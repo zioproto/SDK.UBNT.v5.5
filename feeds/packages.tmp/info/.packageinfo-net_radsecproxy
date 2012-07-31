@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/radsecproxy/Makefile
+Package: radsecproxy
+Version: 1.2-1
+Depends: +libopenssl +libpthread
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: radsecproxy
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   A generic radius proxy for UDP/TLS (RadSec)
+
+http://software.uninett.no/radsecproxy
+@@
+

@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/nmap/Makefile
+Package: nmap
+Version: 4.20-1
+Depends: +libdnet +libpcap +libpcre +uclibcxx
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Network exploration and/or security auditing utility
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  A free open source utility for network exploration or security auditing.
+
+http://www.insecure.org/nmap/
+@@
+

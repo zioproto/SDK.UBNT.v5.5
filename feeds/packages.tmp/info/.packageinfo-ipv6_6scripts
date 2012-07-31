@@ -1,0 +1,15 @@
+Source-Makefile: feeds/packages/ipv6/6scripts/Makefile
+Package: 6scripts
+Version: 0.1-1
+Depends: +kmod-ipv6
+Provides: 
+Build-Depends: 
+Section: ipv6
+Category: IPv6
+Title: IPv6 scripts
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: IPv6 scripts to setup ipv6 connectivy using 6to4 tunnels
+or bridged ipv6 connectivity.
+@@
+

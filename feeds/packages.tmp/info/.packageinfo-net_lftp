@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/lftp/Makefile
+Package: lftp
+Submenu: FTP
+Version: 3.7.7-1
+Depends: +libncurses +libopenssl +libreadline +uclibcxx
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: lftp
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	lftp
+
+http://lftp.yar.ru/
+@@
+

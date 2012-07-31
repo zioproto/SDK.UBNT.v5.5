@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/lib/libXfont/Makefile
+Package: libXfont
+Submenu: libraries
+Version: 1.3.3-4
+Depends: +zlib +libfontenc +libfreetype
+Provides: 
+Build-Depends: xproto fontcacheproto fontsproto xtrans libtool
+Section: xorg-lib
+Category: Xorg
+Title: libXfont
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libXfont
+
+http://xorg.freedesktop.org/
+@@
+

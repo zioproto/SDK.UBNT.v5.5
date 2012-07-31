@@ -1,0 +1,143 @@
+Source-Makefile: feeds/packages/net/olsrd/Makefile
+Package: olsrd
+Menu: 1
+Version: 0.5.6-r3-2
+Depends: +libpthread
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: OLSR (Optimized Link State Routing) daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	OLSR (Optimized Link State Routing) daemon
+
+http://www.olsr.org/
+@@
+Package: olsrd-mod-arprefresh
+Version: 0.5.6-r3-2
+Depends: olsrd
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Kernel ARP cache refresh plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Kernel ARP cache refresh plugin
+
+http://www.olsr.org/
+@@
+Package: olsrd-mod-dot-draw
+Version: 0.5.6-r3-2
+Depends: olsrd
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Dot topology information plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Dot topology information plugin
+
+http://www.olsr.org/
+@@
+Package: olsrd-mod-bmf
+Version: 0.5.6-r3-2
+Depends: olsrd +kmod-tun
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Basic multicast forwarding plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Basic multicast forwarding plugin
+
+http://www.olsr.org/
+@@
+Package: olsrd-mod-dyn-gw
+Version: 0.5.6-r3-2
+Depends: olsrd
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Dynamic internet gateway plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Dynamic internet gateway plugin
+
+http://www.olsr.org/
+@@
+Package: olsrd-mod-dyn-gw-plain
+Version: 0.5.6-r3-2
+Depends: olsrd
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Dynamic internet gateway plain plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Dynamic internet gateway plain plugin
+
+http://www.olsr.org/
+@@
+Package: olsrd-mod-httpinfo
+Version: 0.5.6-r3-2
+Depends: olsrd
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Small informative web server plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Small informative web server plugin
+
+http://www.olsr.org/
+@@
+Package: olsrd-mod-nameservice
+Version: 0.5.6-r3-2
+Depends: olsrd
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Lightweight hostname resolver plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Lightweight hostname resolver plugin
+
+http://www.olsr.org/
+@@
+Package: olsrd-mod-secure
+Version: 0.5.6-r3-2
+Depends: olsrd
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Message signing plugin to secure routing domain
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Message signing plugin to secure routing domain
+
+http://www.olsr.org/
+@@
+Package: olsrd-mod-txtinfo
+Version: 0.5.6-r3-2
+Depends: olsrd
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Small informative web server plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Small informative web server plugin
+
+http://www.olsr.org/
+@@
+

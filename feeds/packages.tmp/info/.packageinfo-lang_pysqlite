@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/lang/pysqlite/Makefile
+Package: python-sqlite
+Submenu: Python
+Version: 2.3.5-1
+Depends: python-core +libsqlite3
+Provides: 
+Build-Depends: python
+Section: lang
+Category: Languages
+Title: SQLite database adapter for Python
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  This package contains an SQLite database adapter for the Python 
+ programming language.
+
+http://www.initd.org/tracker/pysqlite/wiki/pysqlite
+@@
+

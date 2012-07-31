@@ -1,0 +1,32 @@
+Source-Makefile: feeds/packages/net/openvpn/Makefile
+Package: openvpn
+Submenu: VPN
+Version: 2.0.9-5.1
+Depends: +kmod-tun +libopenssl +liblzo
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Open source VPN solution using SSL
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	 Open source VPN solution using SSL
+
+http://openvpn.net
+@@
+Package: openvpn-easy-rsa
+Submenu: VPN
+Version: 2.0.9-5.1
+Depends: openvpn +openssl-util
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Simple shell scripts to manage a Certificate Authority
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Simple shell scripts to manage a Certificate Authority
+
+http://openvpn.net
+@@
+

@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/driver/xf86-video-ati/Makefile
+Package: xf86-video-ati
+Submenu: driver
+Version: 6.9.0-2
+Depends: +xserver-xorg @BROKEN
+Provides: 
+Build-Depends: 
+Section: xorg-driver
+Category: Xorg
+Title: xf86-video-ati
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xf86-video-ati
+
+http://xorg.freedesktop.org/
+@@
+

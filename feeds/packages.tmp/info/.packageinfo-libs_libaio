@@ -1,0 +1,14 @@
+Source-Makefile: feeds/packages/libs/libaio/Makefile
+Package: libaio
+Version: 0.3.106-2
+Depends: @LINUX_2_6
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: Linux kernel AIO interface access library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Linux kernel AIO interface access library
+@@
+

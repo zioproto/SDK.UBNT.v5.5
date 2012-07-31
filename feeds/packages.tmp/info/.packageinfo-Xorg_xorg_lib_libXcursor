@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/lib/libXcursor/Makefile
+Package: libXcursor
+Submenu: libraries
+Version: 1.1.9-4
+Depends: +libXrender +libXfixes +libX11
+Provides: 
+Build-Depends: fixesproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: libXcursor
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libXcursor
+
+http://xorg.freedesktop.org/
+@@
+

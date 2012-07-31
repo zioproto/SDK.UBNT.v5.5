@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/sound/streamripper/Makefile
+Package: streamripper
+Version: 1.62.0-1
+Depends: +libmad
+Provides: 
+Build-Depends: 
+Section: multimedia
+Category: Multimedia
+Title: streamripper
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Streamripper is an Open Source application that lets you record streaming mp3 to your hard drive.
+
+http://streamripper.sourceforge.net/
+@@
+

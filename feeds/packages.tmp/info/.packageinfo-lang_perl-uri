@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/perl-uri/Makefile
+Package: perl-uri
+Submenu: Perl
+Version: 1.36-1
+Depends: perl
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: Manipulates and accesses URI strings
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Manipulates and accesses URI strings
+
+http://search.cpan.org/dist/URI/
+@@
+

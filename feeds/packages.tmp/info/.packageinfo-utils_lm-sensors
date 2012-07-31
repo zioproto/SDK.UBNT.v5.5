@@ -1,0 +1,30 @@
+Source-Makefile: feeds/packages/utils/lm-sensors/Makefile
+Package: lm-sensors
+Version: 3.0.2-1
+Depends: +sysfsutils @LINUX_2_6 @TARGET_x86
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: lm-sensors (programs)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Utility to read hardware sensor data
+
+http://www.lm-sensors.org/
+@@
+Package: libsensors
+Version: 3.0.2-1
+Depends: +sysfsutils @LINUX_2_6
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: lm-sensors libraries
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	lm-sensors libraries
+
+http://www.lm-sensors.org/
+@@
+

@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/net/nodogsplash/Makefile
+Package: nodogsplash
+Submenu: Captive Portals
+Version: 0.9_beta9.9-2
+Depends: +libpthread
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Open public network gateway daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Nodogsplash offers a simple way to open a free hotspot providing restricted access to an
+	internet connection. It is intended for use on wireless access points running OpenWRT
+	(but may also work on other Linux-based devices).
+
+http://kokoro.ucsd.edu/nodogsplash/
+@@
+

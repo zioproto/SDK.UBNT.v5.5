@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/icmptx/Makefile
+Package: icmptx
+Version: 0.01-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: allows you to pass IP packets via ICMP queries 
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	allows you to pass IP packets via ICMP queries 
+
+http://thomer.com/icmptx/
+@@
+

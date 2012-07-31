@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/pygtk/Makefile
+Package: python-gtk
+Submenu: Python
+Version: 2.12.1-2
+Depends: python-core +python-gobject +gtk2 +pycairo @!LINUX_2_4
+Provides: 
+Build-Depends: libtool
+Section: lang
+Category: Languages
+Title: GTK bindings for python
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   API to GTK and glade library from python.
+
+http://www.pygtk.org/
+@@
+

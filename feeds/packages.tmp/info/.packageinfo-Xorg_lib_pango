@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/Xorg/lib/pango/Makefile
+Package: pango
+Submenu: libraries
+Version: 1.22.2-4
+Depends: +cairo +glib2 +fontconfig +libXft
+Provides: 
+Build-Depends: libtool
+Section: xorg-libs
+Category: Xorg
+Title: Text layout and rendering library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: Pango is a library for layout and rendering of text, with an emphasis
+on internationalization. Pango can be used anywhere that text layout
+is needed; however, most of the work on Pango so far has been done using
+the GTK+ widget toolkit as a test platform. Pango forms the core of text
+and font handling for GTK+-2.x.
+@@
+

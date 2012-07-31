@@ -1,0 +1,20 @@
+Source-Makefile: feeds/packages/net/vnstati/Makefile
+Package: vnstati
+Version: beta3-1
+Depends: +vnstat +libgd
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: vnStat image output - png image output support for vnStat
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	The purpose of vnstati is to provide image output support for statistics
+	collected using vnstat(1). However, the image file format is limited to
+	png. All basic outputs of vnStat are supported excluding live traffic
+	features. The image can be outputted either to a file or to standard
+	output.
+
+http://humdi.net/vnstat/
+@@
+

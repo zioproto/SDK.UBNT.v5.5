@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/wiviz/Makefile
+Package: wiviz
+Version: 1.0-1
+Depends: +libpcap
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Wireless Network Visualization
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Wireless Network Visualization
+
+http://devices.natetrue.com/wiviz/
+@@
+

@@ -1,0 +1,20 @@
+Source-Makefile: feeds/packages/net/polipo/Makefile
+Package: polipo
+Submenu: Proxy Servers
+Version: 1.0.4-1.2
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: A caching web proxy
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Polipo is a small and fast caching web proxy (a web cache, an HTTP proxy, 
+ a proxy server). While Polipo was designed to be used by one person or a 
+ small group of people, there is nothing that prevents it from being used 
+ by a larger group.
+
+http://www.pps.jussieu.fr/~jch/software/polipo/
+@@
+

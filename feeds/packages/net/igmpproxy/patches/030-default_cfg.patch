@@ -1,0 +1,43 @@
+--- a/src/igmpproxy.c
++++ b/src/igmpproxy.c
+@@ -39,7 +39,7 @@
+ #include "igmpproxy.h"
+ 
+ static const char Usage[] = 
+-"Usage: igmpproxy [-h] [-d] [-v [-v]] <configfile>\n"
++"Usage: igmpproxy [-h] [-d] [-v [-v]] [configfile]\n"
+ "\n" 
+ "   -h   Display this help screen\n"
+ "   -d   Run in debug mode. Output all messages on stderr\n"
+@@ -61,6 +61,9 @@ static int sighandled = 0;
+ #define	GOT_SIGUSR1	0x04
+ #define	GOT_SIGUSR2	0x08
+ 
++// The default path for the config file...
++#define     IGMPPROXY_CONFIG_FILEPATH     "/etc/igmpproxy.conf"
++
+ // The upstream VIF index
+ int         upStreamVif;   
+ 
+@@ -71,6 +74,7 @@ int         upStreamVif;   
+ */    
+ int main( int ArgCn, char *ArgVc[] ) {
+ 
++	char *configFilePath = IGMPPROXY_CONFIG_FILEPATH;
+     // Parse the commandline options and setup basic settings..
+     for (int c; (c = getopt(ArgCn, ArgVc, "vdh")) != -1;) {
+         switch (c) {
+@@ -94,10 +98,10 @@ int main( int ArgCn, char *ArgVc[] ) {
+     }
+ 
+     if (optind != ArgCn - 1) {
+-	fputs("You must specify the configuration file.\n", stderr);
+-	exit(1);
++	fprintf(stderr, "Using default configuration file \"%s\"\n", IGMPPROXY_CONFIG_FILEPATH);
++    } else {
++	configFilePath = ArgVc[optind];
+     }
+-    char *configFilePath = ArgVc[optind];
+ 
+     // Chech that we are root
+     if (geteuid() != 0) {

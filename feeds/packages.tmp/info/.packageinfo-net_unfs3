@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/net/unfs3/Makefile
+Package: unfs3
+Version: 0.9.20-1
+Depends: +portmap
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: User-space NFSv3 Server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	UNFS3 is a user-space implementation of the NFSv3 server
+	specification. It provides a daemon for the MOUNT and NFS
+	protocols, which are used by NFS clients for accessing files
+	on the server.
+
+http://unfs3.sourceforge.net/
+@@
+

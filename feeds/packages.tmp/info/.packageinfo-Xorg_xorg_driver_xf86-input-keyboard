@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/driver/xf86-input-keyboard/Makefile
+Package: xf86-input-keyboard
+Submenu: driver
+Version: 1.3.1-4
+Depends: +xserver-xorg
+Provides: 
+Build-Depends: randrproto inputproto kbproto xproto
+Section: xorg-driver
+Category: Xorg
+Title: xf86-input-keyboard
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xf86-input-keyboard
+
+http://xorg.freedesktop.org/
+@@
+

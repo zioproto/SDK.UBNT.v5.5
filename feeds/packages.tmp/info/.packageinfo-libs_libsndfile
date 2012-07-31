@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/libs/libsndfile/Makefile
+Package: libsndfile
+Version: 1.0.17-2
+Depends: @!avr32
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: Library for reading/writing audio files
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  libsndfile is a library of C routines for reading and writing files 
+ containing sampled audio data.
+
+http://www.mega-nerd.com/libsndfile/
+@@
+

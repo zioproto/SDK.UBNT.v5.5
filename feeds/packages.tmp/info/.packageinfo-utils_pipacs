@@ -1,0 +1,14 @@
+Source-Makefile: feeds/packages/utils/pipacs/Makefile
+Package: pipacs
+Version: 2
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: UNIX socket accounting/wiewer program
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	UNIX socket accounting/wiewer program
+@@
+

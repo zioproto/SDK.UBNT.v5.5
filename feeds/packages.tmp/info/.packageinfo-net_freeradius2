@@ -1,0 +1,353 @@
+Source-Makefile: feeds/packages/net/freeradius2/Makefile
+Package: freeradius2
+Menu: 1
+Version: 2.1.1-2
+Depends: +libltdl +libopenssl +libpthread +libreadline
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: A flexible RADIUS server (version 2)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A flexible RADIUS server (version 2)
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-democerts
+Version: 2.1.1-2
+Depends: freeradius2
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Demo certificates to test the server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Demo certificates to test the server
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-chap
+Version: 2.1.1-2
+Depends: freeradius2
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: CHAP module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	CHAP module
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-detail
+Version: 2.1.1-2
+Depends: freeradius2
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Detailed accounting module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Detailed accounting module
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-eap
+Version: 2.1.1-2
+Depends: freeradius2
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Base EAP module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Base EAP module
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-eap-gtc
+Version: 2.1.1-2
+Depends: freeradius2-mod-eap
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: EAP/GTC module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	EAP/GTC module
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-eap-md5
+Version: 2.1.1-2
+Depends: freeradius2-mod-eap
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: EAP/MD5 module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	EAP/MD5 module
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-eap-mschapv2
+Version: 2.1.1-2
+Depends: freeradius2-mod-eap
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: EAP/MS-CHAPv2 module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	EAP/MS-CHAPv2 module
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-eap-peap
+Version: 2.1.1-2
+Depends: freeradius2-mod-eap
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: EAP/PEAP module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	EAP/PEAP module
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-eap-tls
+Version: 2.1.1-2
+Depends: freeradius2-mod-eap
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: EAP/TLS module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	EAP/TLS module
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-eap-ttls
+Version: 2.1.1-2
+Depends: freeradius2-mod-eap-tls
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: EAP/TTLS module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	EAP/TTLS module
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-exec
+Version: 2.1.1-2
+Depends: freeradius2
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: EXEC module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	EXEC module
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-attr-rewrite
+Version: 2.1.1-2
+Depends: freeradius2
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: ATTR rewrite module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	ATTR rewrite module
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-files
+Version: 2.1.1-2
+Depends: freeradius2
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Module using local files for authorization
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Module using local files for authorization
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-ldap
+Version: 2.1.1-2
+Depends: freeradius2 +libopenldap
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: LDAP module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	LDAP module
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-mschap
+Version: 2.1.1-2
+Depends: freeradius2
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: MS-CHAP and MS-CHAPv2 module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	MS-CHAP and MS-CHAPv2 module
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-pap
+Version: 2.1.1-2
+Depends: freeradius2
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: PAP module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	PAP module
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-preprocess
+Version: 2.1.1-2
+Depends: freeradius2
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Request pre-processing module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Request pre-processing module
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-realm
+Version: 2.1.1-2
+Depends: freeradius2
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Realms handling module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Realms handling module
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-sql
+Version: 2.1.1-2
+Depends: freeradius2
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Base SQL module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Base SQL module
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-sql-mysql
+Version: 2.1.1-2
+Depends: freeradius2-mod-sql +libmysqlclient
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: MySQL module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	MySQL module
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-sql-pgsql
+Version: 2.1.1-2
+Depends: freeradius2-mod-sql +libpq
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: PostgreSQL module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	PostgreSQL module
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-sqlcounter
+Version: 2.1.1-2
+Depends: freeradius2-mod-sql
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Generic SQL Counter module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Generic SQL Counter module
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-mod-radutmp
+Version: 2.1.1-2
+Depends: freeradius2
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Radius UTMP module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Radius UTMP module
+
+http://www.freeradius2.org/
+@@
+Package: freeradius2-utils
+Version: 2.1.1-2
+Depends: freeradius2
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Misc. client utilities
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Misc. client utilities
+
+http://www.freeradius2.org/
+@@
+

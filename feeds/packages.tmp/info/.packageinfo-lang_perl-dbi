@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/perl-dbi/Makefile
+Package: perl-dbi
+Submenu: Perl
+Version: 1.604-1
+Depends: perl
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: Database independent interface for Perl
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Database independent interface for Perl
+
+http://search.cpan.org/~timb/DBI/
+@@
+

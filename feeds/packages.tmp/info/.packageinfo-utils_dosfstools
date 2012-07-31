@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/utils/dosfstools/Makefile
+Package: dosfstools
+Submenu: filesystem
+Version: 2.11-3.1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: MS-DOS FAT filesystems utilities
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Utilities to create and check MS-DOS FAT filesystems.
+
+ftp://ftp.uni-erlangen.de:/pub/Linux/LOCAL/dosfstools/
+@@
+

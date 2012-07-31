@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/sound/shell-fm/Makefile
+Package: shell-fm
+Version: 0.5-2
+Depends: +libao +libmad
+Provides: 
+Build-Depends: 
+Section: sound
+Category: Sound
+Title: Console Based Last.FM Radio Player
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Shell.FM is a console based player for the streams provided 
+	by Last.FM for the Linux platform. It's lightweight and easy to use.
+
+http://nex.scrapping.cc
+@@
+

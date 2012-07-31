@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/utils/screen/Makefile
+Package: screen
+Version: 4.0.3-1
+Depends: +libncurses
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Full-screen terminal window manager
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Screen is a full-screen window manager that multiplexes a physical
+	terminal between several processes, typically interactive shells.
+
+http://www.gnu.org/software/screen/
+@@
+

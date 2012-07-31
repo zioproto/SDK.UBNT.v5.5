@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/app/xset/Makefile
+Package: xset
+Submenu: app
+Version: 1.0.4-2
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-app
+Category: Xorg
+Title: xset
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xset
+
+http://xorg.freedesktop.org/
+@@
+

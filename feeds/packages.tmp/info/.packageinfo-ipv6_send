@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/ipv6/send/Makefile
+Package: send
+Version: 0.2-4-1
+Depends: +kmod-ipv6 +ip6tables +libnetfilter-queue +libopenssl +libreadline +libncurses
+Provides: 
+Build-Depends: 
+Section: ipv6
+Category: IPv6
+Title: Secure Neighbor Discovery implementation
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	DoCoMo's Open Source SEND project provides an implementation of RFC 3971
+	Secure Neighbor Discovery (SEND). SEND cryptographically secures the
+	IPv6 neighbor discovery protocol, countering the threats discussed in
+	RFC 3756 (IPv6 Neighbor Discovery (ND) Trust Models and Threats).
+
+http://mobisend.org/debian-mobisend.html
+@@
+

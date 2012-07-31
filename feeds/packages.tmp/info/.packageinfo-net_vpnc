@@ -1,0 +1,21 @@
+Source-Makefile: feeds/packages/net/vpnc/Makefile
+Package: vpnc
+Submenu: VPN
+Version: 0.5.1-1
+Depends: +libgpg-error +libgcrypt +kmod-tun +ip
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: VPN client for Cisco EasyVPN
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A VPN client compatible with Cisco's EasyVPN equipment.
+
+	Supports IPSec (ESP) with Mode Configuration and Xauth.  Supports only
+	shared-secret IPSec authentication with Xauth, AES (256, 192, 128),
+	3DES, 1DES, MD5, SHA1, DH1/2/5 and IP tunneling.
+
+http://www.unix-ag.uni-kl.de/~massar/vpnc/
+@@
+

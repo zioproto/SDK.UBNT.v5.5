@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/lib/libdrm/Makefile
+Package: libdrm
+Submenu: libraries
+Version: 2.3.1-2
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-lib
+Category: Xorg
+Title: libdrm
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libdrm
+
+http://dri.freedesktop.org/
+@@
+

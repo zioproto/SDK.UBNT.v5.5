@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/sysstat/Makefile
+Package: sysstat
+Version: 8.0.1-2
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Sysstat performance monitoring tools
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   The sysstat utilities are a collection of performance monitoring tools for Linux. These include sar, sadf, mpstat, iostat, pidstat and sa tools.
+
+http://perso.orange.fr/sebastien.godard/index.html
+@@
+

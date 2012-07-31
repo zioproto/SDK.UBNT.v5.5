@@ -1,0 +1,21 @@
+Source-Makefile: feeds/packages/net/privoxy/Makefile
+Package: privoxy
+Version: 3.0.8-3
+Depends: +libpcre +libpthread
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: web proxy with advanced filtering capabilities
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Privoxy is a web proxy with advanced filtering capabilities for 
+	protecting privacy, modifying web page content, managing cookies, 
+	controlling access, and removing ads, banners, pop-ups and other 
+	obnoxious Internet junk. Privoxy has a very flexible configuration 
+	and can be customized to suit individual needs and tastes. Privoxy 
+	has application for both stand-alone systems and multi-user networks.
+
+http://www.privoxy.org/
+@@
+

@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/net/chrony/Makefile
+Package: chrony
+Submenu: Time Synchronization
+Version: 1.23-1.1
+Depends: +libreadline +libncurses @!TARGET_avr32 @!powerpc
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: NTP client/server for on-demand connections
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A NTP implementation that has been specifically written to work
+	well in the case of an intermittent (e.g. dial-on-demand)
+	connection to the network where your NTP servers are.
+
+http://chrony.sunsite.dk/
+@@
+

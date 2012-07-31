@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/php-pear/Makefile
+Package: php-pear
+Submenu: PHP
+Version: 1.5.4-1
+Depends: +php5
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: PEAR
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	PEAR
+
+http://pear.php.net/
+@@
+

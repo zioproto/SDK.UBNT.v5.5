@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/sound/pulseaudio/Makefile
+Package: pulseaudio
+Version: 0.9.13-1
+Depends: +libspeex +libgdbm +liboil +libsamplerate +libsndfile +libatomicops +libltdl +dbus +libintl +libiconv @BROKEN
+Provides: 
+Build-Depends: libtool
+Section: sound
+Category: Sound
+Title: Network sound server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Network sound server
+
+http://www.pulseaudio.org
+@@
+

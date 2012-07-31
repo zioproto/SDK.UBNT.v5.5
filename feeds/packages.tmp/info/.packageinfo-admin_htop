@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/admin/htop/Makefile
+Package: htop
+Version: 0.8.1-1
+Depends: +libncurses
+Provides: 
+Build-Depends: 
+Section: admin
+Category: Administration
+Title: Interactive processes viewer
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Htop is an ncursed-based process viewer similar to top, but
+ it allows to scroll the list vertically and horizontally to
+ see all processes and their full command lines. 
+
+http://htop.sourceforge.net/
+@@
+

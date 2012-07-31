@@ -1,0 +1,26 @@
+Source-Makefile: feeds/packages/devel/binutils/Makefile
+Package: binutils
+Version: 1
+Depends: @TARGET_x86
+Provides: 
+Build-Depends: 
+Section: devel
+Category: Development
+Title: binutils
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   The Binutils package contains a linker, an assembler, and other tools for handling object files
+@@
+Package: libbfd
+Version: 1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: libbfd
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libbfd
+@@
+

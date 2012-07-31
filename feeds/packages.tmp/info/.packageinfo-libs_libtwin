@@ -1,0 +1,14 @@
+Source-Makefile: feeds/packages/libs/libtwin/Makefile
+Package: libtwin
+Version: 0.0.3-2
+Depends: +zlib +libpng +libjpeg @TARGET_ps3
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: The tiny windowing system libraries
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	The tiny windowing system libraries
+@@
+

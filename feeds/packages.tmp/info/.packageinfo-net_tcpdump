@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/tcpdump/Makefile
+Package: tcpdump
+Version: 3.9.8-1.1
+Depends: +libpcap
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Network monitoring and data acquisition tool
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Network monitoring and data acquisition tool
+
+http://www.tcpdump.org/
+@@
+

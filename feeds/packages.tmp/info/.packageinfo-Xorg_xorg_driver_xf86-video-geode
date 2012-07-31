@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/driver/xf86-video-geode/Makefile
+Package: xf86-video-geode
+Submenu: driver
+Version: 2.10.1-2
+Depends: +xserver-xorg +libpciaccess
+Provides: 
+Build-Depends: randrproto renderproto videoproto xextproto xf86dgaproto xproto fontsproto
+Section: xorg-driver
+Category: Xorg
+Title: xf86-video-geode
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xf86-video-geode
+
+http://xorg.freedesktop.org/
+@@
+

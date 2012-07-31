@@ -1,0 +1,137 @@
+Source-Makefile: feeds/packages/net/pmacct/Makefile
+Package: nfacctd
+Submenu: pmacct (accounting and aggregation tools)
+Version: 0.10.3-1
+Depends: 
+Provides: 
+Build-Depends: libpcap
+Section: net
+Category: Network
+Title: NetFlow accounting daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	NetFlow accounting daemon
+
+http://www.ba.cnr.it/~paolo/pmacct/
+@@
+Package: nfacctd-mysql
+Submenu: pmacct (accounting and aggregation tools)
+Version: 0.10.3-1
+Depends:  +libmysqlclient
+Provides: 
+Build-Depends: libpcap
+Section: net
+Category: Network
+Title: NetFlow accounting daemon with MySQL support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	NetFlow accounting daemon with MySQL support
+
+http://www.ba.cnr.it/~paolo/pmacct/
+@@
+Package: nfacctd-pgsql
+Submenu: pmacct (accounting and aggregation tools)
+Version: 0.10.3-1
+Depends:  +libpq
+Provides: 
+Build-Depends: libpcap
+Section: net
+Category: Network
+Title: NetFlow accounting daemon with PostreSQL support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	NetFlow accounting daemon with PostreSQL support
+
+http://www.ba.cnr.it/~paolo/pmacct/
+@@
+Package: nfacctd-sqlite
+Submenu: pmacct (accounting and aggregation tools)
+Version: 0.10.3-1
+Depends:  +libsqlite3
+Provides: 
+Build-Depends: libpcap
+Section: net
+Category: Network
+Title: NetFlow accounting daemon with SQLite support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	NetFlow accounting daemon with SQLite support
+
+http://www.ba.cnr.it/~paolo/pmacct/
+@@
+Package: pmacctd
+Submenu: pmacct (accounting and aggregation tools)
+Version: 0.10.3-1
+Depends:  +libpcap
+Provides: 
+Build-Depends: libpcap
+Section: net
+Category: Network
+Title: IP pcap-based accounting daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	IP pcap-based accounting daemon
+
+http://www.ba.cnr.it/~paolo/pmacct/
+@@
+Package: pmacctd-mysql
+Submenu: pmacct (accounting and aggregation tools)
+Version: 0.10.3-1
+Depends:  +libpcap +libmysqlclient
+Provides: 
+Build-Depends: libpcap
+Section: net
+Category: Network
+Title: IP pcap-based accounting daemon with MySQL support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	IP pcap-based accounting daemon with MySQL support
+
+http://www.ba.cnr.it/~paolo/pmacct/
+@@
+Package: pmacctd-pgsql
+Submenu: pmacct (accounting and aggregation tools)
+Version: 0.10.3-1
+Depends:  +libpcap +libpq
+Provides: 
+Build-Depends: libpcap
+Section: net
+Category: Network
+Title: IP pcap-based accounting daemon with PostreSQL support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	IP pcap-based accounting daemon with PostreSQL support
+
+http://www.ba.cnr.it/~paolo/pmacct/
+@@
+Package: pmacctd-sqlite
+Submenu: pmacct (accounting and aggregation tools)
+Version: 0.10.3-1
+Depends:  +libpcap +libsqlite3
+Provides: 
+Build-Depends: libpcap
+Section: net
+Category: Network
+Title: IP pcap-based accounting daemon with SQLite support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	IP pcap-based accounting daemon with SQLite support
+
+http://www.ba.cnr.it/~paolo/pmacct/
+@@
+Package: pmacct-client
+Submenu: pmacct (accounting and aggregation tools)
+Version: 0.10.3-1
+Depends: 
+Provides: 
+Build-Depends: libpcap
+Section: net
+Category: Network
+Title: Command-line client to gather data from the IMT plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Command-line client to gather data from the IMT plugin
+
+http://www.ba.cnr.it/~paolo/pmacct/
+@@
+

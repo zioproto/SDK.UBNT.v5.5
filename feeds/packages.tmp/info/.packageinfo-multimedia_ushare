@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/multimedia/ushare/Makefile
+Package: ushare
+Version: 1.1a-1
+Depends: +libdlna +libupnp
+Provides: 
+Build-Depends: 
+Section: multimedia
+Category: Multimedia
+Title: UPnP A/V & DLNA Media Server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  uShare is a UPnP (TM) A/V & DLNA Media Server. It implements the server 
+ component that provides UPnP media devices with information on available 
+ multimedia files.
+
+http://ushare.geexbox.org/
+@@
+

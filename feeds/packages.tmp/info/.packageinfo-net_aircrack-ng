@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/aircrack-ng/Makefile
+Package: aircrack-ng
+Submenu: wireless
+Version: r1396-1.2
+Depends: +libpthread +libopenssl +libpcap
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: next generation of aircrack with new features
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: Aircrack-ng is the next generation of aircrack with new features
+
+http://www.aircrack-ng.org/
+@@
+

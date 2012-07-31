@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/utils/devio/Makefile
+Package: devio
+Submenu: disc
+Version: 1.2-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: correctly read (or write) a region of a block device
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A command line program to correctly read (or write) a region of a block device.
+	Primary use is for extracting formatted data from MTD partitions.
+
+http://sourceforge.net/projects/devio/
+@@
+

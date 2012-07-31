@@ -1,0 +1,39 @@
+Source-Makefile: feeds/packages/libs/sqlite2/Makefile
+Package: libsqlite2
+Version: 2.8.17-1
+Depends: 
+Provides: 
+Build-Depends: libncurses libreadline
+Section: libs
+Category: Libraries
+Title: SQLite (v2.x) database engine (library)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: =
+	SQLite is a small C library that implements a self-contained, embeddable, 
+	zero-configuration SQL database engine.	
+	This package contains the SQLite (v2.x) shared library, used by other programs.
+
+http://www.sqlite.org/
+@@
+Package: sqlite2-cli
+Submenu: database
+Version: 2.8.17-1
+Depends: +libsqlite2 +libncurses +libreadline
+Provides: 
+Build-Depends: libncurses libreadline
+Section: utils
+Category: Utilities
+Title: SQLite (v2.x) database engine (cli)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: =
+	SQLite is a small C library that implements a self-contained, embeddable, 
+	zero-configuration SQL database engine.	
+	This package contains a terminal-based front-end to the SQLite (v2.x) library 
+	that can evaluate queries interactively and display the results in 
+	multiple formats.
+
+http://www.sqlite.org/
+@@
+

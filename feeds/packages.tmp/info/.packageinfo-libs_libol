@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/libol/Makefile
+Package: libol
+Version: 0.3.18-1
+Depends: 
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: Support library for syslog-ng
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Support library for syslog-ng
+
+http://www.balabit.com/products/syslog_ng/
+@@
+

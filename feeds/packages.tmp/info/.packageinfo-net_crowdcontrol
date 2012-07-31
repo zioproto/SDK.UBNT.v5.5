@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/net/crowdcontrol/Makefile
+Package: crowdcontrol
+Version: 0.4b-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: The extra-light http proxy server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Crowd Control is an small, cross-platform HTTP proxy (a fork of the elhttp project) 
+	designed for systems with little RAM, such as a home router. It can filter URLs using 
+	SquidGuard blocklists, and has the unique ability to filter HTTPS domains as well.
+
+http://sourceforge.net/projects/crowdcontrol/
+@@
+

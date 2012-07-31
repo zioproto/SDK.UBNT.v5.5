@@ -1,0 +1,14 @@
+Source-Makefile: feeds/packages/utils/event_test/Makefile
+Package: event_test
+Version: 0.01-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Event device test program
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  This package contains an utility for testing event devices.
+@@
+

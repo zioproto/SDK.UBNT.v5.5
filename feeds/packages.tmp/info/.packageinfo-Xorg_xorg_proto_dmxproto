@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/proto/dmxproto/Makefile
+Package: dmxproto
+Submenu: proto
+Version: 2.2.2-3
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-proto
+Category: Xorg
+Title: dmxproto
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	dmxproto
+
+http://xorg.freedesktop.org/
+@@
+

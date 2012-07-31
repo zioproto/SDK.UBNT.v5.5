@@ -1,0 +1,29 @@
+Source-Makefile: feeds/packages/Xorg/wm/fluxbox/Makefile
+Package: fbrun
+Submenu: window manager
+Version: 1.0rc3-1.1
+Depends: fluxbox
+Provides: 
+Build-Depends: 
+Section: xorg-wm
+Category: Xorg
+Title: fluxbox tool to run applications
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	fluxbox tool to run applications
+@@
+Package: fluxbox
+Menu: 1
+Submenu: window manager
+Version: 1.0rc3-1.1
+Depends: +uclibcxx +libXt
+Provides: 
+Build-Depends: 
+Section: xorg-wm
+Category: Xorg
+Title: fluxbox window manager
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	fluxbox window manager
+@@
+

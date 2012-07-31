@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/utils/lilo/Makefile
+Package: lilo
+Prereq-Check: 1
+Version: 22.8-1
+Depends: @TARGET_x86
+Provides: 
+Build-Depends: 
+Section: base
+Category: Boot Loaders
+Title: lilo
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	lilo
+
+ftp://metalab.unc.edu/pub/Linux/system/boot/lilo/
+@@
+

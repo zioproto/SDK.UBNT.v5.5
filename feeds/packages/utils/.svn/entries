@@ -1,0 +1,364 @@
+10
+
+dir
+32837
+svn://svn.openwrt.org/openwrt/branches/packages_8.09/utils
+svn://svn.openwrt.org/openwrt
+
+
+
+2009-10-04T13:39:10.579554Z
+17852
+nico
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3c298f89-4303-0410-b956-a3cf2f4a3e73
+
+dtach
+dir
+
+bc
+dir
+
+wx200d
+dir
+
+rrdtool
+dir
+
+tar
+dir
+
+sysfsutils
+dir
+
+collectd
+dir
+
+dfu-util
+dir
+
+setserial
+dir
+
+vim
+dir
+
+dir300-flash
+dir
+
+dbus
+dir
+
+rdiff-backup
+dir
+
+sispmctl
+dir
+
+logrotate
+dir
+
+cdparanoia
+dir
+
+digitemp
+dir
+
+zip
+dir
+
+anyremote
+dir
+
+lsof
+dir
+
+memtester
+dir
+
+huaweiaktbbo
+dir
+
+lcd4linux
+dir
+
+hd-idle
+dir
+
+cifsmount
+dir
+
+bluez-hcidump
+dir
+
+petitboot
+dir
+
+mgetty
+dir
+
+psplash
+dir
+
+hplip
+dir
+
+fxload
+dir
+
+haserl
+dir
+
+owfs
+dir
+
+pipacs
+dir
+
+smartmontools
+dir
+
+mdadm
+dir
+
+avrusbboot
+dir
+
+ssldump
+dir
+
+macchanger
+dir
+
+nano
+dir
+
+rrdcollect
+dir
+
+sane-backends
+dir
+
+dialog
+dir
+
+dosfstools
+dir
+
+lilo
+dir
+
+coreutils
+dir
+
+gzip
+dir
+
+i2c-tools
+dir
+
+joe
+dir
+
+bash
+dir
+
+crypto-tools
+dir
+
+loop-aes
+dir
+
+firmwarehotplug
+dir
+
+sierra-pcmcia
+dir
+
+strace
+dir
+
+lrzsz
+dir
+
+bzip2
+dir
+
+rcs
+dir
+
+avrdude
+dir
+
+ipmitool
+dir
+
+pciutils
+dir
+
+usb-modeswitch
+dir
+
+pps-tools
+dir
+
+gadgetfs-test
+dir
+
+setpwc
+dir
+
+valgrind
+dir
+
+dadhi-tools
+dir
+
+dt
+dir
+
+microcom
+dir
+
+sysstat
+dir
+
+heyu
+dir
+
+usbutils
+dir
+
+pcmciautils
+dir
+
+alsa-utils
+dir
+
+bluez-utils
+dir
+
+gnokii
+dir
+
+event_test
+dir
+
+ntfs-3g
+dir
+
+stress
+dir
+
+bemused
+dir
+
+pv
+dir
+
+sdparm
+dir
+
+scponly
+dir
+
+cmdpad
+dir
+
+picocom
+dir
+
+testusb
+dir
+
+lirc
+dir
+
+minicom
+dir
+
+reiserfsprogs
+dir
+
+input-utils
+dir
+
+empty
+dir
+
+fortune-mod
+dir
+
+mc
+dir
+
+mksh
+dir
+
+lm-sensors
+dir
+
+foxboard-utils
+dir
+
+zile
+dir
+
+mg
+dir
+
+at
+dir
+
+unzip
+dir
+
+devio
+dir
+
+dadhi-linux
+dir
+
+procps
+dir
+
+io
+dir
+
+bandwidthd
+dir
+
+deco
+dir
+
+hdparm
+dir
+
+dmidecode
+dir
+
+oprofile
+dir
+
+screen
+dir
+
+gnupg
+dir
+
+pwgen
+dir
+

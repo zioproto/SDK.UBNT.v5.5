@@ -1,0 +1,21 @@
+Source-Makefile: feeds/packages/utils/setserial/Makefile
+Package: setserial
+Submenu: terminal
+Version: 2.17-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Serial port configuration utility
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	setserial is a program designed to set and/or report the 
+	configuration information associated with a serial port. This 
+	information includes what I/O port and IRQ a particular 
+	serial port is using, and whether or not the break key should 
+	be interpreted as the Secure Attention Key, and so on.
+
+http://setserial.sourceforge.net/
+@@
+

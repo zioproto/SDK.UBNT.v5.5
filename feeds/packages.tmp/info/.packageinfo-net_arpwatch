@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/arpwatch/Makefile
+Package: arpwatch
+Version: 2.1a15-1
+Depends: +libpcap
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Ethernet station activity monitor
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Ethernet monitor program for keeping track of ethernet/ip address
+	pairings.
+
+http://www-nrg.ee.lbl.gov/
+@@
+

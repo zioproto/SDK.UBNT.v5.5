@@ -1,0 +1,14 @@
+Source-Makefile: feeds/packages/utils/input-utils/Makefile
+Package: input-utils
+Version: 20051128-143821-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Utilities for the input layer of the Linux kernel
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Utilities for the input layer of the Linux kernel
+@@
+

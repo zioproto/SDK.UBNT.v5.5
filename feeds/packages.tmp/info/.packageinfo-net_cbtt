@@ -1,0 +1,32 @@
+Source-Makefile: feeds/packages/net/cbtt/Makefile
+Package: cbtt
+Submenu: BitTorrent
+Version: 20060727-1
+Depends: +libpthread +uclibcxx +zlib
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Bittorrent tracker
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Bittorrent tracker
+
+http://bnbtusermods.sourceforge.net/
+@@
+Package: cbtt-mysql
+Submenu: BitTorrent
+Version: 20060727-1
+Depends: +libpthread +uclibcxx +zlib +libmysqlclient
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Bittorrent tracker (with mysql support)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Bittorrent tracker (with mysql support)
+
+http://bnbtusermods.sourceforge.net/
+@@
+

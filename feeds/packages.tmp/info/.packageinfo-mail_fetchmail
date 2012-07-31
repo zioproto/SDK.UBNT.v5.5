@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/mail/fetchmail/Makefile
+Package: fetchmail
+Version: 6.3.9-rc2-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: mail
+Category: Mail
+Title: Remote mail retriever
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Retrieves remote mail via POP/IMAP.
+ Very useful in conjunction with mutt.
+
+http://fetchmail.berlios.de/
+@@
+

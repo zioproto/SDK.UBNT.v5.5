@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/libamsel/Makefile
+Package: libamsel
+Version: 20040621-cvs-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: The amwall library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A library for amwall configuration files.
+
+http://amselinux.de/
+@@
+

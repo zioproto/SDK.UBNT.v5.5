@@ -1,0 +1,14 @@
+Source-Makefile: feeds/packages/utils/mksh/Makefile
+Package: mksh
+Version: R33d-1
+Depends: +libssp
+Provides: 
+Build-Depends: 
+Section: shells
+Category: Base system
+Title: mksh
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: MirBSD version of ksh
+@@
+

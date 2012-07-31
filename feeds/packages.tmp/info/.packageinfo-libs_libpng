@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/libpng/Makefile
+Package: libpng
+Version: 1.2.29-1.2
+Depends: +zlib
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: A PNG format files handling library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A PNG format files handling library
+
+http://www.libpng.org/pub/png/libpng.html
+@@
+

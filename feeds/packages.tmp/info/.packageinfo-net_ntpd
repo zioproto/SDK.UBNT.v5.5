@@ -1,0 +1,56 @@
+Source-Makefile: feeds/packages/net/ntpd/Makefile
+Package: ntpd
+Submenu: Time Synchronization
+Version: 4.2.4p6-2.1
+Depends: 
+Provides: 
+Build-Depends: libelf
+Section: net
+Category: Network
+Title: ISC ntp server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 		The ISC ntp suite is a collection of tools used to synchronize
+	the system clock with remote NTP time servers and run/montior
+	local NTP servers.
+	This package contains the ntpd server.
+
+http://www.ntp.org/
+@@
+Package: ntpdate
+Submenu: Time Synchronization
+Version: 4.2.4p6-2.1
+Depends: 
+Provides: 
+Build-Depends: libelf
+Section: net
+Category: Network
+Title: ISC ntp date
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 		The ISC ntp suite is a collection of tools used to synchronize
+	the system clock with remote NTP time servers and run/montior
+	local NTP servers.
+	This package contains ntpdate.
+
+http://www.ntp.org/
+@@
+Package: ntp-utils
+Submenu: Time Synchronization
+Version: 4.2.4p6-2.1
+Depends: +libreadline +libncurses
+Provides: 
+Build-Depends: libelf
+Section: net
+Category: Network
+Title: ISC ntp utilities
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 		The ISC ntp suite is a collection of tools used to synchronize
+	the system clock with remote NTP time servers and run/montior
+	local NTP servers.
+	This package contains ntpdc and ntpq.
+
+http://www.ntp.org/
+@@
+

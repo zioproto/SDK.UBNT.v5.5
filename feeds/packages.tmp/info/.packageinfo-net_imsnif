@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/net/imsnif/Makefile
+Package: imsnif
+Version: 0.04-2
+Depends: +libpcap +uclibcxx
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: MSN Messenger sniffer
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   IMsnif is a simple program to log Instant Message activity
+  on the network. It uses libpcap to capture packets and
+  analyzes them, logging conversation, contact lists, etc.
+
+http://sourceforge.net/projects/im-snif
+@@
+

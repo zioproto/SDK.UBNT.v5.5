@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/lib/libXpm/Makefile
+Package: libXpm
+Submenu: libraries
+Version: 3.5.7-4
+Depends: +libX11 +libXt +libXext
+Provides: 
+Build-Depends: libtool
+Section: xorg-lib
+Category: Xorg
+Title: libXpm
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libXpm
+
+http://xorg.freedesktop.org/
+@@
+

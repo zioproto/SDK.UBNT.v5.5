@@ -1,0 +1,30 @@
+Source-Makefile: feeds/packages/libs/tiff/Makefile
+Package: libtiff
+Version: 3.8.2-1.2
+Depends: +zlib +libjpeg
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: TIFF libraries
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	TIFF libraries
+
+http://www.remotesensing.org/libtiff/
+@@
+Package: tiff-utils
+Version: 3.8.2-1.2
+Depends: +libtiff
+Provides: 
+Build-Depends: libtool
+Section: utils
+Category: Utilities
+Title: TIFF utilities
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	TIFF utilities
+
+http://www.remotesensing.org/libtiff/
+@@
+

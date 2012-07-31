@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/wnck/Makefile
+Package: libwnck
+Version: 2.22.3-3
+Depends: +gtk2 +glib2 +libXext
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: Window Navigator Construction Kit
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: Window Navigator Construction Kit
+
+http://ftp.gnome.org/
+@@
+

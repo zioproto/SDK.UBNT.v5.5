@@ -1,0 +1,61 @@
+Source-Makefile: feeds/packages/net/nufw/Makefile
+Package: nufw
+Version: 2.2.17
+Depends: +glib2 +libgnutls +libsasl2 +libintl +libiconv +libnetfilter-queue
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: nufw
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   NuFW adds user-based filtering to Netfilter,
+  the state of the art IP filtering layer from
+  the Linux kernel. Its exclusive algorithm allows
+  authenticated filtering even on multiuser computers.
+
+http://www.nufw.org/
+@@
+Package: nutcpc
+Version: 2.2.17
+Depends: +glib2 +libgnutls +libsasl2 +libintl +libiconv +libnetfilter-queue
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: client version
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	client version
+
+http://www.nufw.org/
+@@
+Package: nufw-modules
+Version: 2.2.17
+Depends: +glib2 +libgnutls +libsasl2 +libintl +libiconv +libnetfilter-queue
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: NuFW modules
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	NuFW modules
+
+http://www.nufw.org/
+@@
+Package: nufw-python
+Version: 2.2.17
+Depends: +glib2 +libgnutls +libsasl2 +libintl +libiconv +libnetfilter-queue
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: python bindings
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	python bindings
+
+http://www.nufw.org/
+@@
+

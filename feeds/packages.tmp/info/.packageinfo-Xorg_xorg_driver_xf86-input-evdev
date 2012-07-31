@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/driver/xf86-input-evdev/Makefile
+Package: xf86-input-evdev
+Submenu: driver
+Version: 2.0.4-4
+Depends: +xserver-xorg
+Provides: 
+Build-Depends: randrproto inputproto xproto
+Section: xorg-driver
+Category: Xorg
+Title: xf86-input-evdev
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xf86-input-evdev
+
+http://xorg.freedesktop.org/
+@@
+

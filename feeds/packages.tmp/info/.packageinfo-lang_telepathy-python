@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/lang/telepathy-python/Makefile
+Package: telepathy-python
+Submenu: Python
+Prereq-Check: 1
+Version: 0.15.3-1
+Depends: python-core +dbus-python
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: telepathy-python
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   telepathy python bindings
+
+http://telepathy.freedesktop.org
+@@
+

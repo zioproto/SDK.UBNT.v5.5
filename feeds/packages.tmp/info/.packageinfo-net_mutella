@@ -1,0 +1,24 @@
+Source-Makefile: feeds/packages/net/mutella/Makefile
+Package: mutella
+Submenu: P2P
+Version: 0.4.5-2
+Depends: +libncurses +libreadline +libpthread +libstdcpp +zlib
+Provides: 
+Build-Depends: libtool
+Section: net
+Category: Network
+Title: Gnutella client with command line and http interface
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Mutella supports all the functionality required to participate as
+ a full-featured node in the Gnutella network. "Full-featured" implies
+ support for file search, download and sharing. It is optimized for a
+ high-bandwidth connection, where it sets standards for server
+ performance and stability, but can also run on a modest-speed line.
+ .
+ Mutella can either be controlled via a colourful text mode interface
+ or via a web browser using a built in http interface.
+
+http://mutella.sourceforge.net/
+@@
+

@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/utils/lrzsz/Makefile
+Package: lrzsz
+Version: 0.12.20-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: X,Y and Z-modem protocols
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Transfer files in your login sessions.
+	Very leightweight and straight forward.
+	You just need a terminal client that can do 
+	either X, Y or Z-modem file transfers.
+
+http://www.ohse.de/uwe/software/lrzsz.html
+@@
+

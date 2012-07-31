@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/bluez-hcidump/Makefile
+Package: bluez-hcidump
+Version: 1.42-1
+Depends: +bluez-libs
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Bluetooth packet analyzer
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Bluetooth packet analyzer
+
+http://www.bluez.org/
+@@
+

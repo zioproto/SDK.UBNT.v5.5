@@ -1,0 +1,74 @@
+--- a/src/callout.c
++++ b/src/callout.c
+@@ -76,14 +76,16 @@ void free_all_callouts() {
+  */
+ void age_callout_queue(int elapsed_time)
+ {
+     struct timeOutQueue *ptr, *to_last = NULL;
+     int i = 0;
+     struct timeOutQueue  *to_queue = 0; /* timeouted queue */
+ 
++	my_log(LOG_DEBUG, 0, "age_callout: elapsed %d", elapsed_time);
++
+ 	for (ptr = queue; ptr; ptr = ptr->next)
+ 	{
+         if (ptr->time > elapsed_time)
+         {
+             ptr->time -= elapsed_time;
+             break;
+         }
+--- a/src/igmpproxy.c
++++ b/src/igmpproxy.c
+@@ -257,14 +257,15 @@ void igmpProxyRun() {
+                 my_log(LOG_NOTICE, 0, "Got a interupt signal. Exiting.");
+                 break;
+             }
+         }
+ 
+         // Prepare timeout...
+         secs = timer_nextTimer();
++        my_log(LOG_DEBUG, 0, "nextTimer pending after %d", secs);
+         if(secs == -1) {
+             timeout = NULL;
+         } else {
+             timeout->tv_usec = 0;
+             timeout->tv_sec = secs;
+         }
+ 
+--- a/src/syslog.c
++++ b/src/syslog.c
+@@ -35,27 +35,33 @@
+ 
+ int LogLevel = LOG_ERR;
+ bool Log2Stderr = false;
+ 
+ void my_log( int Severity, int Errno, const char *FmtSt, ... )
+ {
+     char LogMsg[ 128 ];
++    struct timeval now;
+ 
+     va_list ArgPt;
+     unsigned Ln;
+     va_start( ArgPt, FmtSt );
+     Ln = vsnprintf( LogMsg, sizeof( LogMsg ), FmtSt, ArgPt );
+     if( Errno > 0 )
+         snprintf( LogMsg + Ln, sizeof( LogMsg ) - Ln,
+                 "; Errno(%d): %s", Errno, strerror(Errno) );
+     va_end( ArgPt );
+ 
+     if (Severity <= LogLevel) {
+         if (Log2Stderr)
+-            fprintf(stderr, "%s\n", LogMsg);
++		{
++			char tstamp[30];
++			gettimeofday(&now, NULL);
++			strftime(tstamp, sizeof(tstamp), "%T", localtime(&now.tv_sec));
++			fprintf(stderr, "%s.%06ld %s\n", tstamp, now.tv_usec, LogMsg);
++		}
+         else {
+             syslog(Severity, "%s", LogMsg);
+ 	}
+     }
+ 
+     if( Severity <= LOG_ERR )
+         exit( -1 );

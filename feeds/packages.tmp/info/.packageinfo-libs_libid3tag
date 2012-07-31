@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/libs/libid3tag/Makefile
+Package: libid3tag
+Version: 0.15.1b-1
+Depends: +zlib
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: An ID3 tag manipulation library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libid3tag is a library for reading and (eventually) writing ID3 tags, both 
+	ID3v1 and the various versions of ID3v2.
+
+http://mad.sourceforge.net/
+@@
+

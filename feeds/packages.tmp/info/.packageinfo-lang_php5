@@ -1,0 +1,326 @@
+Source-Makefile: feeds/packages/lang/php5/Makefile
+Package: php5
+Submenu: PHP
+Version: 5.2.6-2
+Depends: +libopenssl +zlib
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: PHP5 Hypertext preprocessor
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  PHP is a widely-used general-purpose scripting language that is especially 
+ suited for Web development and can be embedded into HTML.
+ This package contains only the PHP config file. You must actually choose 
+ your PHP flavour (cli, cgi or fastcgi).
+
+http://www.php.net/
+@@
+Package: php5-cli
+Submenu: PHP
+Version: 5.2.6-2
+Depends: php5
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: PHP5 Hypertext preprocessor (CLI)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  PHP is a widely-used general-purpose scripting language that is especially 
+ suited for Web development and can be embedded into HTML.
+ This package contains the CLI version of the PHP5 interpreter.
+
+http://www.php.net/
+@@
+Package: php5-cgi
+Submenu: PHP
+Version: 5.2.6-2
+Depends: php5
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: PHP5 Hypertext preprocessor (CGI)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  PHP is a widely-used general-purpose scripting language that is especially 
+ suited for Web development and can be embedded into HTML.
+ This package contains the CGI version of the PHP5 interpreter.
+
+http://www.php.net/
+@@
+Package: php5-fastcgi
+Submenu: PHP
+Version: 5.2.6-2
+Depends: php5
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: PHP5 Hypertext preprocessor (FastCGI)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  PHP is a widely-used general-purpose scripting language that is especially 
+ suited for Web development and can be embedded into HTML.
+ This package contains the FastCGI version of the PHP5 interpreter.
+
+http://www.php.net/
+@@
+Package: php5-mod-curl
+Submenu: PHP
+Version: 5.2.6-2
+Depends: php5 +libcurl
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: cURL module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	cURL module
+
+http://www.php.net/
+@@
+Package: php5-mod-ftp
+Submenu: PHP
+Version: 5.2.6-2
+Depends: php5
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: FTP module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	FTP module
+
+http://www.php.net/
+@@
+Package: php5-mod-gd
+Submenu: PHP
+Version: 5.2.6-2
+Depends: php5 +libgd
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: GD graphics module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	GD graphics module
+
+http://www.php.net/
+@@
+Package: php5-mod-gmp
+Submenu: PHP
+Version: 5.2.6-2
+Depends: php5 +libgmp
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: GMP module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	GMP module
+
+http://www.php.net/
+@@
+Package: php5-mod-ldap
+Submenu: PHP
+Version: 5.2.6-2
+Depends: php5 +libopenldap +libsasl2
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: LDAP module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	LDAP module
+
+http://www.php.net/
+@@
+Package: php5-mod-mysql
+Submenu: PHP
+Version: 5.2.6-2
+Depends: php5 +libmysqlclient
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: MySQL module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	MySQL module
+
+http://www.php.net/
+@@
+Package: php5-mod-openssl
+Submenu: PHP
+Version: 5.2.6-2
+Depends: php5 +libopenssl
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: OpenSSL module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	OpenSSL module
+
+http://www.php.net/
+@@
+Package: php5-mod-pcre
+Submenu: PHP
+Version: 5.2.6-2
+Depends: php5 +libpcre
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: PCRE module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	PCRE module
+
+http://www.php.net/
+@@
+Package: php5-mod-pgsql
+Submenu: PHP
+Version: 5.2.6-2
+Depends: php5 +libpq
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: PostgreSQL module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	PostgreSQL module
+
+http://www.php.net/
+@@
+Package: php5-mod-session
+Submenu: PHP
+Version: 5.2.6-2
+Depends: php5
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: Session module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Session module
+
+http://www.php.net/
+@@
+Package: php5-mod-sockets
+Submenu: PHP
+Version: 5.2.6-2
+Depends: php5
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: Sockets module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Sockets module
+
+http://www.php.net/
+@@
+Package: php5-mod-sqlite
+Submenu: PHP
+Version: 5.2.6-2
+Depends: php5 +libsqlite2
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: SQLite module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	SQLite module
+
+http://www.php.net/
+@@
+Package: php5-mod-pdo
+Submenu: PHP
+Version: 5.2.6-2
+Depends: php5
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: PHP Data Objects module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	PHP Data Objects module
+
+http://www.php.net/
+@@
+Package: php5-mod-pdo-sqlite
+Submenu: PHP
+Version: 5.2.6-2
+Depends: php5-mod-pdo +libsqlite3
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: PHP Data Objects module - SQLite support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	PHP Data Objects module - SQLite support
+
+http://www.php.net/
+@@
+Package: php5-mod-xml
+Submenu: PHP
+Version: 5.2.6-2
+Depends: php5 +libexpat
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: XML module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	XML module
+
+http://www.php.net/
+@@
+Package: php5-mod-apc
+Submenu: PHP
+Version: 5.2.6-2
+Depends: php5
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: APC Extension
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	APC Extension
+
+http://www.php.net/
+@@
+Package: php5-mod-exif
+Submenu: PHP
+Version: 5.2.6-2
+Depends: php5
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: EXIF Extension
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	EXIF Extension
+
+http://www.php.net/
+@@
+

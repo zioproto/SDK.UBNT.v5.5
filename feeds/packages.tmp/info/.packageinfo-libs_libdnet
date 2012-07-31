@@ -1,0 +1,32 @@
+Source-Makefile: feeds/packages/libs/libdnet/Makefile
+Package: libdnet
+Version: 1.10-2
+Depends: 
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: Low-level network library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libdnet is a library of simplified, portable interface to several 
+	low-level networking routines.
+
+http://sourceforge.net/projects/libdnet/
+@@
+Package: pydnet
+Version: 1.10-2
+Depends: libdnet python-core
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: Low-level network library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libdnet is a library of simplified, portable interface to several 
+	low-level networking routines.
+
+http://sourceforge.net/projects/libdnet/
+@@
+

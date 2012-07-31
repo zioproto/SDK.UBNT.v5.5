@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/font/font-misc-cyrillic/Makefile
+Package: font-misc-cyrillic
+Submenu: font
+Version: 1.0.0-2
+Depends: +xserver +font-util @DISPLAY_SUPPORT
+Provides: 
+Build-Depends: 
+Section: xorg-font
+Category: Xorg
+Title: font-misc-cyrillic
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	font-misc-cyrillic
+
+http://xorg.freedesktop.org/
+@@
+

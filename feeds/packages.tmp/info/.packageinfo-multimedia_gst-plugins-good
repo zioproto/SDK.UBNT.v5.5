@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/multimedia/gst-plugins-good/Makefile
+Package: gst-plugins-good
+Version: 0.10.10-4
+Depends: +gstreamer +liboil +pango +cairo +libpng +taglib +libspeex +libjpeg +zlib +gst-plugins-base
+Provides: 
+Build-Depends: libtool
+Section: multimedia
+Category: Multimedia
+Title: gst-plugins-good
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	gstreamer good plugins
+
+http://gstreamer.freedesktop.org/
+@@
+

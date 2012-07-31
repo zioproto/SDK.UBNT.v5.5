@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/proto/applewmproto/Makefile
+Package: applewmproto
+Submenu: proto
+Version: 1.0.3-3
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-proto
+Category: Xorg
+Title: applewmproto
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	applewmproto
+
+http://xorg.freedesktop.org/
+@@
+

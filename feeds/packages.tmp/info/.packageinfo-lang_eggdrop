@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/lang/eggdrop/Makefile
+Package: eggdrop
+Version: 1.6.17-1
+Depends: +tcl
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: EggDrop IRC BOT
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	EggDrop IRC BOT
+
+http://www.eggheads.org
+@@
+

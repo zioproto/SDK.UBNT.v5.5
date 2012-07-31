@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/luaprofiler/Makefile
+Package: luaprofiler
+Submenu: Lua
+Version: 2.0.2-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: Lua Profiler
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Profile any Lua application
+
+http://luaprofiler.luaforge.net
+@@
+

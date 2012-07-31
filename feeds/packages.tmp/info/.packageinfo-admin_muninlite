@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/admin/muninlite/Makefile
+Package: muninlite
+Version: 1.0.0-2
+Depends: xinetd
+Provides: 
+Build-Depends: 
+Section: admin
+Category: Administration
+Title: Munin node implemented in shell
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Munin node implemented in shell
+
+http://sourceforge.net/projects/muninlite/
+@@
+

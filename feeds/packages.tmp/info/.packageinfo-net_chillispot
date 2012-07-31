@@ -1,0 +1,23 @@
+Source-Makefile: feeds/packages/net/chillispot/Makefile
+Package: chillispot
+Submenu: Captive Portals
+Version: 1.1.0-1
+Depends: +kmod-tun
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Wireless LAN HotSpot controller
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	ChilliSpot is an open source captive portal or wireless LAN 
+	access point controller. It is used for authenticating users 
+	of a wireless LAN. It supports web based login which is today's 
+	standard for public HotSpots and it supports Wireless Protected 
+	Access (WPA) which is the standard of the future. Authentication, 
+	authorization and accounting (AAA) is handled by your favorite 
+	radius server.
+
+http://www.chillispot.org/
+@@
+

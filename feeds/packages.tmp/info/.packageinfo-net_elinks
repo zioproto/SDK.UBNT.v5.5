@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/elinks/Makefile
+Package: elinks
+Submenu: Web
+Version: 0.11.4-1
+Depends: +libopenssl
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: A text based web browser
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: An advanced text based web browser
+
+http://elinks.or.cz/
+@@
+

@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/arpd/Makefile
+Package: arpd
+Version: 0.2-1
+Depends: +libpcap +libdnet +libevent
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: A daemon to fake ARP replies
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A daemon to fake ARP replies
+
+http://niels.xtdnet.nl/honeyd/
+@@
+

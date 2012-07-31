@@ -1,0 +1,14 @@
+Source-Makefile: feeds/packages/utils/crypto-tools/Makefile
+Package: crypto-tools
+Version: 20080917-1
+Depends: +libopenssl
+Provides: 
+Build-Depends: libopenssl ocf-crypto-headers
+Section: utils
+Category: Utilities
+Title: OCF-Linux's crypto-tools
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	OCF-Linux's crypto-tools
+@@
+

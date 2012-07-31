@@ -1,0 +1,91 @@
+Source-Makefile: feeds/packages/lang/python/Makefile
+Package: python
+Submenu: Python
+Version: 2.5.4-2
+Depends: +libpthread +zlib +PACKAGE_python:libffi
+Provides: python-core
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: Python 2.5 programming language (full)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Python is a dynamic object-oriented programming language that can be used
+ for many kinds of software development. It offers strong support for
+ integration with other languages and tools, comes with extensive standard
+ libraries, and can be learned in a few days. Many Python programmers
+ report substantial productivity gains and feel the language encourages
+ the development of higher quality, more maintainable code.
+ .
+ This package contains the full Python install.
+
+http://www.python.org/
+@@
+Package: python-mini
+Submenu: Python
+Version: 2.5.4-2
+Depends: +libpthread +zlib
+Provides: python-core
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: Python 2.5 programming language (minimal)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Python is a dynamic object-oriented programming language that can be used
+ for many kinds of software development. It offers strong support for
+ integration with other languages and tools, comes with extensive standard
+ libraries, and can be learned in a few days. Many Python programmers
+ report substantial productivity gains and feel the language encourages
+ the development of higher quality, more maintainable code.
+  .
+  This package contains only a minimal Python install.
+
+http://www.python.org/
+@@
+Package: python-doc
+Submenu: Python
+Version: 2.5.4-2
+Depends:  python-core
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: Python interactive documentation
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Python interactive documentation
+
+http://www.python.org/
+@@
+Package: python-expat
+Submenu: Python
+Version: 2.5.4-2
+Depends:  python-core +libexpat
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: Python support for expat
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Python support for expat
+
+http://www.python.org/
+@@
+Package: python-openssl
+Submenu: Python
+Version: 2.5.4-2
+Depends:  python-core +libopenssl
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: Python support for OpenSSL
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Python support for OpenSSL
+
+http://www.python.org/
+@@
+

@@ -1,0 +1,100 @@
+Source-Makefile: feeds/packages/utils/owfs/Makefile
+Package: owfs
+Version: 2.7p13-1
+Depends: +libow +kmod-fuse +libfuse +fuse-utils
+Provides: 
+Build-Depends: libtool
+Section: utils
+Category: Utilities
+Title: OWFS - fuse file system
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	OWFS - fuse file system
+
+http://owfs.sourceforge.net/
+@@
+Package: owshell
+Version: 2.7p13-1
+Depends: +libow
+Provides: 
+Build-Depends: libtool
+Section: utils
+Category: Utilities
+Title: OWFS - shell utilities
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	OWFS - shell utilities
+
+http://owfs.sourceforge.net/
+@@
+Package: owserver
+Version: 2.7p13-1
+Depends: +libow +libpthread
+Provides: 
+Build-Depends: libtool
+Section: net
+Category: Network
+Title: OWFS - network server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	OWFS - network server
+
+http://owfs.sourceforge.net/
+@@
+Package: owhttpd
+Version: 2.7p13-1
+Depends: +libow +libpthread
+Provides: 
+Build-Depends: libtool
+Section: net
+Category: Network
+Title: OWFS - http server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	OWFS - http server
+
+http://owfs.sourceforge.net/
+@@
+Package: owftpd
+Version: 2.7p13-1
+Depends: +libow +libpthread
+Provides: 
+Build-Depends: libtool
+Section: net
+Category: Network
+Title: OWFS - ftp server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	OWFS - ftp server
+
+http://owfs.sourceforge.net/
+@@
+Package: libow
+Version: 2.7p13-1
+Depends: +libusb +libpthread
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: OWFS - common shared library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	OWFS - common shared library
+
+http://owfs.sourceforge.net/
+@@
+Package: libow-capi
+Version: 2.7p13-1
+Depends: +libow
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: OWFS - C-API library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	OWFS - C-API library
+
+http://owfs.sourceforge.net/
+@@
+

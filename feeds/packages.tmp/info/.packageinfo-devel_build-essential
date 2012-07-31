@@ -1,0 +1,14 @@
+Source-Makefile: feeds/packages/devel/build-essential/Makefile
+Package: build-essential
+Version: 1-1
+Depends: +gcc +make +binutils +patch +diffutils @NO_STRIP
+Provides: 
+Build-Depends: 
+Section: devel
+Category: Development
+Title: Build essentials 
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Build essentials 
+@@
+

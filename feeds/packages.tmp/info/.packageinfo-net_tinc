@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/tinc/Makefile
+Package: tinc
+Submenu: VPN
+Version: 1.0.8-1
+Depends: +liblzo +libopenssl +zlib
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: VPN tunneling daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	VPN tunneling daemon
+
+http://www.tinc-vpn.org/
+@@
+

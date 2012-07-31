@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/mercurial/Makefile
+Package: mercurial
+Version: 1.1.2-1
+Depends: python
+Provides: 
+Build-Depends: python
+Section: net
+Category: Network
+Title: Mercurial Source Control Management (SCM) system
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   A fast, lightweight Source Control Management system designed for efficient handling of very large distributed projects.
+
+http://www.selenic.com/mercurial/
+@@
+

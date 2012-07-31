@@ -1,0 +1,152 @@
+Source-Makefile: feeds/packages/lang/twisted/Makefile
+Package: twisted
+Submenu: Python
+Version: 2.5.0-1
+Depends: python-core +zope-interface
+Provides: 
+Build-Depends: python
+Section: lang
+Category: Languages
+Title: Python networking engine
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Python networking engine
+
+http://twistedmatrix.com/
+@@
+Package: twisted-conch
+Submenu: Python
+Version: 2.5.0-1
+Depends: python-core twisted
+Provides: 
+Build-Depends: python
+Section: lang
+Category: Languages
+Title: Twisted - Conch
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Twisted - Conch
+
+http://twistedmatrix.com/
+@@
+Package: twisted-lore
+Submenu: Python
+Version: 2.5.0-1
+Depends: python-core twisted
+Provides: 
+Build-Depends: python
+Section: lang
+Category: Languages
+Title: Twisted - Lore
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Twisted - Lore
+
+http://twistedmatrix.com/
+@@
+Package: twisted-mail
+Submenu: Python
+Version: 2.5.0-1
+Depends: python-core twisted
+Provides: 
+Build-Depends: python
+Section: lang
+Category: Languages
+Title: Twisted - Mail
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Twisted - Mail
+
+http://twistedmatrix.com/
+@@
+Package: twisted-names
+Submenu: Python
+Version: 2.5.0-1
+Depends: python-core twisted
+Provides: 
+Build-Depends: python
+Section: lang
+Category: Languages
+Title: Twisted - Names
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Twisted - Names
+
+http://twistedmatrix.com/
+@@
+Package: twisted-news
+Submenu: Python
+Version: 2.5.0-1
+Depends: python-core twisted
+Provides: 
+Build-Depends: python
+Section: lang
+Category: Languages
+Title: Twisted - News
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Twisted - News
+
+http://twistedmatrix.com/
+@@
+Package: twisted-runner
+Submenu: Python
+Version: 2.5.0-1
+Depends: python-core twisted
+Provides: 
+Build-Depends: python
+Section: lang
+Category: Languages
+Title: Twisted - Runner
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Twisted - Runner
+
+http://twistedmatrix.com/
+@@
+Package: twisted-web
+Submenu: Python
+Version: 2.5.0-1
+Depends: python-core twisted
+Provides: 
+Build-Depends: python
+Section: lang
+Category: Languages
+Title: Twisted - Web
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Twisted - Web
+
+http://twistedmatrix.com/
+@@
+Package: twisted-words
+Submenu: Python
+Version: 2.5.0-1
+Depends: python-core twisted
+Provides: 
+Build-Depends: python
+Section: lang
+Category: Languages
+Title: Twisted - Words
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Twisted - Words
+
+http://twistedmatrix.com/
+@@
+Package: zope-interface
+Submenu: Python
+Version: 2.5.0-1
+Depends: python-core
+Provides: 
+Build-Depends: python
+Section: lang
+Category: Languages
+Title: Zope interface
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Zope interface
+
+http://twistedmatrix.com/
+@@
+

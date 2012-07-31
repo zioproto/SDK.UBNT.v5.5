@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/pyserial/Makefile
+Package: pyserial
+Submenu: Python
+Version: 2.4-1
+Depends: python-core
+Provides: 
+Build-Depends: python
+Section: lang
+Category: Languages
+Title: pyserial
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   serial port python bindings
+
+http://pyserial.sourceforge.net
+@@
+

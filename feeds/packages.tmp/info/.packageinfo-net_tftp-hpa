@@ -1,0 +1,30 @@
+Source-Makefile: feeds/packages/net/tftp-hpa/Makefile
+Package: tftp-hpa
+Version: 0.48-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: An enhanced version of the BSD TFTP client
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	An enhanced version of the BSD TFTP client
+
+http://www.kernel.org/pub/software/network/tftp
+@@
+Package: tftpd-hpa
+Version: 0.48-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: An enhanced version of the BSD TFTP server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	An enhanced version of the BSD TFTP server
+
+http://www.kernel.org/pub/software/network/tftp
+@@
+

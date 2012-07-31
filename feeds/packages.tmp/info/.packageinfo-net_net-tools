@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/net/net-tools/Makefile
+Package: net-tools
+Version: 1.60-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Original net-tools
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	The net-tools package contains usual linux commands: 
+	arp, hostname, ipmaddr, iptunnel, mii-tool, nameif, netstat, plipconfig, rarp, 
+	route and slattach.
+
+http://www.tazenda.demon.co.uk/phil/net-tools/
+@@
+

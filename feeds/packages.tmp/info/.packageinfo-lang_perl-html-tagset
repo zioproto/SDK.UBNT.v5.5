@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/perl-html-tagset/Makefile
+Package: perl-html-tagset
+Submenu: Perl
+Version: 3.20-1
+Depends: perl
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: Data tables pertaining to HTML
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Data tables pertaining to HTML
+
+http://search.cpan.org/~petdance/HTML-Tagset/
+@@
+

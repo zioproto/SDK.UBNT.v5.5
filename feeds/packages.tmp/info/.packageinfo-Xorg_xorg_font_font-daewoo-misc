@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/font/font-daewoo-misc/Makefile
+Package: font-daewoo-misc
+Submenu: font
+Version: 1.0.0-2
+Depends: +xserver +font-util @DISPLAY_SUPPORT
+Provides: 
+Build-Depends: 
+Section: xorg-font
+Category: Xorg
+Title: font-daewoo-misc
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	font-daewoo-misc
+
+http://xorg.freedesktop.org/
+@@
+

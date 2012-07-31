@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/php-pear-xmlrpc/Makefile
+Package: php-pear-xmlrpc
+Submenu: PHP
+Version: 1.5.1-1
+Depends: php-pear
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: PEAR XML-RPC module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	PEAR XML-RPC module
+
+http://pear.php.net/
+@@
+

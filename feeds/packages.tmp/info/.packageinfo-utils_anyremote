@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/anyremote/Makefile
+Package: anyremote
+Version: 4.7.1-1
+Depends: +bluez-libs
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: A bluetooth remote control app
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Remote control your machine via bluetooth
+
+http://anyremote.sourceforge.net/
+@@
+

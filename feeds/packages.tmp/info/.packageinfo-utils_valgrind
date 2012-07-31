@@ -1,0 +1,21 @@
+Source-Makefile: feeds/packages/utils/valgrind/Makefile
+Package: valgrind
+Version: 3.3.1-1
+Depends: @TARGET_x86||@TARGET_rdc||@TARGET_ps3||@TARGET_magicbox||@TARGET_amcc||@TARGET_uml
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: debugging and profiling Linux programs
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Valgrind is an award-winning suite of tools for debugging and
+	profiling Linux programs. With the tools that come with Valgrind,
+	you can automatically detect many memory management and threading
+	bugs, avoiding hours of frustrating bug-hunting, making your
+	programs more stable. You can also perform detailed profiling,
+	to speed up and reduce memory use of your programs.
+
+http://www.valgrind.org
+@@
+

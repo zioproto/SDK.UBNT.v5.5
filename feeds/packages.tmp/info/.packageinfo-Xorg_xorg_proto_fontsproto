@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/proto/fontsproto/Makefile
+Package: fontsproto
+Submenu: proto
+Version: 2.0.2-3
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-proto
+Category: Xorg
+Title: fontsproto
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	fontsproto
+
+http://xorg.freedesktop.org/
+@@
+

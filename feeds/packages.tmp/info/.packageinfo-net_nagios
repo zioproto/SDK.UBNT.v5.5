@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/nagios/Makefile
+Package: nagios
+Submenu: Monitoring
+Version: 2.10-1
+Depends: +libpthread +microperl +libltdl
+Provides: 
+Build-Depends: libnotimpl
+Section: net
+Category: Network
+Title: service and network monitoring program
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	service and network monitoring program
+
+http://www.nagios.org/
+@@
+

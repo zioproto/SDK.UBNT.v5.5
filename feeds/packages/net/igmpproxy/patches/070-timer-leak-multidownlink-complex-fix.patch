@@ -1,0 +1,597 @@
+--- a/src/callout.c
++++ b/src/callout.c
+@@ -70,31 +70,50 @@ void free_all_callouts() {
+ }
+ 
+ 
+ /**
+  * elapsed_time seconds have passed; perform all the events that should
+  * happen.
+  */
+-void age_callout_queue(int elapsed_time) {
+-    struct timeOutQueue *ptr;
++void age_callout_queue(int elapsed_time)
++{
++    struct timeOutQueue *ptr, *to_last = NULL;
+     int i = 0;
++    struct timeOutQueue  *to_queue = 0; /* timeouted queue */
+ 
+-    for (ptr = queue; ptr; ptr = queue, i++) {
+-        if (ptr->time > elapsed_time) {
++	for (ptr = queue; ptr; ptr = ptr->next)
++	{
++        if (ptr->time > elapsed_time)
++        {
+             ptr->time -= elapsed_time;
+-            return;
+-        } else {
+-            elapsed_time -= ptr->time;
+-            queue = queue->next;
+-            my_log(LOG_DEBUG, 0, "About to call timeout %d (#%d)", ptr->id, i);
+-
+-            if (ptr->func)
+-                ptr->func(ptr->data);
+-            free(ptr);
++            break;
+         }
++		elapsed_time -= ptr->time;
++		to_last = ptr;
++    }
++
++    if (!to_last)
++    {
++    	return;
++    }
++
++    to_queue = queue;
++    queue = to_last->next;
++    to_last->next = NULL;
++    while (to_queue)
++    {
++    	ptr = to_queue;
++    	to_queue = to_queue->next;
++
++    	my_log(LOG_DEBUG, 0, "About to call timeout %d (#%d)", ptr->id, i);
++
++    	if (ptr->func)
++    		ptr->func(ptr->data);
++    	free(ptr);
++    	i++;
+     }
+ }
+ 
+ /**
+  * Return in how many seconds age_callout_queue() would like to be called.
+  * Return -1 if there are no events pending.
+  */
+@@ -172,33 +191,14 @@ int timer_setTimer(int delay, timer_f ac
+             node->id, i, node->time);
+     debugQueue();
+ 
+     return node->id;
+ }
+ 
+ /**
+-*   returns the time until the timer is scheduled 
+-*/
+-int timer_leftTimer(int timer_id) {
+-    struct timeOutQueue *ptr;
+-    int left = 0;
+-
+-    if (!timer_id)
+-        return -1;
+-
+-    for (ptr = queue; ptr; ptr = ptr->next) {
+-        left += ptr->time;
+-        if (ptr->id == timer_id) {
+-            return left;
+-        }
+-    }
+-    return -1;
+-}
+-
+-/**
+ *   clears the associated timer.  Returns 1 if succeeded. 
+ */
+ int timer_clearTimer(int  timer_id) {
+     struct timeOutQueue  *ptr, *prev;
+     int i = 0;
+ 
+     if (!timer_id)
+@@ -222,16 +222,14 @@ int timer_clearTimer(int  timer_id) {
+             else
+                 prev->next = ptr->next;
+ 
+             /* increment next node if any */
+             if (ptr->next != 0)
+                 (ptr->next)->time += ptr->time;
+ 
+-            if (ptr->data)
+-                free(ptr->data);
+             my_log(LOG_DEBUG, 0, "deleted timer %d (#%d)", ptr->id, i);
+             free(ptr);
+             debugQueue();
+             return 1;
+         }
+         prev = ptr;
+         ptr = ptr->next;
+--- a/src/igmpproxy.c
++++ b/src/igmpproxy.c
+@@ -237,17 +237,16 @@ void igmpProxyRun() {
+     fd_set  ReadFDS;
+     socklen_t dummy = 0;
+     struct  timeval  curtime, lasttime, difftime, tv; 
+     // The timeout is a pointer in order to set it to NULL if nessecary.
+     struct  timeval  *timeout = &tv;
+ 
+     // Initialize timer vars
+-    difftime.tv_usec = 0;
+-    gettimeofday(&curtime, NULL);
+-    lasttime = curtime;
++	difftime.tv_usec = 0;
++	gettimeofday(&lasttime, NULL);
+ 
+     // First thing we send a membership query in downstream VIF's...
+     sendGeneralMembershipQuery();
+ 
+     // Loop until the end...
+     for (;;) {
+ 
+@@ -279,15 +278,43 @@ void igmpProxyRun() {
+         Rt = select( MaxFD +1, &ReadFDS, NULL, NULL, timeout );
+ 
+         // log and ignore failures
+         if( Rt < 0 ) {
+             my_log( LOG_WARNING, errno, "select() failure" );
+             continue;
+         }
+-        else if( Rt > 0 ) {
++
++        // At this point, we can handle timeouts...
++        // Handle timeouts before sockets processing because they may
++        // add new timeouts
++
++		/*
++		 * If the select timed out, then there's no other
++		 * activity to account for and we don't need to
++		 * call gettimeofday.
++		 */
++		gettimeofday(&curtime, NULL);
++		difftime.tv_sec = curtime.tv_sec - lasttime.tv_sec;
++		difftime.tv_usec += curtime.tv_usec - lasttime.tv_usec;
++		while (difftime.tv_usec > 1000000) {
++			difftime.tv_sec++;
++			difftime.tv_usec -= 1000000;
++		}
++		if (difftime.tv_usec < 0) {
++			difftime.tv_sec--;
++			difftime.tv_usec += 1000000;
++		}
++		if (difftime.tv_sec < 0)
++		{
++			difftime.tv_sec = 0;
++		}
++		age_callout_queue(difftime.tv_sec);
++        memcpy(&lasttime, &curtime, sizeof(lasttime));
++
++        if( Rt > 0 ) {
+ 
+             // Read IGMP request, and handle it...
+             if( FD_ISSET( MRouterFD, &ReadFDS ) ) {
+     
+                 recvlen = recvfrom(MRouterFD, recv_buf, RECV_BUF_SIZE,
+                                    0, NULL, &dummy);
+                 if (recvlen < 0) {
+@@ -296,43 +323,14 @@ void igmpProxyRun() {
+                 }
+                 
+ 
+                 acceptIgmp(recvlen);
+             }
+         }
+ 
+-        // At this point, we can handle timeouts...
+-        do {
+-            /*
+-             * If the select timed out, then there's no other
+-             * activity to account for and we don't need to
+-             * call gettimeofday.
+-             */
+-            if (Rt == 0) {
+-                curtime.tv_sec = lasttime.tv_sec + secs;
+-                curtime.tv_usec = lasttime.tv_usec;
+-                Rt = -1; /* don't do this next time through the loop */
+-            } else {
+-                gettimeofday(&curtime, NULL);
+-            }
+-            difftime.tv_sec = curtime.tv_sec - lasttime.tv_sec;
+-            difftime.tv_usec += curtime.tv_usec - lasttime.tv_usec;
+-            while (difftime.tv_usec > 1000000) {
+-                difftime.tv_sec++;
+-                difftime.tv_usec -= 1000000;
+-            }
+-            if (difftime.tv_usec < 0) {
+-                difftime.tv_sec--;
+-                difftime.tv_usec += 1000000;
+-            }
+-            lasttime = curtime;
+-            if (secs == 0 || difftime.tv_sec > 0)
+-                age_callout_queue(difftime.tv_sec);
+-            secs = -1;
+-        } while (difftime.tv_sec > 0);
+ 
+     }
+ 
+ }
+ 
+ /*
+  * Signal handler.  Take note of the fact that the signal arrived
+--- a/src/igmpproxy.h
++++ b/src/igmpproxy.h
+@@ -243,15 +243,14 @@ int leaveMcGroup( int UdpSock, struct If
+  */
+ void initRouteTable();
+ void clearAllRoutes();
+ int insertRoute(uint32_t group, int ifx);
+ int activateRoute(uint32_t group, uint32_t originAddr);
+ void ageActiveRoutes();
+ void setRouteLastMemberMode(uint32_t group);
+-int lastMemberGroupAge(uint32_t group);
+ 
+ /* request.c
+  */
+ void acceptGroupReport(uint32_t src, uint32_t group, uint8_t type);
+ void acceptLeaveMessage(uint32_t src, uint32_t group);
+ void sendGeneralMembershipQuery();
+ 
+@@ -261,15 +260,14 @@ typedef void (*timer_f)(void *);
+ 
+ void callout_init();
+ void free_all_callouts();
+ void age_callout_queue(int);
+ int timer_nextTimer();
+ int timer_setTimer(int, timer_f, void *);
+ int timer_clearTimer(int);
+-int timer_leftTimer(int);
+ 
+ /* confread.c
+  */
+ #define MAX_TOKEN_LENGTH    30
+ 
+ int openConfigFile(char *filename);
+ void closeConfigFile();
+--- a/src/request.c
++++ b/src/request.c
+@@ -35,24 +35,14 @@
+ *
+ *   Functions for recieveing and processing IGMP requests.
+ *
+ */
+ 
+ #include "igmpproxy.h"
+ 
+-// Prototypes...
+-void sendGroupSpecificMemberQuery(void *argument);  
+-    
+-typedef struct {
+-    uint32_t      group;
+-    uint32_t      vifAddr;
+-    short       started;
+-} GroupVifDesc;
+-
+-
+ /**
+ *   Handles incoming membership reports, and
+ *   appends them to the routing table.
+ */
+ void acceptGroupReport(uint32_t src, uint32_t group, uint8_t type) {
+     struct IfDesc  *sourceVif;
+ 
+@@ -118,69 +108,24 @@ void acceptLeaveMessage(uint32_t src, ui
+             inetFmt(src,s1));
+         return;
+     }
+ 
+     // We have a IF so check that it's an downstream IF.
+     if(sourceVif->state == IF_STATE_DOWNSTREAM) {
+ 
+-        GroupVifDesc   *gvDesc;
+-        gvDesc = (GroupVifDesc*) malloc(sizeof(GroupVifDesc));
+-
+         // Tell the route table that we are checking for remaining members...
+         setRouteLastMemberMode(group);
+ 
+-        // Call the group spesific membership querier...
+-        gvDesc->group = group;
+-        gvDesc->vifAddr = sourceVif->InAdr.s_addr;
+-        gvDesc->started = 0;
+-
+-        sendGroupSpecificMemberQuery(gvDesc);
+-
+     } else {
+         // just ignore the leave request...
+         my_log(LOG_DEBUG, 0, "The found if for %s was not downstream. Ignoring leave request.", inetFmt(src, s1));
+     }
+ }
+ 
+ /**
+-*   Sends a group specific member report query until the 
+-*   group times out...
+-*/
+-void sendGroupSpecificMemberQuery(void *argument) {
+-    struct  Config  *conf = getCommonConfig();
+-
+-    // Cast argument to correct type...
+-    GroupVifDesc   *gvDesc = (GroupVifDesc*) argument;
+-
+-    if(gvDesc->started) {
+-        // If aging returns false, we don't do any further action...
+-        if(!lastMemberGroupAge(gvDesc->group)) {
+-            return;
+-        }
+-    } else {
+-        gvDesc->started = 1;
+-    }
+-
+-    // Send a group specific membership query...
+-    sendIgmp(gvDesc->vifAddr, gvDesc->group, 
+-             IGMP_MEMBERSHIP_QUERY,
+-             conf->lastMemberQueryInterval * IGMP_TIMER_SCALE, 
+-             gvDesc->group, 0);
+-
+-    my_log(LOG_DEBUG, 0, "Sent membership query from %s to %s. Delay: %d",
+-        inetFmt(gvDesc->vifAddr,s1), inetFmt(gvDesc->group,s2),
+-        conf->lastMemberQueryInterval);
+-
+-    // Set timeout for next round...
+-    timer_setTimer(conf->lastMemberQueryInterval, sendGroupSpecificMemberQuery, gvDesc);
+-
+-}
+-
+-
+-/**
+ *   Sends a general membership query on downstream VIFs
+ */
+ void sendGeneralMembershipQuery() {
+     struct  Config  *conf = getCommonConfig();
+     struct  IfDesc  *Dp;
+     int             Ix;
+ 
+--- a/src/rttable.c
++++ b/src/rttable.c
+@@ -52,14 +52,17 @@ struct RouteTable {
+     // Keeps the upstream membership state...
+     short               upstrState;     // Upstream membership state.
+ 
+     // These parameters contain aging details.
+     uint32_t              ageVifBits;     // Bits representing aging VIFs.
+     int                 ageValue;       // Downcounter for death.          
+     int                 ageActivity;    // Records any acitivity that notes there are still listeners.
++
++    int					timer_active; /* is true when route has group specific timer active */
++    int					timer_id; /* timer Id when above is true */
+ };
+ 
+                  
+ // Keeper for the routing table...
+ static struct RouteTable   *routing_table;
+ 
+ // Prototypes
+@@ -146,14 +149,29 @@ void sendJoinLeaveUpstream(struct RouteT
+             leaveMcGroup( getMcGroupSock(), upstrIf, route->group );
+ 
+             route->upstrState = ROUTESTATE_NOTJOINED;
+         }
+     }
+ }
+ 
++static void freeRoute(struct RouteTable **croute)
++{
++	if (!*croute)
++		return;
++	/* Cancel active timer if any */
++	if ((*croute)->timer_active)
++	{
++		timer_clearTimer((*croute)->timer_id);
++		(*croute)->timer_active = 0;
++	}
++	// Clear memory, and set pointer to next route...
++	free(*croute);
++	*croute = NULL;
++}
++
+ /**
+ *   Clear all routes from routing table, and alerts Leaves upstream.
+ */
+ void clearAllRoutes() {
+     struct RouteTable   *croute, *remainroute;
+ 
+     // Loop through all routes...
+@@ -170,15 +188,15 @@ void clearAllRoutes() {
+             my_log(LOG_WARNING, 0, "The removal from Kernel failed.");
+         }
+ 
+         // Send Leave message upstream.
+         sendJoinLeaveUpstream(croute, 0);
+ 
+         // Clear memory, and set pointer to next route...
+-        free(croute);
++        freeRoute(&croute);
+     }
+     routing_table = NULL;
+ 
+     // Send a notice that the routing table is empty...
+     my_log(LOG_NOTICE, 0, "All routes removed. Routing table is empty.");
+ }
+                  
+@@ -372,17 +390,19 @@ int activateRoute(uint32_t group, uint32
+                     inetFmt(croute->originAddr, s2),
+                     inetFmt(originAddr, s3));
+             }
+             croute->originAddr = originAddr;
+         }
+ 
+         // Only update kernel table if there are listeners !
+-        if(croute->vifBits > 0) {
++        /* Above is not true anymore: update immediately -
++         * even if no listeners. */
++/*        if(croute->vifBits > 0) { */
+             result = internUpdateKernelRoute(croute, 1);
+-        }
++/*        } */
+     }
+     logRouteTable("Activate Route");
+ 
+     return result;
+ }
+ 
+ 
+@@ -407,14 +427,73 @@ void ageActiveRoutes() {
+             internAgeRoute(croute);
+         }
+     }
+     logRouteTable("Age active routes");
+ }
+ 
+ /**
++*   Ages groups in the last member check state. If the
++*   route is not found, or not in this state, 0 is returned.
++*/
++int lastMemberGroupAge(struct RouteTable *croute)
++{
++	if (croute->upstrState == ROUTESTATE_CHECK_LAST_MEMBER)
++	{
++		return !internAgeRoute(croute);
++	}
++	return 0;
++}
++
++/**
++*   Sends a group specific member report query until the
++*   group times out...
++*/
++void sendGroupSpecificMemberQuery(void *argument)
++{
++	struct Config *conf = getCommonConfig();
++	// Cast argument to correct type...
++	struct RouteTable *croute = (struct RouteTable *)argument;
++	struct IfDesc *Dp;
++	int Ix;
++
++	if (croute->timer_active)
++	{
++		// If aging returns false, we don't do any further action...
++		if(!lastMemberGroupAge(croute))
++		{
++			croute->timer_active = 0;
++			return;
++		}
++	}
++
++	// Loop through all downstream vifs...
++	for ( Ix = 0; (Dp = getIfByIx(Ix)); Ix++ )
++	{
++		if (Dp->InAdr.s_addr && !(Dp->Flags & IFF_LOOPBACK) &&
++				Dp->state == IF_STATE_DOWNSTREAM)
++		{
++			// Send a group specific membership query...
++			sendIgmp(Dp->InAdr.s_addr, croute->group,
++					 IGMP_MEMBERSHIP_QUERY,
++					 conf->lastMemberQueryInterval * IGMP_TIMER_SCALE,
++					 croute->group, 0);
++
++			my_log(LOG_DEBUG, 0, "Sent membership query from %s to %s. Delay: %d",
++				inetFmt(Dp->InAdr.s_addr, s1), inetFmt(croute->group, s2),
++				conf->lastMemberQueryInterval);
++		}
++	}
++
++	// Set timeout for next round...
++	croute->timer_id = timer_setTimer(conf->lastMemberQueryInterval,
++			sendGroupSpecificMemberQuery, croute);
++	croute->timer_active = 1;
++}
++
++/**
+ *   Should be called when a leave message is recieved, to
+ *   mark a route for the last member probe state.
+ */
+ void setRouteLastMemberMode(uint32_t group) {
+     struct Config       *conf = getCommonConfig();
+     struct RouteTable   *croute;
+ 
+@@ -425,34 +504,22 @@ void setRouteLastMemberMode(uint32_t gro
+             // Send a leave message right away..
+             sendJoinLeaveUpstream(croute, 0);
+         }
+         // Set the routingstate to Last member check...
+         croute->upstrState = ROUTESTATE_CHECK_LAST_MEMBER;
+         // Set the count value for expiring... (-1 since first aging)
+         croute->ageValue = conf->lastMemberQueryCount;
+-    }
+-}
+-
+-
+-/**
+-*   Ages groups in the last member check state. If the
+-*   route is not found, or not in this state, 0 is returned.
+-*/
+-int lastMemberGroupAge(uint32_t group) {
+-    struct RouteTable   *croute;
+ 
+-    croute = findRoute(group);
+-    if(croute!=NULL) {
+-        if(croute->upstrState == ROUTESTATE_CHECK_LAST_MEMBER) {
+-            return !internAgeRoute(croute);
+-        } else {
+-            return 0;
++        if (croute->timer_active)
++        {
++        	timer_clearTimer(croute->timer_id);
++        	croute->timer_active = 0;
+         }
++        sendGroupSpecificMemberQuery(croute);
+     }
+-    return 0;
+ }
+ 
+ /**
+ *   Remove a specified route. Returns 1 on success,
+ *   and 0 if route was not found.
+ */
+ int removeRoute(struct RouteTable*  croute) {
+@@ -494,16 +561,15 @@ int removeRoute(struct RouteTable*  crou
+     } else {
+         croute->prevroute->nextroute = croute->nextroute;
+         if(croute->nextroute != NULL) {
+             croute->nextroute->prevroute = croute->prevroute;
+         }
+     }
+     // Free the memory, and set the route to NULL...
+-    free(croute);
+-    croute = NULL;
++    freeRoute(&croute);
+ 
+     logRouteTable("Remove route");
+ 
+     return result;
+ }
+ 
+ 
+@@ -562,14 +628,16 @@ int internAgeRoute(struct RouteTable*  c
+         } else {
+ 
+             my_log(LOG_DEBUG, 0, "Removing group %s. Died of old age.",
+                          inetFmt(croute->group,s1));
+ 
+             // No activity was registered within the timelimit, so remove the route.
+             removeRoute(croute);
++            /* Route deleted already - get out */
++            return 1;
+         }
+         // Tell that the route was updated...
+         result = 1;
+     }
+ 
+     // The aging vif bits must be reset for each round...
+     BIT_ZERO(croute->ageVifBits);

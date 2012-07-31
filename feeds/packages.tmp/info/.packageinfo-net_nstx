@@ -1,0 +1,30 @@
+Source-Makefile: feeds/packages/net/nstx/Makefile
+Package: nstx
+Version: 1.1-beta6-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: allows you to pass IP packets via DNS queries client version
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	nstx client version
+
+http://savannah.nongnu.org/projects/nstx/
+@@
+Package: nstxd
+Version: 1.1-beta6-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: allows you to pass IP packets via DNS queries server version
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	nstx server version
+
+http://savannah.nongnu.org/projects/nstx/
+@@
+

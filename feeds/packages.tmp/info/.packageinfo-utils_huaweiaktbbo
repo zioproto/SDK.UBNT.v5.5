@@ -1,0 +1,14 @@
+Source-Makefile: feeds/packages/utils/huaweiaktbbo/Makefile
+Package: huaweiaktbbo
+Version: 1
+Depends: +libusb
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Huawei e220 configuration tool
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Huawei e220 configuration tool
+@@
+

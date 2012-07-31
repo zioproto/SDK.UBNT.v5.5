@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/proto/windowswmproto/Makefile
+Package: windowswmproto
+Submenu: proto
+Version: 1.0.3-3
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-proto
+Category: Xorg
+Title: windowswmproto
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	windowswmproto
+
+http://xorg.freedesktop.org/
+@@
+

@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/imspector/Makefile
+Package: imspector
+Version: 0.7-1
+Depends: +libopenssl +libstdcpp +libmysqlclient +libsqlite3 +libpq
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: IMSpector is an Instant Messenger proxy
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	IMSpector is an Instant Messenger proxy with monitoring and blocking, and content-filtering capabilities.
+
+http://www.imspector.org
+@@
+

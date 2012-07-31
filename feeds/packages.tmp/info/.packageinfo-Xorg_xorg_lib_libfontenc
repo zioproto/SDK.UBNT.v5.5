@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/lib/libfontenc/Makefile
+Package: libfontenc
+Submenu: libraries
+Version: 1.0.4-4
+Depends: +zlib
+Provides: 
+Build-Depends: xproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: libfontenc
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libfontenc
+
+http://xorg.freedesktop.org/
+@@
+

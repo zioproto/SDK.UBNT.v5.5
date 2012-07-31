@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/iksemel/Makefile
+Package: libiksemel
+Version: 1.3-1
+Depends: +libgnutls +libtasn1
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: Iksemel Jabber Library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Iksemel Jabber Library
+
+http://code.google.com/p/iksemel/
+@@
+

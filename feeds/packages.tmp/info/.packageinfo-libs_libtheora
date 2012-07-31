@@ -1,0 +1,21 @@
+Source-Makefile: feeds/packages/libs/libtheora/Makefile
+Package: libtheora
+Version: 1.0-3
+Depends: +libogg
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: libtheora
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: Theora is Xiph.Org's first publicly released video codec, intended
+for use within the Foundation's Ogg multimedia streaming system.
+Theora is derived directly from On2's VP3 codec; Currently the
+encoders are nearly identical, but Theora will make use of new
+features supported by the decoder to improve over what is
+is possible with VP3.
+
+http://xiph.org/theora/
+@@
+

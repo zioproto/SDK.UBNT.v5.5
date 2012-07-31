@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/amule/Makefile
+Package: amule
+Submenu: P2P
+Version: 2.1.3-2
+Depends: +libpng +libpthread +libncurses +libreadline +libwxbase
+Provides: 
+Build-Depends: libgd
+Section: net
+Category: Network
+Title: A multi-platform eMule-like ed2k client
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A multi-platform eMule-like ed2k client
+
+http://www.amule.org/
+@@
+

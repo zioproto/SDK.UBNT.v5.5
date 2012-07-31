@@ -1,0 +1,123 @@
+10
+
+dir
+32837
+svn://svn.openwrt.org/openwrt/branches/packages_8.09/Xorg/xorg/driver
+svn://svn.openwrt.org/openwrt
+
+
+
+2009-01-09T17:23:58.355499Z
+13953
+nbd
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3c298f89-4303-0410-b956-a3cf2f4a3e73
+
+template.mk
+file
+
+
+
+
+2012-07-25T12:17:25.865176Z
+56cef0ec74f4303132f66d226b0e8ea4
+2008-12-09T23:24:25.116320Z
+13571
+mirko
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+2036
+
+xf86-video-fbdev
+dir
+
+xf86-input-keyboard
+dir
+
+xf86-video-intel
+dir
+
+xf86-video-ati
+dir
+
+xf86-video-vesa
+dir
+
+xf86-input-mouse
+dir
+
+packages
+file
+
+
+
+
+2012-07-25T12:17:25.865176Z
+107ded6d860217e6cf47b249bd82bd09
+2008-12-09T23:24:25.116320Z
+13571
+mirko
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+197
+
+xf86-input-evdev
+dir
+
+xf86-video-geode
+dir
+
+xf86-video-nv
+dir
+

@@ -1,0 +1,20 @@
+Source-Makefile: feeds/packages/net/ndyndns/Makefile
+Package: ndyndns
+Version: 1.12-1
+Depends: +libcurl +libopenssl
+Provides: 
+Build-Depends: libtool
+Section: net
+Category: Network
+Title: DynDNS.com update daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	The ndyndns daemon is an update client for DynDNS.com. It
+	checks for an IP address change every two minutes, avoids
+	unnecessary updates, reports errors, logs to syslog, and
+	generally complies with everything required of a proper dyndns
+	client.
+
+http://ndyndns.googlecode.com/
+@@
+

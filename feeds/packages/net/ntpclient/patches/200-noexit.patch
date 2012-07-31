@@ -1,0 +1,222 @@
+--- a/Makefile
++++ b/Makefile
+@@ -17,15 +17,15 @@ CFLAGS += -DENABLE_REPLAY
+ LDFLAGS += -lrt
+ 
+ all: ntpclient
+ 
+ test: ntpclient
+ 	./ntpclient -d -r <test.dat
+ 
+-ntpclient: ntpclient.o phaselock.o
++ntpclient: ntpclient.o phaselock.o resolv.o
+ 
+ ntpclient.o phaselock.o: ntpclient.h
+ 
+ adjtimex: adjtimex.o
+ 
+ clean:
+ 	rm -f ntpclient adjtimex *.o
+--- a/ntpclient.c
++++ b/ntpclient.c
+@@ -128,14 +128,15 @@ struct ntp_control {
+ 	int live;
+ 	int set_clock;   /* non-zero presumably needs root privs */
+ 	int probe_count;
+ 	int cycle_time;
+ 	int goodness;
+ 	int cross_check;
+ 	char serv_addr[4];
++	int noexit;
+ };
+ 
+ /* prototypes for some local routines */
+ static void send_packet(int usd, u32 time_sent[2]);
+ static int rfc1305print(u32 *data, struct ntptime *arrival, struct ntp_control *ntpc, int *error);
+ /* static void udp_handle(int usd, char *data, int data_len, struct sockaddr *sa_source, int sa_len); */
+ 
+@@ -435,28 +436,32 @@ fail:
+ 	printf("%d %.5d.%.3d  rejected packet\n",
+ 		arrival->coarse/86400, arrival->coarse%86400,
+ 		arrival->fine/4294967);
+ #endif
+ 	return 1;
+ }
+ 
+-static void stuff_net_addr(struct in_addr *p, char *hostname)
++extern void resolv_init(void);
++
++static int stuff_net_addr(struct in_addr *p, char *hostname)
+ {
+ 	struct hostent *ntpserver;
++	resolv_init();
+ 	ntpserver=gethostbyname(hostname);
+ 	if (ntpserver == NULL) {
+ 		herror(hostname);
+-		exit(1);
++		return 1;
+ 	}
+ 	if (ntpserver->h_length != 4) {
+ 		/* IPv4 only, until I get a chance to test IPv6 */
+ 		fprintf(stderr,"oops %d\n",ntpserver->h_length);
+-		exit(1);
++		return 1;
+ 	}
+ 	memcpy(&(p->s_addr),ntpserver->h_addr_list[0],4);
++	return 0;
+ }
+ 
+ static void setup_receive(int usd, unsigned int interface, short port)
+ {
+ 	struct sockaddr_in sa_rcvr;
+ 	memset(&sa_rcvr,0,sizeof sa_rcvr);
+ 	sa_rcvr.sin_family=AF_INET;
+@@ -466,24 +471,27 @@ static void setup_receive(int usd, unsig
+ 		perror("bind");
+ 		fprintf(stderr,"could not bind to udp port %d\n",port);
+ 		exit(1);
+ 	}
+ 	/* listen(usd,3); this isn't TCP; thanks Alexander! */
+ }
+ 
+-static void setup_transmit(int usd, char *host, short port, struct ntp_control *ntpc)
++static int setup_transmit(int usd, char *host, short port, struct ntp_control *ntpc)
+ {
+ 	struct sockaddr_in sa_dest;
+ 	memset(&sa_dest,0,sizeof sa_dest);
+ 	sa_dest.sin_family=AF_INET;
+-	stuff_net_addr(&(sa_dest.sin_addr),host);
++	if (stuff_net_addr(&(sa_dest.sin_addr),host) != 0)
++		return 1;
+ 	memcpy(ntpc->serv_addr,&(sa_dest.sin_addr),4); /* XXX asumes IPv4 */
+ 	sa_dest.sin_port=htons(port);
+ 	if (connect(usd,(struct sockaddr *)&sa_dest,sizeof sa_dest)==-1)
+-		{perror("connect");exit(1);}
++		{perror("connect"); exit(1);}
++
++	return 0;
+ }
+ 
+ static void primary_loop(int usd, struct ntp_control *ntpc)
+ {
+ 	fd_set fds;
+ 	struct sockaddr sa_xmit;
+ 	int i, pack_len, probes_sent, error;
+@@ -589,36 +597,39 @@ static void usage(char *argv0)
+ 	" [-d]"
+ #endif
+ 	" [-f frequency] [-g goodness] -h hostname\n"
+ 	"\t[-i interval] [-l] [-p port] [-q min_delay]"
+ #ifdef ENABLE_REPLAY
+ 	" [-r]"
+ #endif
+-	" [-s] [-t]\n",
++	" [-s] [-t] [-n]\n",
+ 	argv0);
+ }
+ 
+ int main(int argc, char *argv[]) {
+ 	int usd;  /* socket */
+ 	int c;
++	int ret;
++	int retry_count;
+ 	/* These parameters are settable from the command line
+ 	   the initializations here provide default behavior */
+ 	short int udp_local_port=0;   /* default of 0 means kernel chooses */
+ 	char *hostname=NULL;          /* must be set */
+ 	int initial_freq;             /* initial freq value to use */
+ 	struct ntp_control ntpc;
+ 	ntpc.live=0;
+ 	ntpc.set_clock=0;
+ 	ntpc.probe_count=0;           /* default of 0 means loop forever */
+ 	ntpc.cycle_time=600;          /* seconds */
+ 	ntpc.goodness=0;
+ 	ntpc.cross_check=1;
++	ntpc.noexit=0;
+ 
+ 	for (;;) {
+-		c = getopt( argc, argv, "c:" DEBUG_OPTION "f:g:h:i:lp:q:" REPLAY_OPTION "stD");
++		c = getopt( argc, argv, "c:" DEBUG_OPTION "f:g:h:i:lp:q:" REPLAY_OPTION "stDn");
+ 		if (c == EOF) break;
+ 		switch (c) {
+ 			case 'c':
+ 				ntpc.probe_count = atoi(optarg);
+ 				break;
+ #ifdef ENABLE_DEBUG
+ 			case 'd':
+@@ -663,14 +674,18 @@ int main(int argc, char *argv[]) {
+ 				(ntpc.cross_check)=0;
+ 				break;
+ 
+ 			case 'D':
+ 				daemon();
+ 				break;
+ 
++			case 'n':
++				ntpc.noexit=1;
++				break;
++
+ 			default:
+ 				usage(argv[0]);
+ 				exit(1);
+ 		}
+ 	}
+ 	if (hostname == NULL) {
+ 		usage(argv[0]);
+@@ -693,26 +708,39 @@ int main(int argc, char *argv[]) {
+ 		"  -g goodness    %d\n"
+ 		"  -h hostname    %s\n"
+ 		"  -i interval    %d\n"
+ 		"  -l live        %d\n"
+ 		"  -p local_port  %d\n"
+ 		"  -q min_delay   %f\n"
+ 		"  -s set_clock   %d\n"
+-		"  -x cross_check %d\n",
++		"  -x cross_check %d\n"
++		"  -n noexit      %d\n",
+ 		ntpc.probe_count, debug, ntpc.goodness,
+ 		hostname, ntpc.cycle_time, ntpc.live, udp_local_port, min_delay,
+-		ntpc.set_clock, ntpc.cross_check );
++		ntpc.set_clock, ntpc.cross_check, ntpc.noexit);
+ 	}
+ 
+ 	/* Startup sequence */
+ 	if ((usd=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP))==-1)
+ 		{perror ("socket");exit(1);}
+ 
+ 	setup_receive(usd, INADDR_ANY, udp_local_port);
+ 
+-	setup_transmit(usd, hostname, NTP_PORT, &ntpc);
++	for (retry_count=1;;retry_count++) {
++		ret=setup_transmit(usd, hostname, NTP_PORT, &ntpc);
++		if (ret==0 || ntpc.noexit==0 || (ntpc.probe_count>0 && retry_count>=ntpc.probe_count))
++			break;
++
++		sleep(MIN_INTERVAL);
++	}
++
++	if (ret!=0)
++		exit(ret);
++
++	if (ntpc.probe_count>0)
++		ntpc.probe_count-=retry_count;
+ 
+ 	primary_loop(usd, &ntpc);
+ 
+ 	close(usd);
+ 	return 0;
+ }
+--- /dev/null
++++ b/resolv.c
+@@ -0,0 +1,11 @@
++#define _BSD_SOURCE
++
++#include <sys/types.h>
++#include <netinet/in.h>
++#include <netdb.h>
++#include <arpa/nameser.h>
++#include <resolv.h>
++
++void resolv_init(void) {
++	res_init();
++}

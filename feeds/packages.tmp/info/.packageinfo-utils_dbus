@@ -1,0 +1,30 @@
+Source-Makefile: feeds/packages/utils/dbus/Makefile
+Package: dbus
+Version: 1.2.3-2
+Depends: +libexpat
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Simple interprocess messaging system (daemon)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Simple interprocess messaging system (daemon)
+
+http://dbus.freedesktop.org/
+@@
+Package: dbus-utils
+Version: 1.2.3-2
+Depends: dbus
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Simple interprocess messaging system (utilities)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Simple interprocess messaging system (utilities)
+
+http://dbus.freedesktop.org/
+@@
+

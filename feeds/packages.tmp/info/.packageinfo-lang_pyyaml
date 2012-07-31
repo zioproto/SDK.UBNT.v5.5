@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/pyyaml/Makefile
+Package: pyyaml
+Submenu: Python
+Version: 3.08-1
+Depends: python-core +libyaml
+Provides: 
+Build-Depends: python
+Section: lang
+Category: Languages
+Title: pyyaml
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   yaml python bindings
+
+http://pyyaml.org
+@@
+

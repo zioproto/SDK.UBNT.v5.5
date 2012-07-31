@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/net/opendchub/Makefile
+Package: opendchub
+Submenu: P2P
+Version: 0.7.15-1
+Depends: +libopenssl +libpthread
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: software for the Direct Connect network
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Open DC hub is a Unix/Linux version of the hub software
+	for the Direct Connect network
+
+http://opendchub.sourceforge.net
+@@
+

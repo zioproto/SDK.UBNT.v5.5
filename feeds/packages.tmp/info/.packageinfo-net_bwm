@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/bwm/Makefile
+Package: bwm
+Version: 1.1.0-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: A very tiny bandwidth monitor
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A very tiny bandwidth monitor
+
+http://ftp.debian.org/debian/pool/main/b/bwm
+@@
+

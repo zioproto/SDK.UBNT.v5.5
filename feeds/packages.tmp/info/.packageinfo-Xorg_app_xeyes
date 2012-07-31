@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/app/xeyes/Makefile
+Package: xeyes
+Submenu: app
+Version: 1.0.1-3
+Depends: +libX11 +libXt +libXext +libXmu
+Provides: 
+Build-Depends: 
+Section: xorg-app
+Category: Xorg
+Title: xeyes
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xeyes
+
+http://xorg.freedesktop.org/
+@@
+

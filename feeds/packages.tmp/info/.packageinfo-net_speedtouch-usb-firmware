@@ -1,0 +1,15 @@
+Source-Makefile: feeds/packages/net/speedtouch-usb-firmware/Makefile
+Package: speedtouch-usb-firmware
+Submenu: firmware
+Version: 3-012
+Depends: +kmod-usb-atm +kmod-usb-atm-speedtouch @LINUX_2_6
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: SpeedTouch 330 ADSL USB firmware
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	This package add the firmware for SpeedTouch330 ADSL USB modem.
+@@
+

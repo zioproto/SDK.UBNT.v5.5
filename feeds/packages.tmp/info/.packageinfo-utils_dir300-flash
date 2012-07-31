@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/dir300-flash/Makefile
+Package: dir300-flash
+Version: 0.9.9-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Flashes a custom firmware on the DIR-300 wireless router
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Flashes a custom firmware on the DIR-300 wireless router
+
+http://x-alina.freifunk-potsdam.de/
+@@
+

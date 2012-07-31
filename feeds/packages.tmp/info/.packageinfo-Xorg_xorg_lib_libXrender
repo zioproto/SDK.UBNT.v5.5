@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/lib/libXrender/Makefile
+Package: libXrender
+Submenu: libraries
+Version: 0.9.4-4
+Depends: +libX11
+Provides: 
+Build-Depends: renderproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: libXrender
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libXrender
+
+http://xorg.freedesktop.org/
+@@
+

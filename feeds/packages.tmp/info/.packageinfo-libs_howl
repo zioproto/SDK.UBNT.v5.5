@@ -1,0 +1,75 @@
+Source-Makefile: feeds/packages/libs/howl/Makefile
+Package: libhowl
+Version: 1.0.0-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: Zeroconf networking implementation (library)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Howl is a cross-platform implementation of Zeroconf networking.	
+	This package contains the Howl shared libraries, used by other programs.
+
+http://www.porchdogsoft.com/products/howl/
+@@
+Package: howl-autoipd
+Version: 1.0.0-1
+Depends: +libhowl
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: An IPv4 Link-Local address self-assigner daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Howl is a cross-platform implementation of Zeroconf networking.	
+	This package contains an IPv4 Link-Local address self-assigner daemon.
+
+http://www.porchdogsoft.com/products/howl/
+@@
+Package: howl-mdnsresponder
+Version: 1.0.0-1
+Depends: +libhowl
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: An mDNS (Multicast DNS) service responder daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Howl is a cross-platform implementation of Zeroconf networking.	
+	This package contains an mDNS (Multicast DNS) service responder daemon.
+
+http://www.porchdogsoft.com/products/howl/
+@@
+Package: howl-nifd
+Version: 1.0.0-1
+Depends: +libhowl
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: A network interface monitor daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	This package contains a network interface monitor daemon.
+
+http://www.porchdogsoft.com/products/howl/
+@@
+Package: howl-utils
+Version: 1.0.0-1
+Depends: +libhowl
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Zeroconf networking implementation (utilities)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	This package contains mDNS (Multicast DNS) client utilities.
+
+http://www.porchdogsoft.com/products/howl/
+@@
+

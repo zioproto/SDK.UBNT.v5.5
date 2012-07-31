@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/bandwidthd/Makefile
+Package: bandwidthd
+Version: 2.0.1-1
+Depends: +libpng +libgd +libpcap
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Bandwidthd
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Bandwidthd
+
+http://bandwidthd.sourceforge.net/
+@@
+

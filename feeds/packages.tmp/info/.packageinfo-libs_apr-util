@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/apr-util/Makefile
+Package: libaprutil
+Version: 1.2.8-1
+Depends: +libapr +libexpat +libiconv +libpthread +libsqlite3 +libuuid
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: Apache Portable Runtime Utility Library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Apache Portable Runtime Utility Library
+
+http://apr.apache.org/
+@@
+

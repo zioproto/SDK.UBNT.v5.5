@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/libs/pwlib/Makefile
+Package: pwlib
+Version: 1.11.1-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: Portable Windows library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  PWLib is a moderately large class library that was created as a method to 
+ produce applications that run on both Microsoft Windows and the X Window 
+ System.
+
+http://www.voxgratia.org/
+@@
+

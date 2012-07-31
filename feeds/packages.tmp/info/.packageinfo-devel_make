@@ -1,0 +1,14 @@
+Source-Makefile: feeds/packages/devel/make/Makefile
+Package: make
+Version: 3.81-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: devel
+Category: Development
+Title: make
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	The Make package contains a program for compiling packages
+@@
+

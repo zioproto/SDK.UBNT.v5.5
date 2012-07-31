@@ -1,0 +1,15 @@
+Source-Makefile: feeds/packages/Xorg/lib/libast/Makefile
+Package: libast
+Submenu: libraries
+Version: 0.7-1
+Depends: +libX11
+Provides: 
+Build-Depends: libtool
+Section: xorg-libraries
+Category: Xorg
+Title: libast
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libast
+@@
+

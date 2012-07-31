@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/dbus-glib/Makefile
+Package: libdbus-glib
+Version: 0.76-3
+Depends: +dbus +glib2 +libiconv +libintl
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: D-Bus Glib bindings
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	D-Bus Glib bindings
+
+http://dbus.freedesktop.org/doc/dbus-glib/
+@@
+

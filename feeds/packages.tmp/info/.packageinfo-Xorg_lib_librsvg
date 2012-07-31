@@ -1,0 +1,32 @@
+Source-Makefile: feeds/packages/Xorg/lib/librsvg/Makefile
+Package: librsvg
+Submenu: libraries
+Version: 2.22.3-3
+Depends: +cairo +libxml2 +glib2 +libcroco +pango +gtk2
+Provides: 
+Build-Depends: libtool
+Section: xorg-libs
+Category: Xorg
+Title: SVG rendering library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: librsvg is a high performance SVG rendering library associated with the Gnome Project.
+
+http://librsvg.sourceforge.net/
+@@
+Package: librsvg-pixbuf-loader
+Submenu: libraries
+Version: 2.22.3-3
+Depends: librsvg
+Provides: 
+Build-Depends: libtool
+Section: xorg-libs
+Category: Xorg
+Title: SVG rendering library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	SVG rendering library
+
+http://librsvg.sourceforge.net/
+@@
+

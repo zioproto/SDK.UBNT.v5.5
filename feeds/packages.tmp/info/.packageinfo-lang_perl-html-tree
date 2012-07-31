@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/perl-html-tree/Makefile
+Package: perl-html-tree
+Submenu: Perl
+Version: 3.23-2
+Depends: perl perl-html-parser perl-html-tagset
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: represent and create HTML syntax trees
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	represent and create HTML syntax trees
+
+http://search.cpan.org/~petdance/HTML-Tree/
+@@
+

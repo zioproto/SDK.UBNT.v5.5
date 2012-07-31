@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/multimedia/motion/Makefile
+Package: motion
+Version: 3.2.10.1-1
+Depends: +libjpeg
+Provides: 
+Build-Depends: 
+Section: multimedia
+Category: Multimedia
+Title: webcam motion sensing and logging
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	webcam motion sensing and logging
+
+http://www.lavrsen.dk/twiki/bin/view/Motion/WebHome
+@@
+

@@ -1,0 +1,32 @@
+Source-Makefile: feeds/packages/utils/oprofile/Makefile
+Package: oprofile
+Version: 0.9.4-1
+Depends: +libpopt +kmod-oprofile +libstdcpp
+Provides: 
+Build-Depends: libbfd
+Section: utils
+Category: Utilities
+Title: OProfile System Profiler
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  A transparent low-overhead system-wide profiler.
+
+http://oprofile.sourceforge.net
+@@
+Package: kmod-oprofile
+Submenu: Other modules
+Version: <LINUX_VERSION>+0.9.4--1
+Depends: @KERNEL_PROFILING
+Provides: 
+Build-Depends: libbfd
+Section: kernel
+Category: Kernel modules
+Title: OProfile profiling support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Kernel-Config: CONFIG_OPROFILE
+Description:   Kernel module for support for oprofile system profiling.
+
+http://oprofile.sourceforge.net
+@@
+

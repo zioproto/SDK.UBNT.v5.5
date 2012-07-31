@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/libnfsidmap/Makefile
+Package: libnfsidmap
+Version: 0.20-2
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: libnfsidmap, for compiling mount.nfs4
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  needed for nfs-utils
+
+http://www.citi.umich.edu/projects/nfsv4
+@@
+

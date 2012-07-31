@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/utils/pciutils/Makefile
+Package: pciutils
+Version: 3.0.0-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Linux PCI Utilities
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	This package contains various utilities for inspecting and setting of
+	devices connected to the PCI bus.
+
+http://mj.ucw.cz/pciutils.shtml
+@@
+

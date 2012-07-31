@@ -1,0 +1,23 @@
+Source-Makefile: feeds/packages/net/mtr/Makefile
+Package: mtr
+Version: 0.73-1
+Depends: +libncurses
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Full screen ncurses traceroute tool
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	mtr combines the functionality of the 'traceroute' and 'ping' programs
+	in a single network diagnostic tool.
+	As mtr starts, it investigates the network connection between the host
+	mtr runs on and a user-specified destination host. After it
+	determines the address of each network hop between the machines,
+	it sends a sequence ICMP ECHO requests to each one to determine the
+	quality of the link to each machine. As it does this, it prints
+	running statistics about each machine.
+
+http://www.bitwizard.nl/mtr/
+@@
+

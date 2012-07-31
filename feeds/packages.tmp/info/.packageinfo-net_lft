@@ -1,0 +1,21 @@
+Source-Makefile: feeds/packages/net/lft/Makefile
+Package: lft
+Version: 3.1-1
+Depends: +libpcap
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: The alternative traceroute and whois tools for network engineers
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	LFT, short for Layer Four Traceroute, is a sort of 'traceroute' that
+	often works much faster (than the commonly-used Van Jacobson method)
+	and goes through many configurations of packet-filters (firewalls).
+	More importantly, LFT implements numerous other features including AS
+	number lookups through several reliable sources, loose source routing,
+	netblock name lookups, et al.
+
+http://pwhois.org/lft
+@@
+

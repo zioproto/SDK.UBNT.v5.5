@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/lib/libXi/Makefile
+Package: libXi
+Submenu: libraries
+Version: 1.1.3-3
+Depends: +libX11 +libXext
+Provides: 
+Build-Depends: xproto xextproto inputproto libtool
+Section: xorg-libraries
+Category: Xorg
+Title: libXi
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libXi
+
+http://xorg.freedesktop.org/
+@@
+

@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/libs/libpam/Makefile
+Package: libpam
+Version: 0.99.6.3-1
+Depends: @BROKEN
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: free implementation of the following DCE-RFC from Sunsoft.
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Linux-PAM is a free implementation of the following DCE-RFC from Sunsoft. 
+
+
+http://www.kernel.org/pub/linux/libs/pam
+@@
+

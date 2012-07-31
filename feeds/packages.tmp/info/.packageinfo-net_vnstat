@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/net/vnstat/Makefile
+Package: vnstat
+Version: 1.6-2
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Console-based network traffic monitor
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	vnStat is a network traffic monitor for Linux that keeps a log of daily 
+	network traffic for the selected interface(s). vnStat isn't a packet 
+	sniffer. The traffic information is analyzed from the /proc -filesystem, 
+	so vnStat can be used without root permissions.
+
+http://humdi.net/vnstat/
+@@
+

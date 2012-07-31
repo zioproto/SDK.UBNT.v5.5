@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/lang/kid/Makefile
+Package: python-kid
+Submenu: Python
+Version: 0.9.6-1
+Depends: python-core
+Provides: 
+Build-Depends: python
+Section: lang
+Category: Languages
+Title: XML-based Templating
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Kid is a simple template language for XML based vocabularies written in 
+ Python.
+
+http://www.kid-templating.org/
+@@
+

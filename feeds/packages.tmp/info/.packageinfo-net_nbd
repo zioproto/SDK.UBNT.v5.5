@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/nbd/Makefile
+Package: nbd
+Version: 2.9.11-1
+Depends: @LINUX_2_6
+Provides: 
+Build-Depends: glib2 libintl
+Section: net
+Category: Network
+Title: Network Block Device utilities
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   This package contains the network block device client.
+
+http://nbd.sourceforge.net
+@@
+

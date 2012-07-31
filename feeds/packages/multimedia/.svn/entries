@@ -1,0 +1,91 @@
+10
+
+dir
+32837
+svn://svn.openwrt.org/openwrt/branches/packages_8.09/multimedia
+svn://svn.openwrt.org/openwrt
+
+
+
+2009-04-21T11:38:28.162275Z
+15321
+nico
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3c298f89-4303-0410-b956-a3cf2f4a3e73
+
+ftpd-topfield
+dir
+
+gst-plugins-good
+dir
+
+spca5xx-view
+dir
+
+gspcav1
+dir
+
+ffmpeg
+dir
+
+motion
+dir
+
+ov51x-jpeg
+dir
+
+peercast
+dir
+
+palantir
+dir
+
+puppy
+dir
+
+mjpg-streamer
+dir
+
+uvc-streamer
+dir
+
+nw802-2.4
+dir
+
+spcaview
+dir
+
+gphoto2
+dir
+
+gst-plugins-base
+dir
+
+ushare
+dir
+
+gstreamer
+dir
+
+spca5xx-le
+dir
+
+qc-usb
+dir
+
+linux-uvc
+dir
+

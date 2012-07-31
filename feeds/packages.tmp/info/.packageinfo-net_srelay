@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/srelay/Makefile
+Package: srelay
+Version: 0.4.6-1
+Depends: +libwrap
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: A socks 4/5 proxy server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A socks 4/5 proxy server
+
+http://www.c-wind.com/srelay/
+@@
+

@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/wknock/Makefile
+Package: wknock
+Version: 1-1
+Depends: kmod-brcm-wl +libpcap
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: A tool to hide your Access Point against opportunistic attackers.
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: tool to hide your Access Point against opportunistic attackers.
+
+http://www.rstack.org/oudot/wknock/
+@@
+

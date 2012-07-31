@@ -1,0 +1,21 @@
+Source-Makefile: feeds/packages/utils/scponly/Makefile
+Package: scponly
+Version: 4.8-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Alternative 'shell' (of sorts) for sysadmins
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	"scponly" is an alternative 'shell' (of sorts) for system
+	administrators who would like to provide access to remote
+	users to both read and write local files without providing
+	any remote execution priviledges. Functionally, it is best
+	described as a wrapper to the mostly trusted suite of ssh
+	applications.
+
+http://sourceforge.net/projects/scponly
+@@
+

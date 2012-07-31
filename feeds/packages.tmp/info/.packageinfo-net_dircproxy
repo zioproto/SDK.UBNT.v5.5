@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/dircproxy/Makefile
+Package: dircproxy
+Submenu: Instant Messaging
+Version: 1.2.0-beta2-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: An IRC proxy server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	An IRC proxy server
+
+http://dircproxy.securiweb.net/
+@@
+

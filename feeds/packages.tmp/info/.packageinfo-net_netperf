@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/netperf/Makefile
+Package: netperf
+Version: 2.4.3-2
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Network performance measurement tool
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Network performance measurement tool
+
+http://www.netperf.org/
+@@
+

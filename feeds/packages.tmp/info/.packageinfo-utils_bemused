@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/utils/bemused/Makefile
+Package: bemusedlinuxserver
+Version: r062-1
+Depends: +bluez-libs +glib1 +mpd +libstdcpp +libiconv
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Bemused linux server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:     Bemused is a system which allows you to control your music collection
+    from your phone, using Bluetooth.
+    This is the MPD hack version.
+    Check http://jamse.sourceforge.net/ for a mobile phone client.
+
+http://bemused-lnx-mpdhack.origo.ethz.ch/
+@@
+

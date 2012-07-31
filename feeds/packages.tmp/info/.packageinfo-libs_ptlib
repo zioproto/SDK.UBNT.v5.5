@@ -1,0 +1,21 @@
+Source-Makefile: feeds/packages/libs/ptlib/Makefile
+Package: ptlib
+Version: 2.2.1-1
+Depends: +libexpat
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: Portable Tools library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  PTLib is a moderately large class library that has its genesis many years ago as
+ PWLib (portable Windows Library), a method to product applications to run on both
+ Microsoft Windows and Unix X-Windows systems. It also was to have a Macintosh port
+ as well but that never eventuated. The parts of the library relating to GUI
+ functions have long been removed as other class libraries such as wxWidgets were
+ much more advanced.
+
+http://www.opalvoip.org/
+@@
+

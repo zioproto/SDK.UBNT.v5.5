@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/pygobject/Makefile
+Package: python-gobject
+Submenu: Python
+Version: 2.16.0-1
+Depends: python-core +glib2
+Provides: 
+Build-Depends: libtool
+Section: lang
+Category: Languages
+Title: GLib bindings for python
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   GLib bindings for python
+
+http://www.pygtk.org/
+@@
+

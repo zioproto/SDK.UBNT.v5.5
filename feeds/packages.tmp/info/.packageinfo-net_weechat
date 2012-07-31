@@ -1,0 +1,50 @@
+Source-Makefile: feeds/packages/net/weechat/Makefile
+Package: weechat
+Menu: 1
+Submenu: Instant Messaging
+Version: 0.2.6-1
+Depends: +libiconv +libgnutls +libncurses
+Provides: 
+Build-Depends: libtool
+Section: net
+Category: Network
+Title: Lightweight IRC client
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Weechat is fast, light & extensible IRC client.
+
+http://weechat.flashtux.org/
+@@
+Package: weechat-mod-charset
+Submenu: Instant Messaging
+Version: 0.2.6-1
+Depends: weechat
+Provides: 
+Build-Depends: libtool
+Section: net
+Category: Network
+Title: Lightweight IRC client (charset plugin)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Weechat is fast, light & extensible IRC client.
+ This packages contains a charset plugin for Weechat.
+
+http://weechat.flashtux.org/
+@@
+Package: weechat-mod-lua
+Submenu: Instant Messaging
+Version: 0.2.6-1
+Depends: weechat +liblua
+Provides: 
+Build-Depends: libtool
+Section: net
+Category: Network
+Title: Lightweight IRC client (Lua plugin)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Weechat is fast, light & extensible IRC client.
+ This packages contains an Lua scripting plugin for Weechat.
+
+http://weechat.flashtux.org/
+@@
+

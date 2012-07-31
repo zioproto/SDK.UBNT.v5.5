@@ -1,0 +1,66 @@
+Source-Makefile: feeds/packages/utils/vim/Makefile
+Package: vim
+Submenu: Editors
+Version: 7.1-3
+Depends: +libncurses
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Vi IMproved - enhanced vi editor (Tiny)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Vim is an almost compatible version of the UNIX editor Vi.
+	(Tiny build)
+
+http://www.vim.org/
+@@
+Package: vim-full
+Submenu: Editors
+Version: 7.1-3
+Depends: +libncurses
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Vi IMproved - enhanced vi editor (Normal)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Vim is an almost compatible version of the UNIX editor Vi.
+	(Normal build)
+
+http://www.vim.org/
+@@
+Package: vim-runtime
+Submenu: Editors
+Version: 7.1-3
+Depends: +libncurses
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Vi IMproved - enhanced vi editor (runtime files)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Vim is an almost compatible version of the UNIX editor Vi.
+	(Runtime files)
+
+http://www.vim.org/
+@@
+Package: vim-help
+Submenu: Editors
+Version: 7.1-3
+Depends: +libncurses
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Vi IMproved - enhanced vi editor (help files)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Vim is an almost compatible version of the UNIX editor Vi.
+	(Help files)
+
+http://www.vim.org/
+@@
+

@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/utils/nano/Makefile
+Package: nano
+Submenu: Editors
+Version: 2.0.7-1
+Depends: +libncurses
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: An enhanced clone of the Pico text editor
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	GNU nano (Nano's ANOther editor, or Not ANOther editor) is an enhanced clone
+	of the Pico text editor..
+
+http://www.nano-editor.org/
+@@
+

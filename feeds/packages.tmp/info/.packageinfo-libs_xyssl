@@ -1,0 +1,30 @@
+Source-Makefile: feeds/packages/libs/xyssl/Makefile
+Package: libxyssl
+Version: 0.9-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: Embedded SSL (library)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Embedded SSL (library)
+
+http://xyssl.org/
+@@
+Package: xyssl-progs
+Version: 0.9-1
+Depends: +libxyssl
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Embedded SSL (programs)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Embedded SSL (programs)
+
+http://xyssl.org/
+@@
+

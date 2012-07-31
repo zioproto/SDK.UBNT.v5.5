@@ -1,0 +1,20 @@
+Source-Makefile: feeds/packages/net/tor/Makefile
+Package: tor
+Version: 0.2.0.31-1
+Depends: +libevent +libopenssl +libpthread +zlib
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: An anonymous Internet communication system
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Tor is a toolset for a wide range of organizations and people that want to
+ improve their safety and security on the Internet. Using Tor can help you
+ anonymize web browsing and publishing, instant messaging, IRC, SSH, and
+ more. Tor also provides a platform on which software developers can build
+ new applications with built-in anonymity, safety, and privacy features.
+
+http://tor.eff.org/
+@@
+

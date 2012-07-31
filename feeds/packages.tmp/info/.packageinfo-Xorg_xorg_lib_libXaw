@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/lib/libXaw/Makefile
+Package: libXaw
+Submenu: libraries
+Version: 1.0.4-4
+Depends: +libX11 +libXext +libXt +libXmu +libXpm +libXau
+Provides: 
+Build-Depends: xproto xextproto printproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: libXaw
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libXaw
+
+http://xorg.freedesktop.org/
+@@
+

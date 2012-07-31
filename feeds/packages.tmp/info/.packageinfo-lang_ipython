@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/ipython/Makefile
+Package: ipython
+Submenu: Python
+Version: 0.8.2-1
+Depends: 
+Provides: 
+Build-Depends: libtool
+Section: lang
+Category: Languages
+Title: ipython
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   python bindings for dbus 
+
+http://ipython.scipy.org/dist/
+@@
+

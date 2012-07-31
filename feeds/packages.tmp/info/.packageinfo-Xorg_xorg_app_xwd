@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/app/xwd/Makefile
+Package: xwd
+Submenu: app
+Version: 1.0.2-1
+Depends: +libX11
+Provides: 
+Build-Depends: 
+Section: xorg-app
+Category: Xorg
+Title: xwd
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xwd
+
+http://xorg.freedesktop.org/
+@@
+

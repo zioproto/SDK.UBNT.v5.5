@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/net/nsca/Makefile
+Package: send-nsca
+Version: 2.7.2-1
+Depends: +libmcrypt
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Nagios Service Check Acceptor (NSCA) client
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	This is the client program that is used to send service check
+	information from a remote machine to the nsca daemon on the central
+	machine that runs Nagios.
+
+http://www.nagios.org/
+@@
+

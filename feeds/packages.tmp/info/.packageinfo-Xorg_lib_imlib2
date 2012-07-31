@@ -1,0 +1,15 @@
+Source-Makefile: feeds/packages/Xorg/lib/imlib2/Makefile
+Package: imlib2
+Submenu: libraries
+Version: 1.4.1-3
+Depends: +libX11 +giflib +libtiff +libjpeg +gtk1 +libnotimpl +libfreetype +libXext
+Provides: 
+Build-Depends: libtool
+Section: xorg-libraries
+Category: Xorg
+Title: Image library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Image library
+@@
+

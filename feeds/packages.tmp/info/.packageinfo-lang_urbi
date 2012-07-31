@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/lang/urbi/Makefile
+Package: urbi
+Version: 1.0RC2-l455-1
+Depends: +uclibcxx +libpthread
+Provides: 
+Build-Depends: libtool
+Section: lang
+Category: Languages
+Title: URBI SDK
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   Universal Real-Time Behavior Interface for robots.
+
+http://www.urbiforge.com
+@@
+

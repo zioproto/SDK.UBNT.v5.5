@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/aprx/Makefile
+Package: aprx
+Version: 0.99-svn121
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: APRS RX only I-gate
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	This daemon listens for traffic on the specified serial interfaces.
+	It then forwards appropriate packets to APRS-IS servers.
+
+http://ham.zmailer.org/oh2mqk/aprx/
+@@
+

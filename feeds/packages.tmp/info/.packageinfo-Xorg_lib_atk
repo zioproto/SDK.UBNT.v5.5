@@ -1,0 +1,15 @@
+Source-Makefile: feeds/packages/Xorg/lib/atk/Makefile
+Package: atk
+Submenu: libraries
+Version: 1.22.0-2
+Depends: +libX11 +glib2
+Provides: 
+Build-Depends: libtool
+Section: xorg-libs
+Category: Xorg
+Title: Accesibility library for gtk+ apps
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Accesibility library for gtk+ apps
+@@
+

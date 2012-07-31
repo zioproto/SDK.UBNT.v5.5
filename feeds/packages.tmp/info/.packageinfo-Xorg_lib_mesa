@@ -1,0 +1,287 @@
+Source-Makefile: feeds/packages/Xorg/lib/mesa/Makefile
+Package: libgl-mesa
+Submenu: libraries
+Version: 7.2-2
+Depends: +libX11 +libXext +libXfixes +libXdamage +libXxf86vm +libdrm
+Provides: 
+Build-Depends: glproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: Mesa OpenGL library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Mesa OpenGL library
+
+http://mesa3d.org
+@@
+Package: libglu-mesa
+Submenu: libraries
+Version: 7.2-2
+Depends: +libgl-mesa
+Provides: 
+Build-Depends: glproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: Mesa OpenGL utility library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Mesa OpenGL utility library
+
+http://mesa3d.org
+@@
+Package: libgl-mesa-dri-i810
+Submenu: libraries
+Version: 7.2-2
+Depends: libgl-mesa @DISPLAY_SUPPORT
+Provides: 
+Build-Depends: glproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: mesa dri i810
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	mesa dri i810
+
+http://mesa3d.org
+@@
+Package: libgl-mesa-dri-i915
+Submenu: libraries
+Version: 7.2-2
+Depends: libgl-mesa @DISPLAY_SUPPORT
+Provides: 
+Build-Depends: glproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: mesa dri i915
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	mesa dri i915
+
+http://mesa3d.org
+@@
+Package: libgl-mesa-dri-i965
+Submenu: libraries
+Version: 7.2-2
+Depends: libgl-mesa @DISPLAY_SUPPORT
+Provides: 
+Build-Depends: glproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: mesa dri i965
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	mesa dri i965
+
+http://mesa3d.org
+@@
+Package: libgl-mesa-dri-mach64
+Submenu: libraries
+Version: 7.2-2
+Depends: libgl-mesa @DISPLAY_SUPPORT
+Provides: 
+Build-Depends: glproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: mesa dri mach64
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	mesa dri mach64
+
+http://mesa3d.org
+@@
+Package: libgl-mesa-dri-mga
+Submenu: libraries
+Version: 7.2-2
+Depends: libgl-mesa @DISPLAY_SUPPORT
+Provides: 
+Build-Depends: glproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: mesa dri mga
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	mesa dri mga
+
+http://mesa3d.org
+@@
+Package: libgl-mesa-dri-r128
+Submenu: libraries
+Version: 7.2-2
+Depends: libgl-mesa @DISPLAY_SUPPORT
+Provides: 
+Build-Depends: glproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: mesa dri r128
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	mesa dri r128
+
+http://mesa3d.org
+@@
+Package: libgl-mesa-dri-r200
+Submenu: libraries
+Version: 7.2-2
+Depends: libgl-mesa @DISPLAY_SUPPORT
+Provides: 
+Build-Depends: glproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: mesa dri r200
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	mesa dri r200
+
+http://mesa3d.org
+@@
+Package: libgl-mesa-dri-r300
+Submenu: libraries
+Version: 7.2-2
+Depends: libgl-mesa @DISPLAY_SUPPORT
+Provides: 
+Build-Depends: glproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: mesa dri r300
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	mesa dri r300
+
+http://mesa3d.org
+@@
+Package: libgl-mesa-dri-radeon
+Submenu: libraries
+Version: 7.2-2
+Depends: libgl-mesa @DISPLAY_SUPPORT
+Provides: 
+Build-Depends: glproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: mesa dri radeon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	mesa dri radeon
+
+http://mesa3d.org
+@@
+Package: libgl-mesa-dri-s3v
+Submenu: libraries
+Version: 7.2-2
+Depends: libgl-mesa @DISPLAY_SUPPORT
+Provides: 
+Build-Depends: glproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: mesa dri s3v
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	mesa dri s3v
+
+http://mesa3d.org
+@@
+Package: libgl-mesa-dri-savage
+Submenu: libraries
+Version: 7.2-2
+Depends: libgl-mesa @DISPLAY_SUPPORT
+Provides: 
+Build-Depends: glproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: mesa dri savage
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	mesa dri savage
+
+http://mesa3d.org
+@@
+Package: libgl-mesa-dri-sis
+Submenu: libraries
+Version: 7.2-2
+Depends: libgl-mesa @DISPLAY_SUPPORT
+Provides: 
+Build-Depends: glproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: mesa dri sis
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	mesa dri sis
+
+http://mesa3d.org
+@@
+Package: libgl-mesa-dri-tdfx
+Submenu: libraries
+Version: 7.2-2
+Depends: libgl-mesa @DISPLAY_SUPPORT
+Provides: 
+Build-Depends: glproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: mesa dri tdfx
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	mesa dri tdfx
+
+http://mesa3d.org
+@@
+Package: libgl-mesa-dri-trident
+Submenu: libraries
+Version: 7.2-2
+Depends: libgl-mesa @DISPLAY_SUPPORT
+Provides: 
+Build-Depends: glproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: mesa dri trident
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	mesa dri trident
+
+http://mesa3d.org
+@@
+Package: libgl-mesa-dri-unichrome
+Submenu: libraries
+Version: 7.2-2
+Depends: libgl-mesa @DISPLAY_SUPPORT
+Provides: 
+Build-Depends: glproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: mesa dri unichrome
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	mesa dri unichrome
+
+http://mesa3d.org
+@@
+Package: libgl-mesa-dri-ffb
+Submenu: libraries
+Version: 7.2-2
+Depends: libgl-mesa @DISPLAY_SUPPORT
+Provides: 
+Build-Depends: glproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: mesa dri ffb
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	mesa dri ffb
+
+http://mesa3d.org
+@@
+Package: libgl-mesa-dri-swrast
+Submenu: libraries
+Version: 7.2-2
+Depends: libgl-mesa @DISPLAY_SUPPORT
+Provides: 
+Build-Depends: glproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: mesa dri swrast
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	mesa dri swrast
+
+http://mesa3d.org
+@@
+

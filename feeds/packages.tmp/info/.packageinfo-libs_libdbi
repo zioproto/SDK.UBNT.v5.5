@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/libdbi/Makefile
+Package: libdbi
+Version: 0.8.3-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title:  (library)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	SQLite is a small C library that implements a self-contained, embeddable, 
+	zero-configuration SQL database engine.	This package contains the SQLite
+	(v3.x) shared library, used by other programs.
+@@
+

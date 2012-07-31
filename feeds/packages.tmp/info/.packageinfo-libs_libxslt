@@ -1,0 +1,30 @@
+Source-Makefile: feeds/packages/libs/libxslt/Makefile
+Package: libxslt
+Version: 1.1.24-2
+Depends: +libxml2
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: Gnome XSLT library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A library for XML transformation using XSLT.
+
+http://xmlsoft.org/XSLT/
+@@
+Package: xsltproc
+Version: 1.1.24-2
+Depends: +libxml2 +libxslt
+Provides: 
+Build-Depends: libtool
+Section: utils
+Category: Utilities
+Title: Gnome XSLT xsltproc Utility
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	XSLT XML transformation utility
+
+http://xmlsoft.org/XSLT/
+@@
+

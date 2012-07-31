@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/cups/Makefile
+Package: cups
+Submenu: printing
+Version: 1.3.7-4.1
+Depends: +zlib +libpthread +libpng +libjpeg
+Provides: 
+Build-Depends: zlib
+Section: net
+Category: Network
+Title: Common UNIX Printing System
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A printer spooling system for devices with USB or LP support.
+
+http://www.cups.org/
+@@
+

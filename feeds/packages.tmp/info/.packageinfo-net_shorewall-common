@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/shorewall-common/Makefile
+Package: shorewall-common
+Submenu: firewall
+Version: 4.2.4-1
+Depends: +shorewall-shell
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Shorewall
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Shorewall Firewall is an iptables-based firewall for Linux.
+
+http://www.shorewall.net/
+@@
+

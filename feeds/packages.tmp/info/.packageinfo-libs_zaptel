@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/zaptel/Makefile
+Package: zaptel-libtonezone
+Version: 1.2.12-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: Zaptel tonezone library.
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Zaptel tonezone library.
+
+http://ftp.digium.com/pub/zaptel/releases
+@@
+

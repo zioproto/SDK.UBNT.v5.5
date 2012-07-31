@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/utils/firmwarehotplug/Makefile
+Package: firmwarehotplug
+Prereq-Check: 1
+Version: 0.1-1
+Depends: @USB_SUPPORT +fxload
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Hotplug firmware for EZ-USB microcontrollers
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Hotplug firmware for EZ-USB microcontrollers
+
+http://linux-hotplug.sourceforge.net/
+@@
+

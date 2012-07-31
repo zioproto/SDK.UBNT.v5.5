@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/net/cutter/Makefile
+Package: cutter
+Version: 1.03-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: allows an user to abort TCP/IP connections
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Cutter is an open source program that allows Linux firewall 
+	administrators to abort TCP/IP connections routed over the 
+	firewall or router on which it is run.
+
+http://www.lowth.com/cutter/
+@@
+

@@ -1,0 +1,47 @@
+Source-Makefile: feeds/packages/net/snort-wireless/Makefile
+Package: snort-wireless
+Submenu: snort-wireless (Ligthweight Network Intrusion Detection System)
+Version: 2.4.3-alpha04-1
+Depends: +libnet0 +libpcap +libpcre
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Ligthweight Network Intrusion Detection System
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Ligthweight Network Intrusion Detection System
+
+http://www.snort-wireless.org/
+@@
+Package: snort-wireless-mysql
+Submenu: snort-wireless (Ligthweight Network Intrusion Detection System)
+Version: 2.4.3-alpha04-1
+Depends: +libnet0 +libpcap +libpcre +libmysqlclient
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Ligthweight Network Intrusion Detection System (MySQL)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Ligthweight Network Intrusion Detection System (MySQL)
+
+http://www.snort-wireless.org/
+@@
+Package: snort-wireless-pgsql
+Submenu: snort-wireless (Ligthweight Network Intrusion Detection System)
+Version: 2.4.3-alpha04-1
+Depends: +libnet0 +libpcap +libpcre +libpq
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Ligthweight Network Intrusion Detection System (PostgreSQL)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Ligthweight Network Intrusion Detection System (PostgreSQL)
+
+http://www.snort-wireless.org/
+@@
+

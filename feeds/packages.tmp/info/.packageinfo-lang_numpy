@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/lang/numpy/Makefile
+Package: numpy
+Submenu: Python
+Prereq-Check: 1
+Version: 1.0.4-1
+Depends: python-core @TARGET_x86||TARGET_olpc||TARGET_uml @BROKEN
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: numpy
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   API to GTK and glade library from python
+
+http://numpy.sf.net
+@@
+

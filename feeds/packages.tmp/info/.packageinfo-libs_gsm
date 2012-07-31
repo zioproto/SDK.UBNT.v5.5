@@ -1,0 +1,38 @@
+Source-Makefile: feeds/packages/libs/gsm/Makefile
+Package: libgsm
+Version: 1.0.10-3
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: A GSM transcoding library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: A GSM 06.10 full-rate speech transcoding implementation (library).
+	An implementation of the European GSM 06.10 provisional standard 
+	for full-rate speech transcoding, prI-ETS 300 036, which uses 
+	RPE/LTP (residual pulse excitation/long term prediction) coding 
+	at 13 kbit/s.
+
+ftp://ftp.cs.tu-berlin.de/pub/local/kbs/tubmik/gsm/
+@@
+Package: gsm-utils
+Version: 1.0.10-3
+Depends: +libgsm
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: GSM transcoding utilities
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: A GSM 06.10 full-rate speech transcoding implementation (utilities).
+	An implementation of the European GSM 06.10 provisional standard 
+	for full-rate speech transcoding, prI-ETS 300 036, which uses 
+	RPE/LTP (residual pulse excitation/long term prediction) coding 
+	at 13 kbit/s.
+
+ftp://ftp.cs.tu-berlin.de/pub/local/kbs/tubmik/gsm/
+@@
+

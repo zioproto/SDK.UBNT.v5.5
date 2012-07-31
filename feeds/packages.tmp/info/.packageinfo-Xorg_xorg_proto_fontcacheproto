@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/proto/fontcacheproto/Makefile
+Package: fontcacheproto
+Submenu: proto
+Version: 0.1.2-3
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-proto
+Category: Xorg
+Title: fontcacheproto
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	fontcacheproto
+
+http://xorg.freedesktop.org/
+@@
+

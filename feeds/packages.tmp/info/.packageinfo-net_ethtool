@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/ethtool/Makefile
+Package: ethtool
+Version: 6-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Display or change ethernet card settings
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	ethtool is used for querying settings of an ethernet device and changing them.
+
+http://sourceforge.net/projects/gkernel/
+@@
+

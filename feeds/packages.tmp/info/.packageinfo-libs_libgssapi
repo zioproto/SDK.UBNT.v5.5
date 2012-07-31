@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/libgssapi/Makefile
+Package: libgssapi
+Version: 0.11-2
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: required libraries for the nfs-utils
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Support libraries - for newer nfs mount command (nfs4)
+
+http://www.citi.umich.edu/projects/nfsv4/linux
+@@
+

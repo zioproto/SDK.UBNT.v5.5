@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/proto/xcmiscproto/Makefile
+Package: xcmiscproto
+Submenu: proto
+Version: 1.1.2-3
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-proto
+Category: Xorg
+Title: xcmiscproto
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xcmiscproto
+
+http://xorg.freedesktop.org/
+@@
+

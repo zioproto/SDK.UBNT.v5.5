@@ -1,0 +1,24 @@
+Source-Makefile: feeds/packages/utils/lcd4linux/Makefile
+Package: lcd4linux
+Menu: 1
+Version: r903-1
+Depends: +libusb
+Provides: 
+Build-Depends: libtool
+Section: utils
+Category: Utilities
+Title: LCD display utility
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	LCD4Linux is a small program that grabs information from the kernel and 
+	some subsystems and displays it on an external liquid crystal display.
+
+http://lcd4linux.bulix.org/
+@@
+Config: 
+	menu "Configuration"
+	depends on PACKAGE_lcd4linux
+	source "feeds/packages/utils/lcd4linux/Config.in"
+	endmenu
+@@
+

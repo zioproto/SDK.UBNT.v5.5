@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/proto/xf86driproto/Makefile
+Package: xf86driproto
+Submenu: proto
+Version: 2.0.4-3
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-proto
+Category: Xorg
+Title: xf86driproto
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xf86driproto
+
+http://xorg.freedesktop.org/
+@@
+

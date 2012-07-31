@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/nagios-plugins/Makefile
+Package: nagios-plugins
+Submenu: Monitoring
+Version: 1.4.12-1.2
+Depends: +uclibcxx +libpq
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: plugins for Nagios checks
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	plugins for Nagios checks
+
+http://nagiosplug.sourceforge.net/
+@@
+

@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/utils/ntfs-3g/Makefile
+Package: ntfs-3g
+Submenu: filesystem
+Version: 1.2531-1
+Depends: +libfuse +fuse-utils +libpthread
+Provides: 
+Build-Depends: libfuse
+Section: utils
+Category: Utilities
+Title: NTFS-3G
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  This package contains the third generation Read/Write NTFS driver
+
+http://www.ntfs-3g.org
+@@
+

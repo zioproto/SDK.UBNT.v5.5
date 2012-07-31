@@ -1,0 +1,14 @@
+Source-Makefile: feeds/packages/net/openslp/Makefile
+Package: openslp
+Version: 1.2.1-2
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: openslp
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	openslp
+@@
+

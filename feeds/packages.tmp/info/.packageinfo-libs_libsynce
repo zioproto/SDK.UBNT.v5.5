@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/libs/libsynce/Makefile
+Package: libsynce
+Version: 0.12-1
+Depends: 
+Provides: 
+Build-Depends: libiconv
+Section: libs
+Category: Libraries
+Title: SynCE library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: The purpose of the SynCE project is to provide a means of communication with a
+Windows CE or Pocket PC device from a computer running Linux, *BSD or other unices.
+
+http://libsynce.sourceforge.net/
+@@
+

@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/proto/calibrateproto/Makefile
+Package: calibrateproto
+Submenu: proto
+Version: git-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-proto
+Category: Xorg
+Title: calibrateproto
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	calibrateproto
+
+http://xorg.freedesktop.org/
+@@
+

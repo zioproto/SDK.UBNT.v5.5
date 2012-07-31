@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/pyevent/Makefile
+Package: python-event
+Submenu: Python
+Version: 0.3-1
+Depends: python-core +libevent
+Provides: 
+Build-Depends: python
+Section: lang
+Category: Languages
+Title: Python interface to libevent
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Python interface to libevent
+
+http://code.google.com/p/pyevent/
+@@
+

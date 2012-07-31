@@ -1,0 +1,20 @@
+Source-Makefile: feeds/packages/net/gmediaserver/Makefile
+Package: gmediaserver
+Submenu: multimedia
+Version: 0.13.0-1
+Depends: +id3lib +libiconv +libmagic +file +libupnp +libuuid
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: An UPnP music media server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  GMediaServer is a server for UPnP media players like the
+ Netgear MP101, Linksys WMLS11B etc. It exports one or more
+ directories using the UPnP protocol so the mediaserver can
+ browse through them and play audio or video files.
+
+http://www.nongnu.org/gmediaserver/
+@@
+

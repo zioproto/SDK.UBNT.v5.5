@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/multimedia/puppy/Makefile
+Package: puppy
+Version: 1.14-1
+Depends: @USB_SUPPORT
+Provides: 
+Build-Depends: 
+Section: multimedia
+Category: Multimedia
+Title: Topfield PVR file transfer client
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: Client to access Topfield PVRs via the USB port
+
+http://puppy.sourceforge.net/
+@@
+

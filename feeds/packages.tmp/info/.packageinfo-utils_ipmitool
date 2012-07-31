@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/utils/ipmitool/Makefile
+Package: ipmitool
+Version: 1.8.10-1
+Depends: +libopenssl
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: IPMI remote computer management utility
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   IPMItool is a utility for managing and configuring devices
+  that support the Intelligent Platform Management Interface
+  (IPMI) version 1.5 and version 2.0 specifications.
+
+http://ipmitool.sourceforge.net/
+@@
+

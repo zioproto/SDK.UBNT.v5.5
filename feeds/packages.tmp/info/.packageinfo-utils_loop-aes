@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/utils/loop-aes/Makefile
+Package: kmod-loop-aes
+Submenu: Cryptographic API modules
+Version: <LINUX_VERSION>+3.2c--1
+Depends: @!PACKAGE_kmod-loop
+Provides: 
+Build-Depends: 
+Section: kernel
+Category: Kernel modules
+Title: loopback module with built-in AES
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   This package provides loadable Linux kernel module (loop.o or loop.ko on 2.6
+  kernels) that has AES cipher built-in. The AES cipher can be used to encrypt
+  local file systems and disk partitions.
+
+http://loop-aes.sourceforge.net
+@@
+

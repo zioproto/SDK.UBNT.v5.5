@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/utils/logrotate/Makefile
+Package: logrotate
+Version: 3.7.1-1
+Depends: +libpopt
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: rotates, compresses, and mails system logs
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	logrotate is designed to ease administration of systems that generate 
+	large numbers of log files. It allows auto-matic rotation, compression, 
+	removal and mailing of log files. Each log file may be handled daily, 
+	weekly, monthly or when it grows too large.
+
+http://packages.debian.org/unstable/admin/logrotate
+@@
+

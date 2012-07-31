@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/net/uucp/Makefile
+Package: uucp
+Version: 1.07
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: copy files to or from another (usually *nix) system
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	UUCP is used to transfer mail, news and random files between systems which are not
+	connected by more modern networks. The communication can be made via modems, direct
+	(hard-wired) serial connections or via an IP connection.
+
+http://packages.debian.org/etch/uucp
+@@
+

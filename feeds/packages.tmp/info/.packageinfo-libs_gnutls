@@ -1,0 +1,93 @@
+Source-Makefile: feeds/packages/libs/gnutls/Makefile
+Package: certtool
+Version: 2.4.1-2.2
+Depends:  +libgnutls +libncurses +libreadline
+Provides: 
+Build-Depends: libtool
+Section: utils
+Category: Utilities
+Title: GNU TLS (certool utility)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  GnuTLS is a project that aims to develop a library which provides a
+ secure layer, over a reliable transport layer. Currently the GnuTLS
+ library implements the proposed standards by the IETF's TLS working
+ group.
+ This package contains the GnuTLS certtool utility.
+
+http://www.gnu.org/software/gnutls/
+@@
+Package: gnutls-utils
+Version: 2.4.1-2.2
+Depends:  +libgnutls +libgnutls-extra
+Provides: 
+Build-Depends: libtool
+Section: utils
+Category: Utilities
+Title: GNU TLS (utilities)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  GnuTLS is a project that aims to develop a library which provides a
+ secure layer, over a reliable transport layer. Currently the GnuTLS
+ library implements the proposed standards by the IETF's TLS working
+ group.
+ This package contains the GnuTLS gnutls-cli, gnutls-serv, psktool,
+ and srptool utilities.
+
+http://www.gnu.org/software/gnutls/
+@@
+Package: libgnutls
+Version: 2.4.1-2.2
+Depends:  +zlib +libgcrypt +libgpg-error
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: GNU TLS (library)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  GnuTLS is a project that aims to develop a library which provides a
+ secure layer, over a reliable transport layer. Currently the GnuTLS
+ library implements the proposed standards by the IETF's TLS working
+ group.
+ This package contains the GnuTLS shared library, needed by other programs.
+
+http://www.gnu.org/software/gnutls/
+@@
+Package: libgnutls-extra
+Version: 2.4.1-2.2
+Depends:  +libgnutls
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: GNU TLS (extra library)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  GnuTLS is a project that aims to develop a library which provides a
+ secure layer, over a reliable transport layer. Currently the GnuTLS
+ library implements the proposed standards by the IETF's TLS working
+ group.
+ This package contains the GnuTLS extra shared library.
+
+http://www.gnu.org/software/gnutls/
+@@
+Package: libgnutls-openssl
+Version: 2.4.1-2.2
+Depends:  +libgnutls
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: GNU TLS (OpenSSL compat library)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  GnuTLS is a project that aims to develop a library which provides a
+ secure layer, over a reliable transport layer. Currently the GnuTLS
+ library implements the proposed standards by the IETF's TLS working
+ group.
+ This package contains the GnuTLS OpenSSL compatibility layer shared library.
+
+http://www.gnu.org/software/gnutls/
+@@
+

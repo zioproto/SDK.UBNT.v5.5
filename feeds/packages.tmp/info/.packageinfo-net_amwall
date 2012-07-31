@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/amwall/Makefile
+Package: amwall
+Submenu: firewall
+Version: 0.1.0-1
+Depends: +libamsel
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: PF to iptables
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	PF to iptables
+
+http://www.amselinux.net/
+@@
+

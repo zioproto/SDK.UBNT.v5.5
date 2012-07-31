@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/lib/libXau/Makefile
+Package: libXau
+Submenu: libraries
+Version: 1.0.4-4
+Depends: 
+Provides: 
+Build-Depends: xproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: libXau
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libXau
+
+http://xorg.freedesktop.org/
+@@
+

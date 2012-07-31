@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/libs/st2205tool/Makefile
+Package: st2205tool
+Version: 1.4pre1-1
+Depends: +libgd
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: ST220xu powered photo-frames library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   Library for hacked photo-frames based on st220xu chipset. You may use those photo-frames with
+  mplayer or LCD4Linux
+
+http://picframe.spritesserver.nl/wiki/
+@@
+

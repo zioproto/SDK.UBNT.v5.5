@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/bitchx/Makefile
+Package: bitchx
+Submenu: Instant Messaging
+Version: 1.1-1
+Depends: +libncurses
+Provides: 
+Build-Depends: libncurses
+Section: net
+Category: Network
+Title: popular IRC client
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	popular IRC client
+
+http://www.bitchx.org
+@@
+

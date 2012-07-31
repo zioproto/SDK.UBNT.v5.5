@@ -1,0 +1,14 @@
+Source-Makefile: feeds/packages/devel/gcc/Makefile
+Package: gcc
+Version: 1
+Depends: @TARGET_x86 @NO_STRIP
+Provides: 
+Build-Depends: 
+Section: devel
+Category: Development
+Title: gcc
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	build a native toolchain for compiling on target
+@@
+

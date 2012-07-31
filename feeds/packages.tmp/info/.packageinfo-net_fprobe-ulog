@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/fprobe-ulog/Makefile
+Package: fprobe-ulog
+Version: 1.1-1
+Depends: +libpthread
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: NetFlow probe (ulog-based)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A NetFlow probe obtaining packets through linux netfilter code 
+	(iptables ULOG target).
+
+http://fprobe.sourceforge.net
+@@
+

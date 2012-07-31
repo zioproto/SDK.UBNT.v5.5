@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/lib/libXcomposite/Makefile
+Package: libXcomposite
+Submenu: libraries
+Version: 0.4.0-2
+Depends: +libX11 +libXfixes +libXext
+Provides: 
+Build-Depends: compositeproto fixesproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: libXcomposite
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libXcomposite
+
+http://xorg.freedesktop.org/
+@@
+

@@ -1,0 +1,31 @@
+Source-Makefile: feeds/packages/net/batman/Makefile
+Package: batmand
+Version: r1206-1
+Depends: +libpthread +kmod-tun
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: B.A.T.M.A.N. layer 3 routing daemon
+Maintainer: Marek Lindner <lindner_marek@yahoo.de>
+Type: ipkg
+Description: B.A.T.M.A.N. layer 3 routing daemon
+
+http://www.open-mesh.net/
+@@
+Package: kmod-batgat
+Submenu: Network Support
+Version: <LINUX_VERSION>+r1206--1
+Depends: +batmand
+Provides: 
+Build-Depends: 
+Section: kernel
+Category: Kernel modules
+Title: B.A.T.M.A.N. gateway module
+Maintainer: Marek Lindner <lindner_marek@yahoo.de>
+Type: ipkg
+Description:  Kernel gateway module for B.A.T.M.A.N.
+
+http://www.open-mesh.net/
+@@
+

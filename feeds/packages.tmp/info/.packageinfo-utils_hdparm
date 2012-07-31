@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/utils/hdparm/Makefile
+Package: hdparm
+Version: 8.9-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Hard disk drive configuration utilitity
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Tune hard disk parameters for high performance.
+	Get/set hard disk parameters for Linux IDE drives.
+	Primary use is for enabling irq-unmasking and IDE multiplemode.
+
+http://sourceforge.net/projects/hdparm/
+@@
+

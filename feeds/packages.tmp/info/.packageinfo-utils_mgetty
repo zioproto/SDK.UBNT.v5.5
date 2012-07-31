@@ -1,0 +1,14 @@
+Source-Makefile: feeds/packages/utils/mgetty/Makefile
+Package: mgetty
+Version: 1.1.36-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: A data/fax solution for your analog modem
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: A data/fax solution for your analog modem.
+@@
+

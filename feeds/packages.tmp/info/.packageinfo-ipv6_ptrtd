@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/ipv6/ptrtd/Makefile
+Package: ptrtd
+Version: 0.5.2-1
+Depends: +kmod-ipv6 +kmod-tun +ip
+Provides: 
+Build-Depends: 
+Section: ipv6
+Category: IPv6
+Title: Portable Transport Relay Translator Daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	The Portable Transport Relay Translator Daemon (pTRTd)
+	is a method of allowing IPv6 hosts to communicate with IPv4 hosts.
+
+http://v6web.litech.org/ptrtd/
+@@
+

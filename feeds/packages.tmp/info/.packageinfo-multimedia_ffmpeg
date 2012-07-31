@@ -1,0 +1,71 @@
+Source-Makefile: feeds/packages/multimedia/ffmpeg/Makefile
+Package: ffmpeg
+Version: 20080419-1
+Depends:  +libpthread +libffmpeg
+Provides: 
+Build-Depends: 
+Section: multimedia
+Category: Multimedia
+Title: FFmpeg program
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  FFmpeg is a a software package that can record, convert and stream digital 
+ audio and video in numerous formats.
+ .
+ This package contains the FFmpeg command line tool.
+
+http://ffmpeg.mplayerhq.hu/
+@@
+Package: ffserver
+Version: 20080419-1
+Depends:  +libpthread +libffmpeg
+Provides: 
+Build-Depends: 
+Section: multimedia
+Category: Multimedia
+Title:  streaming server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  FFmpeg is a a software package that can record, convert and stream digital 
+ audio and video in numerous formats.
+ .
+ This package contains the FFmpeg streaming server.
+
+http://ffmpeg.mplayerhq.hu/
+@@
+Package: libffmpeg
+Menu: 1
+Version: 20080419-1
+Depends:  +libpthread +libfaad2 +zlib
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: FFmpeg libraries
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	FFmpeg libraries
+
+http://ffmpeg.mplayerhq.hu/
+@@
+Config: 
+		menu "Configuration"
+				depends on PACKAGE_libffmpeg
+		source "feeds/packages/multimedia/ffmpeg/Config.in"
+		endmenu
+@@
+Package: libpostproc
+Version: 20080419-1
+Depends: +libffmpeg
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: libpostproc
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libpostproc
+
+http://ffmpeg.mplayerhq.hu/
+@@
+

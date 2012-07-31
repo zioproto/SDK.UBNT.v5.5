@@ -1,0 +1,14 @@
+Source-Makefile: feeds/packages/utils/cifsmount/Makefile
+Package: cifsmount
+Version: 1.5-2
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: CIFS mounting helper utility
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	An user space helper utility for mounting remote CIFS shares.
+@@
+

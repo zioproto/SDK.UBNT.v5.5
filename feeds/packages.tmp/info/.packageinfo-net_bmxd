@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/bmxd/Makefile
+Package: bmxd
+Version: r1075-1
+Depends: +libpthread +kmod-tun
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: B.A.T.M.A.N. Experimental (BMX) layer 3 routing daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: B.A.T.M.A.N. Experimental (BMX) layer 3 routing daemon
+
+https://www.open-mesh.net/
+@@
+

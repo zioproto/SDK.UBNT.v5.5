@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/mdadm/Makefile
+Package: mdadm
+Version: 2.6.7.2-1
+Depends: @LINUX_2_6
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: A tool for managing Soft RAID under Linux
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A tool for managing Soft RAID under Linux
+
+http://www.kernel.org/pub/linux/utils/raid/mdadm/
+@@
+

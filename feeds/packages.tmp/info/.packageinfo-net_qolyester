@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/net/qolyester/Makefile
+Package: qolyester
+Version: 20070910-1
+Depends: +libpthread @!TARGET_avr32 @!powerpc
+Provides: 
+Build-Depends: libnotimpl
+Section: net
+Category: Network
+Title: OLSR implementation with QoS
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	This is an implementation from scratch of the OLSR protocol.
+	It is written in the C++ programming language and its goals
+	are modularity, efficiency and conformance to RFC 3626 (OLSR).
+
+http://qolsr.lri.fr/code/
+@@
+

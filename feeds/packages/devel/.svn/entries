@@ -1,0 +1,46 @@
+10
+
+dir
+32837
+svn://svn.openwrt.org/openwrt/branches/packages_8.09/devel
+svn://svn.openwrt.org/openwrt
+
+
+
+2009-01-13T21:53:14.639339Z
+14028
+lars
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3c298f89-4303-0410-b956-a3cf2f4a3e73
+
+binutils
+dir
+
+diffutils
+dir
+
+gcc
+dir
+
+make
+dir
+
+patch
+dir
+
+build-essential
+dir
+

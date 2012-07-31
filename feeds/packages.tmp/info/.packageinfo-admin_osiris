@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/admin/osiris/Makefile
+Package: osirisd
+Version: 4.2.3-1
+Depends: +libopenssl +libpthread
+Provides: 
+Build-Depends: 
+Section: admin
+Category: Administration
+Title: Host integrity monitoring system (scanning agent)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Host integrity monitoring system (scanning agent)
+
+http://www.hostintegrity.com/osiris
+@@
+

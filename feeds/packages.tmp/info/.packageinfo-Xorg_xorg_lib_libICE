@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/lib/libICE/Makefile
+Package: libICE
+Submenu: libraries
+Version: 1.0.4-4
+Depends: 
+Provides: 
+Build-Depends: xproto xtrans libtool
+Section: xorg-lib
+Category: Xorg
+Title: libICE
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libICE
+
+http://xorg.freedesktop.org/
+@@
+

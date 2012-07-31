@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/multimedia/linux-uvc/Makefile
+Package: kmod-video-uvc
+Submenu: Video Support
+Version: <LINUX_VERSION>+r261--1
+Depends: @LINUX_2_6 @USB_SUPPORT +kmod-usb-core +kmod-video-core
+Provides: 
+Build-Depends: 
+Section: kernel
+Category: Kernel modules
+Title: USB Video Class (UVC) support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	USB Video Class (UVC) support
+
+http://linux-uvc.berlios.de/
+@@
+

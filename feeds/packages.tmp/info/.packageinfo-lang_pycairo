@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/pycairo/Makefile
+Package: pycairo
+Submenu: Python
+Version: 1.8.0-3
+Depends: python-core +cairo
+Provides: 
+Build-Depends: libtool
+Section: lang
+Category: Languages
+Title: Cairo bindings to python
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   Cairo bindings for python
+
+http://www.cairographics.org/pycairo/
+@@
+

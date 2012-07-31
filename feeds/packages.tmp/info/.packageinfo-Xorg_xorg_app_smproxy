@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/app/smproxy/Makefile
+Package: smproxy
+Submenu: app
+Version: 1.0.2-1
+Depends: +libXt +libXmu
+Provides: 
+Build-Depends: 
+Section: xorg-app
+Category: Xorg
+Title: smproxy
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	smproxy
+
+http://xorg.freedesktop.org/
+@@
+

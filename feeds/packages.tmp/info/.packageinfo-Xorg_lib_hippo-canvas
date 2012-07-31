@@ -1,0 +1,33 @@
+Source-Makefile: feeds/packages/Xorg/lib/hippo-canvas/Makefile
+Package: hippo-canvas
+Submenu: libraries
+Version: 0.3.0-2
+Depends: +librsvg +gtk2 +cairo +libcroco +pango
+Provides: 
+Build-Depends: libtool
+Section: xorg-libs
+Category: Xorg
+Title: Hippo Canvas
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: The Hippo Canvas is a Cairo/GObject/GTK+ based canvas, written in C with
+support for flexible layout, CSS styling, and initial work on animations.
+
+http://developer.mugshot.org/wiki/Hippo_Canvas
+@@
+Package: python-hippo-canvas
+Submenu: Python
+Version: 0.3.0-2
+Depends: python-core +PACKAGE_python-hippo-canvas:python-gtk +PACKAGE_python-hippo-canvas:pycairo +hippo-canvas
+Provides: 
+Build-Depends: libtool
+Section: lang-python
+Category: Languages
+Title: Python bindings for hippo canvas
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Python bindings for hippo canvas
+
+http://developer.mugshot.org/wiki/Hippo_Canvas
+@@
+

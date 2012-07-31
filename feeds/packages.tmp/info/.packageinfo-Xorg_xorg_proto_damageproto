@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/proto/damageproto/Makefile
+Package: damageproto
+Submenu: proto
+Version: 1.1.0-3
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-proto
+Category: Xorg
+Title: damageproto
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	damageproto
+
+http://xorg.freedesktop.org/
+@@
+

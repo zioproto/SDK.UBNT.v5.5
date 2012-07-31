@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/ezxml/Makefile
+Package: libezxml
+Version: 0.8.6-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: ezXML (library)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	ezXML is a fast and lightweight C library for parsing XML documents.
+
+http://ezxml.sourceforge.net/
+@@
+

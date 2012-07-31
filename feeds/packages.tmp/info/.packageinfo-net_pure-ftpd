@@ -1,0 +1,21 @@
+Source-Makefile: feeds/packages/net/pure-ftpd/Makefile
+Package: pure-ftpd
+Submenu: FTP
+Version: 1.0.22-1
+Depends: +libelf
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Secure FTP made easy!
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Pure-FTPd is a free (BSD), secure, production-quality and standard-conformant
+ FTP server. It doesn't provide useless bells and whistles, but focuses on
+ efficiency and ease of use.
+ It provides simple answers to common needs, plus unique  useful features for
+ personal users as well as hosting providers.
+
+http://www.pureftpd.org/project/pure-ftpd
+@@
+

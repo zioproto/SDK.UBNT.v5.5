@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/proto/compositeproto/Makefile
+Package: compositeproto
+Submenu: proto
+Version: 0.4-3
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-proto
+Category: Xorg
+Title: compositeproto
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	compositeproto
+
+http://xorg.freedesktop.org/
+@@
+

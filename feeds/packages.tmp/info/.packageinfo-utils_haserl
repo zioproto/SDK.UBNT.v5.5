@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/haserl/Makefile
+Package: haserl
+Version: 0.9.24-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: A CGI wrapper to embed shell scripts in HTML documents
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A CGI wrapper to embed shell scripts in HTML documents
+
+http://haserl.sourceforge.net/
+@@
+

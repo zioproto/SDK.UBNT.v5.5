@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/lib/libSM/Makefile
+Package: libSM
+Submenu: libraries
+Version: 1.0.3-4
+Depends: +libICE
+Provides: 
+Build-Depends: xproto xtrans libtool
+Section: xorg-lib
+Category: Xorg
+Title: libSM
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libSM
+
+http://xorg.freedesktop.org/
+@@
+

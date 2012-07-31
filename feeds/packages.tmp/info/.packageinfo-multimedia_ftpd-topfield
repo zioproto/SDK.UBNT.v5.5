@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/multimedia/ftpd-topfield/Makefile
+Package: ftpd-topfield
+Version: 0.7.4-1
+Depends: @USB_SUPPORT
+Provides: 
+Build-Depends: 
+Section: multimedia
+Category: Multimedia
+Title: Topfield PVR access via FTP
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: FTP server to export the filesystem of a connected Topfield PVR
+
+http://puppy.sourceforge.net/
+@@
+

@@ -1,0 +1,36 @@
+Source-Makefile: feeds/packages/libs/openldap/Makefile
+Package: libopenldap
+Version: 2.2.29-1
+Depends: +libopenssl +libsasl2
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: LDAP implementation (libraries)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: =
+	OpenLDAP Software is an open source implementation of the 
+	Lightweight Directory Access Protocol (LDAP).	
+	This package contains the shared LDAP client libraries, needed by other programs.
+
+http://www.openldap.org/
+@@
+Package: openldap-utils
+Version: 2.2.29-1
+Depends: +libopenldap
+Provides: 
+Build-Depends: libtool
+Section: utils
+Category: Utilities
+Title: LDAP implementation (utilities)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: =
+	OpenLDAP Software is an open source implementation of the 
+	Lightweight Directory Access Protocol (LDAP).	
+	This package contains client programs required to access LDAP servers.
+
+http://www.openldap.org/
+@@
+

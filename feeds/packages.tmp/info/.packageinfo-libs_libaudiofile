@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/libs/libaudiofile/Makefile
+Package: libaudiofile
+Version: 0.2.6-2
+Depends: 
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: Audio File library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	The audiofile library allows the processing of audio data to and from audio 
+	files of many common formats (currently AIFF, AIFF-C, WAVE, NeXT/Sun, BICS, 
+	and raw data).
+
+http://www.68k.org/~michael/audiofile/
+@@
+

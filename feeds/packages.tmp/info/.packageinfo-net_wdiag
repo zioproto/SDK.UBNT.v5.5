@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/wdiag/Makefile
+Package: wdiag
+Version: 0.9-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Westell DSL Modem Diagnostics for Linux
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: A collection of utilities to get DSL stats from Westell DSL modems.
+
+http://sourceforge.net/projects/wdiag/
+@@
+

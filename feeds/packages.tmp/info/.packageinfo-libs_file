@@ -1,0 +1,36 @@
+Source-Makefile: feeds/packages/libs/file/Makefile
+Package: libmagic
+Version: 4.26-1
+Depends: +zlib
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: Determines file type using magic numbers
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Determines file type using "magic" numbers
+
+ftp://ftp.astron.com/pub/file/
+@@
+Package: file
+Version: 4.26-1
+Depends: +libmagic
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Determines file type using magic numbers
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  File tests each argument in an attempt to classify it. There
+ are three sets of tests, performed in this order: filesystem
+ tests, magic number tests, and language tests. The first test
+ that succeeds causes the file type to be printed.
+
+ Starting with version 4, the file command is not much more than
+ a wrapper around the "magic" library. 
+
+ftp://ftp.astron.com/pub/file/
+@@
+

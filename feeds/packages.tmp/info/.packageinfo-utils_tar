@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/utils/tar/Makefile
+Package: tar
+Version: 1.20-1
+Depends: +bzip2
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: GNU tar
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Tar is a program for packaging a set of files as a
+	single archive in tar format.
+
+http://www.gnu.org/software/tar/
+@@
+

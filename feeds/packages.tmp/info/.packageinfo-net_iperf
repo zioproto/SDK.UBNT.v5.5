@@ -1,0 +1,38 @@
+Source-Makefile: feeds/packages/net/iperf/Makefile
+Package: iperf
+Submenu: Monitoring
+Version: 2.0.4-1
+Depends: +uclibcxx
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Internet Protocol bandwidth measuring tool (with single thread support)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Iperf is a modern alternative for measuring TCP and UDP bandwidth 
+ performance, allowing the tuning of various parameters and 
+ characteristics.
+ This package is built with single thread support.
+
+http://dast.nlanr.net/Projects/Iperf/
+@@
+Package: iperf-mt
+Submenu: Monitoring
+Version: 2.0.4-1
+Depends: +uclibcxx +libpthread
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Internet Protocol bandwidth measuring tool (with multithread support)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Iperf is a modern alternative for measuring TCP and UDP bandwidth 
+ performance, allowing the tuning of various parameters and 
+ characteristics.
+ This package is built with multithread support.
+
+http://dast.nlanr.net/Projects/Iperf/
+@@
+

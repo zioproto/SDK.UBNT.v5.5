@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/app/xclipboard/Makefile
+Package: xclipboard
+Submenu: app
+Version: 1.0.1-2
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-app
+Category: Xorg
+Title: xclipboard
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xclipboard
+
+http://xorg.freedesktop.org/
+@@
+

@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/sound/scmpc/Makefile
+Package: scmpc
+Version: 0.2.2-1
+Depends: +libcurl +libdaemon +argtable +confuse
+Provides: 
+Build-Depends: 
+Section: sound
+Category: Sound
+Title: A MPD client which submits your tracks to Last.Fm
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   scmpc is a multithreaded, robust client for MPD to submit tracks to Audioscrobbler (Last.fm).
+
+http://scmpc.berlios.de/
+@@
+

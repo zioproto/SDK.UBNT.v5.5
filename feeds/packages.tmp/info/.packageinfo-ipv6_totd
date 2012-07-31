@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/ipv6/totd/Makefile
+Package: totd
+Version: 1.5.1-1
+Depends: +kmod-ipv6
+Provides: 
+Build-Depends: 
+Section: ipv6
+Category: IPv6
+Title: Small DNS proxy that supports IPv6/IPv4 record translation
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	totd is a small DNS proxy nameserver which supports IPv6 and enable IPv6
+	only sites to access IPv4 sites by using some translation mechanism such
+	as NAT-PT, KAME faith, etc...
+
+http://pasta.cs.uit.no/software/totd.html
+@@
+

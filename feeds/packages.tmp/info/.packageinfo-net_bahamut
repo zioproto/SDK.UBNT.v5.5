@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/bahamut/Makefile
+Package: bahamut
+Version: 1.8.4-1
+Depends: +libopenssl +zlib
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Bahamut IRC server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Bahamut IRC server
+
+http://bahamut.dal.net
+@@
+

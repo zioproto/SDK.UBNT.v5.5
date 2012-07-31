@@ -1,0 +1,47 @@
+Source-Makefile: feeds/packages/lang/sablevm-sdk/Makefile
+Package: sablevm
+Submenu: Java
+Prereq-Check: 1
+Version: 1.13-1
+Depends: +libltdl +libpopt +libpthread +zlib @!TARGET_avr32
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: A Java Virtual Machine (JVM) implementation (full)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  SableVM is a robust, extremely portable, efficient, and specifications-
+ -compliant Java virtual machine that aims to be easy to maintain and to 
+ extend. It features a state-of-the-art and efficient interpreter engine.
+ Its source code is very accessible and easy to understand. It also has 
+ many robustness features that have been the object of careful design.
+ .
+ This package contains the full set of Java classes.
+
+http://sablevm.org/
+@@
+Package: sablevm-mini
+Submenu: Java
+Prereq-Check: 1
+Version: 1.13-1
+Depends: +libltdl +libpopt +libpthread +zlib @!TARGET_avr32
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: A Java Virtual Machine (JVM) implementation (minimal)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  SableVM is a robust, extremely portable, efficient, and specifications-
+ -compliant Java virtual machine that aims to be easy to maintain and to 
+ extend. It features a state-of-the-art and efficient interpreter engine.
+ Its source code is very accessible and easy to understand. It also has 
+ many robustness features that have been the object of careful design.
+ .
+ This package contains only the minimal set of Java classes needed to 
+ run a simple "HelloWorld" program (included in this package).
+
+http://sablevm.org/
+@@
+

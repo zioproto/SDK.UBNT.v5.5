@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/taglib/Makefile
+Package: taglib
+Version: 1.4-2
+Depends: +uclibcxx +zlib @!TARGET_avr32
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: Audio output library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Audio output library
+
+http://developer.kde.org/~wheeler/taglib.html
+@@
+

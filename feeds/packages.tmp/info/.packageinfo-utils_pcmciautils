@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/pcmciautils/Makefile
+Package: pcmciautils
+Version: 015-1
+Depends: +sysfsutils @LINUX_2_6 @PCMCIA_SUPPORT
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: PCMCIA Utilities
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	PCMCIA Utilities
+
+http://www.kernel.org/pub/linux/utils/kernel/pcmcia/pcmcia.html
+@@
+

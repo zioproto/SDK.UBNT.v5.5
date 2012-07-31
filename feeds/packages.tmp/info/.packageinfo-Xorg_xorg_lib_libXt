@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/lib/libXt/Makefile
+Package: libXt
+Submenu: libraries
+Version: 1.0.5-4
+Depends: +libSM +libX11
+Provides: 
+Build-Depends: xproto kbproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: libXt
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libXt
+
+http://xorg.freedesktop.org/
+@@
+

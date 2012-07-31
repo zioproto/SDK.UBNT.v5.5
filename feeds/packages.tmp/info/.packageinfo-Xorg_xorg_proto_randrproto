@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/proto/randrproto/Makefile
+Package: randrproto
+Submenu: proto
+Version: 1.2.1-3
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-proto
+Category: Xorg
+Title: randrproto
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	randrproto
+
+http://xorg.freedesktop.org/
+@@
+

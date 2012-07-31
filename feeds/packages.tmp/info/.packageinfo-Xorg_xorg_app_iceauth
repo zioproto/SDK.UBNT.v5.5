@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/app/iceauth/Makefile
+Package: iceauth
+Submenu: app
+Version: 1.0.2-3
+Depends: +libICE
+Provides: 
+Build-Depends: xproto
+Section: xorg-app
+Category: Xorg
+Title: iceauth
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	iceauth
+
+http://xorg.freedesktop.org/
+@@
+

@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/libptmalloc3/Makefile
+Package: libptmalloc3
+Version: 20060531-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: Efficient malloc implementation
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Efficient malloc implementation
+
+http://www.malloc.de/en/
+@@
+

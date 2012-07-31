@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/utils/smartmontools/Makefile
+Package: smartmontools
+Version: 5.38-1
+Depends: +uclibcxx
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: S.M.A.R.T Monitoring Tool
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	smartmontools contains utility programs (smartctl, smartd) to
+	control/monitor storage systems using the Self-Monitoring, Analysis
+	and Reporting Technology System (S.M.A.R.T.) built into most modern
+	ATA and SCSI disks. It is derived from smartsuite.
+
+http://smartmontools.sourceforge.net/
+@@
+

@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/iptables-snmp/Makefile
+Package: iptables-snmp
+Submenu: firewall
+Version: 0.1-1
+Depends: +snmpd
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: An snmpd plugin to access iptables rules
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	This is a plugin that makes iptables rules accessable from snmpd.
+
+http://www.nobiscuit.com/iptables-snmp/
+@@
+

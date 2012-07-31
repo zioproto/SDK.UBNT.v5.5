@@ -1,0 +1,47 @@
+Source-Makefile: feeds/packages/net/samba/Makefile
+Package: samba-common
+Submenu: samba - NetBIOS/SMB implementation
+Version: 2.0.10-4.1
+Depends: +libgcc
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: NetBIOS/SMB server and client shared files
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	NetBIOS/SMB server and client shared files
+
+http://www.samba.org/
+@@
+Package: samba-server
+Submenu: samba - NetBIOS/SMB implementation
+Version: 2.0.10-4.1
+Depends: samba-common
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: NetBIOS/SMB file and print server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	NetBIOS/SMB file and print server
+
+http://www.samba.org/
+@@
+Package: samba-client
+Submenu: samba - NetBIOS/SMB implementation
+Version: 2.0.10-4.1
+Depends: samba-common
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: NetBIOS/SMB simple client
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	NetBIOS/SMB simple client
+
+http://www.samba.org/
+@@
+

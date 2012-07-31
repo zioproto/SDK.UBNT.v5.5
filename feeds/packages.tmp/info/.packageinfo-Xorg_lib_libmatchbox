@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/lib/libmatchbox/Makefile
+Package: libmatchbox
+Submenu: libraries
+Version: 1.9-2
+Depends: +libX11 +libXft +libpng +libjpeg +libXext +pango
+Provides: 
+Build-Depends: libtool
+Section: xorg-libraries
+Category: Xorg
+Title: libmatchbox
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libmatchbox
+
+http://matchbox-project.org
+@@
+

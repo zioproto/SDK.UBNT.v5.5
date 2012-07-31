@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/lsof/Makefile
+Package: lsof
+Version: 4.77-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: LiSt Open Files - a diagnostic tool
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	LiSt Open Files - a diagnostic tool
+
+http://www.akadia.com/services/lsof_intro.html
+@@
+

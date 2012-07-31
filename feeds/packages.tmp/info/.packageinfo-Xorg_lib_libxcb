@@ -1,0 +1,289 @@
+Source-Makefile: feeds/packages/Xorg/lib/libxcb/Makefile
+Package: libxcb
+Submenu: libraries
+Version: 1.1-2
+Depends: +libXau +libXdmcp
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: libxcb provides an interface to the X Window System protocol, which
+replaces the current Xlib interface.
+@@
+Package: libxcb-xlib
+Submenu: libraries
+Version: 1.1-2
+Depends: +libxcb
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb-xlib
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxcb-xlib
+@@
+Package: libxcb-composite
+Submenu: libraries
+Version: 1.1-2
+Depends: +libxcb
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb-composite
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxcb-composite
+@@
+Package: libxcb-damage
+Submenu: libraries
+Version: 1.1-2
+Depends: +libxcb
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb-damage
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxcb-damage
+@@
+Package: libxcb-dpms
+Submenu: libraries
+Version: 1.1-2
+Depends: +libxcb
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb-dpms
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxcb-dpms
+@@
+Package: libxcb-glx
+Submenu: libraries
+Version: 1.1-2
+Depends: +libxcb
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb-glx
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxcb-glx
+@@
+Package: libxcb-randr
+Submenu: libraries
+Version: 1.1-2
+Depends: +libxcb
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb-randr
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxcb-randr
+@@
+Package: libxcb-record
+Submenu: libraries
+Version: 1.1-2
+Depends: +libxcb
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb-record
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxcb-record
+@@
+Package: libxcb-render
+Submenu: libraries
+Version: 1.1-2
+Depends: +libxcb
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb-render
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxcb-render
+@@
+Package: libxcb-res
+Submenu: libraries
+Version: 1.1-2
+Depends: +libxcb
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb-res
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxcb-res
+@@
+Package: libxcb-screensaver
+Submenu: libraries
+Version: 1.1-2
+Depends: +libxcb
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb-screensaver
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxcb-screensaver
+@@
+Package: libxcb-shape
+Submenu: libraries
+Version: 1.1-2
+Depends: +libxcb
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb-shape
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxcb-shape
+@@
+Package: libxcb-shm
+Submenu: libraries
+Version: 1.1-2
+Depends: +libxcb
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb-shm
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxcb-shm
+@@
+Package: libxcb-sync
+Submenu: libraries
+Version: 1.1-2
+Depends: +libxcb
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb-sync
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxcb-sync
+@@
+Package: libxcb-xevie
+Submenu: libraries
+Version: 1.1-2
+Depends: +libxcb
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb-xevie
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxcb-xevie
+@@
+Package: libxcb-xf86dri
+Submenu: libraries
+Version: 1.1-2
+Depends: +libxcb
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb-xf86dri
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxcb-xf86dri
+@@
+Package: libxcb-xfixes
+Submenu: libraries
+Version: 1.1-2
+Depends: +libxcb
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb-xfixes
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxcb-xfixes
+@@
+Package: libxcb-xinerama
+Submenu: libraries
+Version: 1.1-2
+Depends: +libxcb
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb-xinerama
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxcb-xinerama
+@@
+Package: libxcb-xprint
+Submenu: libraries
+Version: 1.1-2
+Depends: +libxcb
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb-xprint
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxcb-xprint
+@@
+Package: libxcb-xtest
+Submenu: libraries
+Version: 1.1-2
+Depends: +libxcb
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb-xtest
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxcb-xtest
+@@
+Package: libxcb-xvmc
+Submenu: libraries
+Version: 1.1-2
+Depends: +libxcb
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb-xvmc
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxcb-xvmc
+@@
+Package: libxcb-xv
+Submenu: libraries
+Version: 1.1-2
+Depends: +libxcb
+Provides: 
+Build-Depends: xcbproto libpthread-stubs libtool
+Section: xorg-libs
+Category: Xorg
+Title: libxcb-xv
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxcb-xv
+@@
+

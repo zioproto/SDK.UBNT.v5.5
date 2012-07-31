@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/ipv6/tspc/Makefile
+Package: tspc
+Version: 2.1.1-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: ipv6
+Category: IPv6
+Title: Client for Hexago's (Freenet6's) IPv6 service
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Client to configure an IPv6 tunnel to 
+	Hexago's (Freenet6's) migration broker.
+
+http://www.hexago.com
+@@
+

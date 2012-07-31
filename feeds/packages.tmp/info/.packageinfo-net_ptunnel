@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/net/ptunnel/Makefile
+Package: ptunnel
+Version: 0.61-1
+Depends: +libpthread +libpcap
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Tunnel TCP connections over ICMP packets
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	ptunnel is an application that allows you to reliably tunnel TCP connections to 
+	a remote host using ICMP echo request and reply packets, commonly known as ping 
+	requests and replies. It acts as a proxy and can handle sockets and secured 
+	identification.
+
+http://www.cs.uit.no/~daniels/PingTunnel/
+@@
+

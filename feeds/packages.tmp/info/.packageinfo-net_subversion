@@ -1,0 +1,62 @@
+Source-Makefile: feeds/packages/net/subversion/Makefile
+Package: subversion-libs
+Submenu: subversion
+Version: 1.5.2-2
+Depends: +zlib +libneon +libintl +libapr +libaprutil +libpthread
+Provides: 
+Build-Depends: libtool
+Section: net
+Category: Network
+Title: subversion libs
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   	Subversion is a free/open-source version control system. That is,
+	Subversion manages files and directories, and the changes made to them,
+	over time. This allows you to recover older versions of your data, or
+	examine the history of how your data changed. In this regard, many
+	people think of a version control system as a sort of time machine.
+  This package contains the subversion libraries.
+
+http://subversion.tigris.org/
+@@
+Package: subversion-client
+Submenu: subversion
+Version: 1.5.2-2
+Depends: +zlib +libneon +libintl +libapr +libaprutil +libpthread subversion-libs
+Provides: 
+Build-Depends: libtool
+Section: net
+Category: Network
+Title: subversion client tools
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   	Subversion is a free/open-source version control system. That is,
+	Subversion manages files and directories, and the changes made to them,
+	over time. This allows you to recover older versions of your data, or
+	examine the history of how your data changed. In this regard, many
+	people think of a version control system as a sort of time machine.
+  This package contains the subversion client tools.
+
+http://subversion.tigris.org/
+@@
+Package: subversion-server
+Submenu: subversion
+Version: 1.5.2-2
+Depends: +zlib +libneon +libintl +libapr +libaprutil +libpthread subversion-libs
+Provides: 
+Build-Depends: libtool
+Section: net
+Category: Network
+Title: subversion server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   	Subversion is a free/open-source version control system. That is,
+	Subversion manages files and directories, and the changes made to them,
+	over time. This allows you to recover older versions of your data, or
+	examine the history of how your data changed. In this regard, many
+	people think of a version control system as a sort of time machine.
+  This package contains the subversion server.
+
+http://subversion.tigris.org/
+@@
+

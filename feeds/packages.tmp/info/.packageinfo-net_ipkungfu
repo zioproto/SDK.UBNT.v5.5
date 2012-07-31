@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/net/ipkungfu/Makefile
+Package: ipkungfu
+Submenu: firewall
+Version: 0.6.1-2
+Depends: +bash
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: IPKungFu is an iptables-based Linux firewall
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	IPKungFu is an iptables-based Linux firewall.
+	It aims to simplify the configuration of Internet
+	connection sharing, port forwarding, and packet filtering.
+
+http://www.linuxkungfu.org/
+@@
+

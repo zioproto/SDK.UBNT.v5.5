@@ -1,0 +1,36 @@
+Source-Makefile: feeds/packages/libs/radiusclient-ng/Makefile
+Package: libradiusclient-ng
+Version: 0.5.6-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: RADIUS client library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Purpose of this project is to build a portable, easy-to-use and 
+ standard compliant library suitable for developing free and commercial 
+ software that need support for RADIUS protocol (RFCs 2128 and 2139).
+ This package contains shared libraries, needed by other programs.
+
+http://developer.berlios.de/projects/radiusclient-ng/
+@@
+Package: radiusclient-ng
+Version: 0.5.6-1
+Depends: +libradiusclient-ng
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: RADIUS client
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Purpose of this project is to build a portable, easy-to-use and 
+ standard compliant library suitable for developing free and commercial 
+ software that need support for RADIUS protocol (RFCs 2128 and 2139).
+ This package contains a RADIUS client.
+
+http://developer.berlios.de/projects/radiusclient-ng/
+@@
+

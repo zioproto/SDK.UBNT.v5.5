@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/softflowd/Makefile
+Package: softflowd
+Version: 0.9.8-1
+Depends: +libpcap
+Provides: 
+Build-Depends: libtool
+Section: net
+Category: Network
+Title: softflowd
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Software netflow exporter
+
+http://www.mindrot.org/projects/softflowd/
+@@
+

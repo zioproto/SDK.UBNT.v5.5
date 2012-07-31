@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/mail/procmail/Makefile
+Package: procmail
+Version: 3.22-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: mail
+Category: Mail
+Title: Mail processing tool
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Procmail is able to process and classify incoming mail into 
+ different mail boxes.
+ Very useful in conjunction with mutt.
+
+http://www.procmail.org
+@@
+

@@ -1,0 +1,31 @@
+Source-Makefile: feeds/packages/libs/axtls/Makefile
+Package: libaxtls
+Version: 1.1.6-2
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: Embedded client/server TLSv1 SSL library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Embedded client/server TLSv1 SSL library
+
+http://sourceforge.net/projects/axtls
+@@
+Package: axhttpd
+Submenu: Web
+Version: 1.1.6-2
+Depends: +libaxtls
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: A small embedded web server using the axTLS library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A small embedded web server using the axTLS library
+
+http://www.axtls.co.nr/
+@@
+

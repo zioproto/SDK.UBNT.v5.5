@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/libs/libnids/Makefile
+Package: libnids
+Version: 1.18-1
+Depends: +libnet0
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: A network intrusion detection library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	An implementation of an E-component of Network Intrusion Detection 
+	System.
+
+http://www.packetfactory.net/projects/libnids/
+@@
+

@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/matrixssl/Makefile
+Package: libmatrixssl
+Version: 1.2.4-1
+Depends: +libpthread
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: Embedded SSL implementation
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Embedded SSL implementation
+
+http://www.matrixssl.org/
+@@
+

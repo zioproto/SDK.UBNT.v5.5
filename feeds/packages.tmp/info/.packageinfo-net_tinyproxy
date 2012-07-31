@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/tinyproxy/Makefile
+Package: tinyproxy
+Version: 1.6.4-1.2
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Tinyproxy is a lightweight HTTP and HTTPS proxy.
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Tinyproxy is a lightweight HTTP and HTTPS proxy.
+
+http://tinyproxy.sourceforge.net/
+@@
+

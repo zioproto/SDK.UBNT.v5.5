@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/net/aoetools/Makefile
+Package: aoetools
+Version: 26-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: ATA over Ethernet tools
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	The aoetools are programs for users of the ATA over Ethernet (AoE)
+	network storage protocol, a simple protocol for using storage over an
+	ethernet LAN. The vblade program (storage target) exports a block
+	device using AoE.
+
+http://aoetools.sourceforge.net/
+@@
+

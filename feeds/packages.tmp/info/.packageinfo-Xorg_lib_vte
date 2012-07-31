@@ -1,0 +1,35 @@
+Source-Makefile: feeds/packages/Xorg/lib/vte/Makefile
+Package: vte
+Submenu: libraries
+Version: 0.17.4-2
+Depends: +gtk2 +libncurses
+Provides: 
+Build-Depends: libtool
+Section: xorg-libs
+Category: Xorg
+Title: Virtual Terminal Widget
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   VTE is a library (libvte) implementing a terminal emulator widget for GTK+,
+  and a minimal sample application (vte) using that.  Vte is mainly used in
+  gnome-terminal, but can also be used to embed a console/terminal in games,
+  editors, IDEs, etc.
+
+http://developer.gnome.org/arch/gnome/widgets/vte.html
+@@
+Package: python-vte
+Submenu: Python
+Version: 0.17.4-2
+Depends: python-core +PACKAGE_python-vte:python-gtk +vte
+Provides: 
+Build-Depends: libtool
+Section: lang-python
+Category: Languages
+Title: Python bindings for vte
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Python bindings for vte
+
+http://developer.gnome.org/arch/gnome/widgets/vte.html
+@@
+

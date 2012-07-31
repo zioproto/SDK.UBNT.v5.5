@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/utils/deco/Makefile
+Package: deco
+Submenu: filemanager
+Version: 39-1
+Depends: +libncurses
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Text-based, full featured file manager
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A clone of Norton Commander for Unix. Text-based, full featured 
+	file manager.
+
+http://deco.sourceforge.net/
+@@
+

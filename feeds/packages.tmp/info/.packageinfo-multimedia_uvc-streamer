@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/multimedia/uvc-streamer/Makefile
+Package: uvc-streamer
+Version: 1-1
+Depends: @LINUX_2_6 +libpthread
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Linux-UVC streaming applicaton
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	This package contains a streaming daemon for Linux-UVC based webcams
+
+http://www.naaa.de/uvc_streamer
+@@
+

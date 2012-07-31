@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/php-pear-db/Makefile
+Package: php-pear-db
+Submenu: PHP
+Version: 1.7.11-1
+Depends: php-pear
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: PEAR DB module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	PEAR DB module
+
+http://pear.php.net/
+@@
+

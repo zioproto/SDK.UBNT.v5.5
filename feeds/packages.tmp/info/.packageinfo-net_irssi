@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/irssi/Makefile
+Package: irssi
+Submenu: Instant Messaging
+Version: 0.8.10-1
+Depends: +glib1 +libncurses
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: console irc client
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	console irc client
+
+http://irssi.org/
+@@
+

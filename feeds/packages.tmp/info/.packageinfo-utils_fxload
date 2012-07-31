@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/fxload/Makefile
+Package: fxload
+Version: 2002_04_11-1
+Depends: @USB_SUPPORT +udev
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Downloading firmware into EZ-USB microcontrollers
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Downloading firmware into EZ-USB microcontrollers
+
+http://linux-hotplug.sourceforge.net/
+@@
+

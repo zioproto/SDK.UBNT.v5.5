@@ -1,0 +1,15 @@
+Source-Makefile: feeds/packages/utils/usb-modeswitch/Makefile
+Package: usb-modeswitch
+Version: 0.9.5-1
+Depends: +libusb
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: USB ModeSwitch
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   A mode switching tool for controlling
+  "flip flop" (multiple device) USB gear.
+@@
+

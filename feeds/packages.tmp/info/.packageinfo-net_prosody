@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/net/prosody/Makefile
+Package: prosody
+Version: 0.2.0-1.2
+Depends: +liblua +libidn +libopenssl
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: XMPP server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   Prosody is an exciting new server for Jabber/XMPP
+  written in Lua. It aims to be easy to use, and light
+  on resources
+
+http://prosody.im
+@@
+

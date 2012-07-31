@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/natpmp/Makefile
+Package: natpmp
+Version: 0.2.3-2
+Depends: +ip
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: A daemon implementing NAT-PMP
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	This is a daemon implementing NAT-PMP. NAT-PMP is a protocol for
+	handling port forwarding requests from clients behind a NAT.
+
+http://savannah.nongnu.org/projects/natpmp
+@@
+

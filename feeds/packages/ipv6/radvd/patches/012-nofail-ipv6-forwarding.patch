@@ -1,0 +1,22 @@
+--- a/radvd.c
++++ b/radvd.c
+@@ -205,19 +205,14 @@ main(int argc, char *argv[])
+          */
+ 	if (check_conffile_perm(username, conf_file) < 0) {
+ 			flog(LOG_WARNING, "Insecure file permissions, but continuing anyway");
+ 	}
+ 	
+ 	/* if we know how to do it, check whether forwarding is enabled */
+ 	if (check_ip6_forwarding()) {
+-		if (get_debuglevel() == 0) {
+-			flog(LOG_ERR, "IPv6 forwarding seems to be disabled, exiting");
+-			exit(1);
+-		}
+-		else
+ 			flog(LOG_WARNING, "IPv6 forwarding seems to be disabled, but continuing anyway.");
+ 	}
+ 
+ 	/* parse config file */
+ 	if (readin_config(conf_file) < 0)
+ 		exit(1);
+ 

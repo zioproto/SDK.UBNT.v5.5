@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/bluez-libs/Makefile
+Package: bluez-libs
+Version: 3.36-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: Bluetooth library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Bluetooth library
+
+http://www.bluez.org/
+@@
+

@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/ipv6/6tunnel/Makefile
+Package: 6tunnel
+Version: 0.11rc2-2.2
+Depends: +libpcap +kmod-sit
+Provides: 
+Build-Depends: 
+Section: ipv6
+Category: IPv6
+Title: IPv4 / IPv6 tunnel proxy
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: IPv4 / IPv6 tunnel proxy
+
+http://toxygen.net/6tunnel/
+@@
+

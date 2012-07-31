@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/bluez-utils/Makefile
+Package: bluez-utils
+Version: 3.36-6
+Depends: +bluez-libs +libpthread +dbus +libintl +libiconv
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Bluetooth utilities
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Bluetooth utilities
+
+http://www.bluez.org/
+@@
+

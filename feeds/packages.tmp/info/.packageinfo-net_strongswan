@@ -1,0 +1,33 @@
+Source-Makefile: feeds/packages/net/strongswan/Makefile
+Package: strongswan
+Version: 2.8.2-2
+Depends: +kmod-strongswan +libgmp @LINUX_2_4
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: strongSwan (daemon)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  strongSwan is an IPsec implementation for Linux.
+ This package contains the strongSwan user-land daemon.
+
+http://www.strongswan.org/
+@@
+Package: kmod-strongswan
+Submenu: Network Support
+Version: <LINUX_VERSION>+2.8.2--2
+Depends: @LINUX_2_4
+Provides: 
+Build-Depends: 
+Section: kernel
+Category: Kernel modules
+Title: strongSwan (kernel module)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  strongSwan is an IPsec implementation for Linux.
+ This package contains the strongSwan kernel module.
+
+http://www.strongswan.org/
+@@
+

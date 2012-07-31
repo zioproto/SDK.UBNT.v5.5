@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/driver/xf86-video-intel/Makefile
+Package: xf86-video-intel
+Submenu: driver
+Version: 2.4.2-3
+Depends: +xserver-xorg
+Provides: 
+Build-Depends: xf86driproto glproto
+Section: xorg-driver
+Category: Xorg
+Title: xf86-video-intel
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xf86-video-intel
+
+http://xorg.freedesktop.org/
+@@
+

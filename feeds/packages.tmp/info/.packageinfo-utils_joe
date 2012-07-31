@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/utils/joe/Makefile
+Package: joe
+Submenu: Editors
+Version: 3.5-1
+Depends: +libncurses
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: JOE - Joes own editor
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: Joe is world-famous Wordstar like text editor.
+
+http://sourceforge.net/projects/joe-editor/
+@@
+

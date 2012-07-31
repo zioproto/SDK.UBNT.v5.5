@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/glib2/Makefile
+Package: glib2
+Version: 2.18.1-4.1
+Depends: +libiconv +libintl +libpthread
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: glib 2.0
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   The GLib library of C routines
+
+http://www.gtk.org/
+@@
+

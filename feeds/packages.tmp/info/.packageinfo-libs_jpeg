@@ -1,0 +1,30 @@
+Source-Makefile: feeds/packages/libs/jpeg/Makefile
+Package: libjpeg
+Version: 6b-1
+Depends: 
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: The Independent JPEG Group's JPEG runtime library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	The Independent JPEG Group's JPEG runtime library
+
+http://www.ijg.org/
+@@
+Package: jpeg-tools
+Version: 6b-1
+Depends: +libjpeg
+Provides: 
+Build-Depends: libtool
+Section: utils
+Category: Utilities
+Title: The Independent JPEG Group's JPEG manipulation tools
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	The Independent JPEG Group's JPEG manipulation tools
+
+http://www.ijg.org/
+@@
+

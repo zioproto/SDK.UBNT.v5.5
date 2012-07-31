@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/driver/xf86-video-nv/Makefile
+Package: xf86-video-nv
+Submenu: driver
+Version: 2.1.12-3
+Depends: +xserver-xorg
+Provides: 
+Build-Depends: 
+Section: xorg-driver
+Category: Xorg
+Title: xf86-video-nv
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xf86-video-nv
+
+http://xorg.freedesktop.org/
+@@
+

@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/net/smtptrapd/Makefile
+Package: smtptrapd
+Version: 1.5-1
+Depends: +libpthread
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: SMTP Trap Daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	The smtptrapd program is a multi-threaded daemon that provides 
+	a RFC 2821 compliant SMTP service that always returns a 4xx soft 
+	error to the RCPT TO verb.
+
+http://smtptrapd.sourceforge.net/
+@@
+

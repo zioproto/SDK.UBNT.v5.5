@@ -1,0 +1,2 @@
+config babeld
+	option interfaces "wl0"

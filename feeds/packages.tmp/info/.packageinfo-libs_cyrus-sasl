@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/cyrus-sasl/Makefile
+Package: libsasl2
+Version: 2.1.20-1
+Depends: 
+Provides: 
+Build-Depends: libopenssl libtool
+Section: libs
+Category: Libraries
+Title: A general purpose authentication library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A general purpose authentication library
+
+http://asg.web.cmu.edu/sasl/
+@@
+

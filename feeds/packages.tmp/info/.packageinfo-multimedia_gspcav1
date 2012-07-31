@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/multimedia/gspcav1/Makefile
+Package: kmod-video-gspca
+Submenu: Video Support
+Version: <LINUX_VERSION>+20071224--1
+Depends: @LINUX_2_6 @!LINUX_2_6_27 @!LINUX_2_6_28 @USB_SUPPORT @!TARGET_uml +kmod-usb-core +kmod-video-core
+Provides: 
+Build-Depends: 
+Section: kernel
+Category: Kernel modules
+Title: SPCA5xx based USB webcam support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	SPCA5xx based USB webcam support
+
+http://mxhaard.free.fr/
+@@
+

@@ -1,0 +1,22 @@
+Source-Makefile: feeds/packages/utils/i2c-tools/Makefile
+Package: i2c-tools
+Version: 3.0.1-1
+Depends: @LINUX_2_6
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: I2C tools for Linux
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  This package contains an heterogeneous set of I2C tools for Linux. These tools
+ were originally part of the lm-sensors package.
+ Includes:
+ - i2cdetect
+ - i2cdump
+ - i2cget
+ - i2cset
+
+http://www.lm-sensors.org/
+@@
+

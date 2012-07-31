@@ -1,0 +1,87 @@
+Source-Makefile: feeds/packages/net/ulogd/Makefile
+Package: ulogd
+Menu: 1
+Version: 1.24-1
+Depends: +iptables
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Netfilter userspace logging daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Netfilter userspace logging daemon
+
+http://gnumonks.org/projects/ulogd
+@@
+Package: ulogd-mod-mysql
+Version: 1.24-1
+Depends: ulogd +libmysqlclient
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Output plugin for logging to a MySQL database
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Output plugin for logging to a MySQL database
+
+http://gnumonks.org/projects/ulogd
+@@
+Package: ulogd-mod-pcap
+Version: 1.24-1
+Depends: ulogd +libpcap
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Output plugin for logging in pcap format
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Output plugin for logging in pcap format
+
+http://gnumonks.org/projects/ulogd
+@@
+Package: ulogd-mod-pgsql
+Version: 1.24-1
+Depends: ulogd +libpq
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Output plugin for logging to a PostgreSQL database
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Output plugin for logging to a PostgreSQL database
+
+http://gnumonks.org/projects/ulogd
+@@
+Package: ulogd-mod-sqlite
+Version: 1.24-1
+Depends: ulogd +libsqlite3
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Output plugin for logging to an SQLite database
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Output plugin for logging to an SQLite database
+
+http://gnumonks.org/projects/ulogd
+@@
+Package: ulogd-mod-extra
+Version: 1.24-1
+Depends: ulogd
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Extra plugins
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	This package contains the LOCAL, LOGEMU, OPRINT, PWSNIFF and SYSLOG plugins.
+
+http://gnumonks.org/projects/ulogd
+@@
+

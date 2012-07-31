@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/utils/macchanger/Makefile
+Package: macchanger
+Version: 1.5.0-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: utility for viewing/manipulating the MAC address
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	This is a GNU/Linux utility for viewing/manipulating the MAC address 
+	of network interfaces.
+
+http://www.alobbs.com/macchanger
+@@
+

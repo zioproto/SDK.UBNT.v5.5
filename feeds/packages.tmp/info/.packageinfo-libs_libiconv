@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/libiconv/Makefile
+Package: libiconv
+Version: 1.9.1-1
+Depends: 
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: Character set conversion library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Character set conversion library
+
+http://www.gnu.org/software/libiconv/
+@@
+

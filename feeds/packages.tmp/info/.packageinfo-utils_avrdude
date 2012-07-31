@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/avrdude/Makefile
+Package: avrdude
+Version: 5.5-1
+Depends: +libncurses
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: AVR Downloader/UploaDEr
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  AVRDUDE is a full featured program for programming Atmel's AVR CPU's.
+
+http://www.bsdhome.com/avrdude/
+@@
+

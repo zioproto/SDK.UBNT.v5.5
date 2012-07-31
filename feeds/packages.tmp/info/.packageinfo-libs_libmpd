@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/libmpd/Makefile
+Package: libmpd
+Version: 0.14.0-2
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: Libmpd is an a library to easily connect to a mpd server.
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: It's wraps around libmpdclient and provides a higher level api.
+
+http://sarine.nl/libmpd
+@@
+

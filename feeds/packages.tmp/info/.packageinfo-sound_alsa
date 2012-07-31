@@ -1,0 +1,15 @@
+Source-Makefile: feeds/packages/sound/alsa/Makefile
+Package: kmod-alsa
+Submenu: Other modules
+Version: <LINUX_VERSION>+1.0.14rc1--1
+Depends: @USB_SUPPORT @LINUX_2_4
+Provides: 
+Build-Depends: 
+Section: kernel
+Category: Kernel modules
+Title: Advanced Linux Sound Architecture
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Advanced Linux Sound Architecture
+@@
+

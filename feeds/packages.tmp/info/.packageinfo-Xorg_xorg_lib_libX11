@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/lib/libX11/Makefile
+Package: libX11
+Submenu: libraries
+Version: 1.1.5-4
+Depends: +libXdmcp +libXau
+Provides: 
+Build-Depends: xproto xextproto xf86bigfontproto kbproto inputproto xtrans xcmiscproto bigreqsproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: libX11
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libX11
+
+http://xorg.freedesktop.org/
+@@
+

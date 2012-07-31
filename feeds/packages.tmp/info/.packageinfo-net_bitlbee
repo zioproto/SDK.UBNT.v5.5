@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/bitlbee/Makefile
+Package: bitlbee
+Submenu: Instant Messaging
+Version: 1.0.1-1
+Depends: +libopenssl +glib1 +libiconv
+Provides: 
+Build-Depends: libopenssl glib1 libiconv
+Section: net
+Category: Network
+Title: IRC gateway to IM chat networks
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	IRC gateway to IM chat networks
+
+http://www.bitlbee.org/
+@@
+

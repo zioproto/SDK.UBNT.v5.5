@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/sound/empcd/Makefile
+Package: empcd
+Version: 2008.02.16-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: sound
+Category: Sound
+Title: EMPCd can control the MPD
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	This is EMPCd which can use /dev/input/event0 or other event devices
+	to control MPD (Music Player Daemon), directly using libmpdclient
+	and other programs, currently using system(2).
+
+http://unfix.org/projects/empcd
+@@
+

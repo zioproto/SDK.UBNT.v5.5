@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/lib/xtrans/Makefile
+Package: xtrans
+Submenu: libraries
+Version: 1.2.1-3
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-lib
+Category: Xorg
+Title: xtrans
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xtrans
+
+http://xorg.freedesktop.org/
+@@
+

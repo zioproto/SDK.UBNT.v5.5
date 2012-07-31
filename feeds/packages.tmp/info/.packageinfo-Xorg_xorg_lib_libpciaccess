@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/lib/libpciaccess/Makefile
+Package: libpciaccess
+Submenu: libraries
+Version: 0.10.3-3
+Depends: +pciutils
+Provides: 
+Build-Depends: libtool
+Section: xorg-libraries
+Category: Xorg
+Title: libpciaccess
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libpciaccess
+
+http://xorg.freedesktop.org/
+@@
+

@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/fprobe/Makefile
+Package: fprobe
+Version: 1.1-1
+Depends: +libpcap +libpthread
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: NetFlow probe (libpcap-based)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	NetFlow probe (libpcap-based)
+
+http://fprobe.sourceforge.net/
+@@
+

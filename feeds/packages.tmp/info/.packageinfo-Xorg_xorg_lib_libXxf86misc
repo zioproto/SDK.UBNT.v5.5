@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/lib/libXxf86misc/Makefile
+Package: libXxf86misc
+Submenu: libraries
+Version: 1.0.1-4
+Depends: +libX11 +libXext
+Provides: 
+Build-Depends: xproto xextproto xf86miscproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: libXxf86misc
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libXxf86misc
+
+http://xorg.freedesktop.org/
+@@
+

@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/utils/io/Makefile
+Package: io
+Version: 1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Raw memory i/o utility
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	This tool can be used to access physical memory addresses from userspace. 
+	It can be useful to access hardware for which no device driver exists!
+
+http://www.sleepie.demon.co.uk/linuxvme/io.c
+@@
+

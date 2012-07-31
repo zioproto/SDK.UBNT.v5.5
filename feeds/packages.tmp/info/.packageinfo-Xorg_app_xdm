@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/app/xdm/Makefile
+Package: xdm
+Submenu: app
+Version: 1.1.6-2.1
+Depends: +libX11 +libXmu +libXau +libXaw
+Provides: 
+Build-Depends: 
+Section: xorg-app
+Category: Xorg
+Title: xdm
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xdm
+
+http://xorg.freedesktop.org/
+@@
+

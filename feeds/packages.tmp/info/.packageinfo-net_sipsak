@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/sipsak/Makefile
+Package: sipsak
+Version: 0.9.6-2
+Depends: +libopenssl
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: SIP (Session Initiation Protocol) stress and diagnostics utility
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	SIP (Session Initiation Protocol) stress and diagnostics utility
+
+http://www.sipsak.org/
+@@
+

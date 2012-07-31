@@ -1,0 +1,15 @@
+Source-Makefile: feeds/packages/Xorg/lib/gtk1/Makefile
+Package: gtk1
+Submenu: framework
+Version: 1.2.10-1
+Depends: +glib1 +libX11 +libXt
+Provides: 
+Build-Depends: libtool
+Section: xorg-framework
+Category: Xorg
+Title: GTK+ 1.2.10 package
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	GTK+ 1.2.10 package
+@@
+

@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/proto/fixesproto/Makefile
+Package: fixesproto
+Submenu: proto
+Version: 4.0-3
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-proto
+Category: Xorg
+Title: fixesproto
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	fixesproto
+
+http://xorg.freedesktop.org/
+@@
+

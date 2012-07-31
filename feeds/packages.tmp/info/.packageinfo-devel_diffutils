@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/devel/diffutils/Makefile
+Package: diffutils
+Version: 2.8.1-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: devel
+Category: Development
+Title: diffutils
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   The Diffutils package contains programs that show the differences between files or directories.
+
+http://www.gnu.org/
+@@
+

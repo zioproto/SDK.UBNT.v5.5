@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/libidn/Makefile
+Package: libidn
+Version: 1.12-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: Stringprep, Punycode and IDNA implementation
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Stringprep, Punycode and IDNA implementation
+
+http://www.gnu.org/software/libidn/
+@@
+

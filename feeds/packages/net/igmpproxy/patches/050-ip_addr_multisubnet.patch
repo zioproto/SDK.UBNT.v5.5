@@ -1,0 +1,161 @@
+--- a/src/ifvc.c
++++ b/src/ifvc.c
+@@ -67,10 +67,14 @@ void buildIfVc() {
+      */
+     {
+         struct ifreq  *IfPt, *IfNext;
++        char prev_name[IFNAMSIZ] = "";
++        struct SubnetList* subnet_entry, * allowed_last = NULL;
+ 
+         // Temp keepers of interface params...
+         uint32_t addr, subnet, mask;
+ 
++        /* This is a trick for a first pointer ++ .. */
++        IfDescEp--;
+         for ( IfPt = IfVc; IfPt < IfEp; IfPt = IfNext ) {
+             struct ifreq IfReq;
+             char FmtBu[ 32 ];
+@@ -85,27 +89,34 @@ void buildIfVc() {
+ 	    if (IfNext < IfPt + 1)
+ 		    IfNext = IfPt + 1;
+ 
+-            strncpy( IfDescEp->Name, IfPt->ifr_name, sizeof( IfDescEp->Name ) );
++			if (strncmp(IfPt->ifr_name, prev_name, sizeof(prev_name)))
++			{
++				IfDescEp++;
++				strncpy( IfDescEp->Name, IfPt->ifr_name, sizeof( IfDescEp->Name ) );
++				strncpy( prev_name, IfPt->ifr_name, sizeof( prev_name ) );
++				allowed_last = NULL;
++				// Set the index to -1 by default.
++				IfDescEp->index			= -1;
++				// Set the default params for the IF...
++				IfDescEp->state			= IF_STATE_DOWNSTREAM;
++				IfDescEp->robustness	= DEFAULT_ROBUSTNESS;
++				IfDescEp->threshold		= DEFAULT_THRESHOLD;   /* ttl limit */
++				IfDescEp->ratelimit		= DEFAULT_RATELIMIT;
++				IfDescEp->InAdr.s_addr	= 0;  /* mark as non-IP interface */
++				IfDescEp->allowednets	= NULL;
++			}
++			/* don't retrieve more info for non-IP interfaces
++			 */
++			if ( IfPt->ifr_addr.sa_family != AF_INET )
++			{
++				my_log( LOG_DEBUG, 0, "buildIfVc: skipping '%s' as non IP",
++						IfDescEp->Name);
++				continue;
++			}
+ 
+-            // Currently don't set any allowed nets...
+-            //IfDescEp->allowednets = NULL;
++            addr = ((struct sockaddr_in *)&IfPt->ifr_addr)->sin_addr.s_addr;
+ 
+-            // Set the index to -1 by default.
+-            IfDescEp->index = -1;
+-
+-            /* don't retrieve more info for non-IP interfaces
+-             */
+-            if ( IfPt->ifr_addr.sa_family != AF_INET ) {
+-                IfDescEp->InAdr.s_addr = 0;  /* mark as non-IP interface */
+-                IfDescEp++;
+-                continue;
+-            }
+-
+-            // Get the interface adress...
+-            IfDescEp->InAdr = ((struct sockaddr_in *)&IfPt->ifr_addr)->sin_addr;
+-            addr = IfDescEp->InAdr.s_addr;
+-
+-            memcpy( IfReq.ifr_name, IfDescEp->Name, sizeof( IfReq.ifr_name ) );
++            memcpy( IfReq.ifr_name, IfPt->ifr_name, sizeof( IfReq.ifr_name ) );
+             IfReq.ifr_addr.sa_family = AF_INET;
+             ((struct sockaddr_in *)&IfReq.ifr_addr)->sin_addr.s_addr = addr;
+ 
+@@ -115,35 +126,48 @@ void buildIfVc() {
+             mask = ((struct sockaddr_in *)&IfReq.ifr_addr)->sin_addr.s_addr;
+             subnet = addr & mask;
+ 
+-            /* get if flags
+-            **
+-            ** typical flags:
+-            ** lo    0x0049 -> Running, Loopback, Up
+-            ** ethx  0x1043 -> Multicast, Running, Broadcast, Up
+-            ** ipppx 0x0091 -> NoArp, PointToPoint, Up 
+-            ** grex  0x00C1 -> NoArp, Running, Up
+-            ** ipipx 0x00C1 -> NoArp, Running, Up
+-            */
+-            if ( ioctl( Sock, SIOCGIFFLAGS, &IfReq ) < 0 )
+-                my_log( LOG_ERR, errno, "ioctl SIOCGIFFLAGS" );
+-
+-            IfDescEp->Flags = IfReq.ifr_flags;
+-
+-            // Insert the verified subnet as an allowed net...
+-            IfDescEp->allowednets = (struct SubnetList *)malloc(sizeof(struct SubnetList));
+-            if(IfDescEp->allowednets == NULL) my_log(LOG_ERR, 0, "Out of memory !");
+-            
+-            // Create the network address for the IF..
+-            IfDescEp->allowednets->next = NULL;
+-            IfDescEp->allowednets->subnet_mask = mask;
+-            IfDescEp->allowednets->subnet_addr = subnet;
+-
+-            // Set the default params for the IF...
+-            IfDescEp->state         = IF_STATE_DOWNSTREAM;
+-            IfDescEp->robustness    = DEFAULT_ROBUSTNESS;
+-            IfDescEp->threshold     = DEFAULT_THRESHOLD;   /* ttl limit */
+-            IfDescEp->ratelimit     = DEFAULT_RATELIMIT; 
+-            
++			subnet_entry = (struct SubnetList *)malloc(sizeof(struct SubnetList));
++			if(subnet_entry == NULL)
++			{
++				my_log(LOG_ERR, 0, "Out of memory !");
++			}
++			else
++			{
++				// Create the network address for the IF..
++				subnet_entry->next = NULL;
++				subnet_entry->subnet_mask = mask;
++				subnet_entry->subnet_addr = subnet;
++				// Insert the verified subnet as an allowed net...
++				if (allowed_last)
++				{
++					allowed_last->next = subnet_entry;
++				}
++				else
++				{
++					IfDescEp->allowednets = subnet_entry;
++				}
++				allowed_last = subnet_entry;
++			}
++
++			if (IfDescEp->InAdr.s_addr == 0)
++			{
++				/* get if flags
++				**
++				** typical flags:
++				** lo    0x0049 -> Running, Loopback, Up
++				** ethx  0x1043 -> Multicast, Running, Broadcast, Up
++				** ipppx 0x0091 -> NoArp, PointToPoint, Up
++				** grex  0x00C1 -> NoArp, Running, Up
++				** ipipx 0x00C1 -> NoArp, Running, Up
++				*/
++				if ( ioctl( Sock, SIOCGIFFLAGS, &IfReq ) < 0 )
++					my_log( LOG_ERR, errno, "ioctl SIOCGIFFLAGS" );
++
++				IfDescEp->Flags = IfReq.ifr_flags;
++
++				// Get the interface adress...
++				IfDescEp->InAdr = ((struct sockaddr_in *)&IfPt->ifr_addr)->sin_addr;
++			}
+ 
+             // Debug log the result...
+             my_log( LOG_DEBUG, 0, "buildIfVc: Interface %s Addr: %s, Flags: 0x%04x, Network: %s",
+@@ -151,9 +175,9 @@ void buildIfVc() {
+                  fmtInAdr( FmtBu, IfDescEp->InAdr ),
+                  IfDescEp->Flags,
+                  inetFmts(subnet,mask, s1));
+-
+-            IfDescEp++;
+         } 
++        /* Restoring after trick for a first pointer ++ .. */
++        IfDescEp++;
+     }
+ 
+     close( Sock );

@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/synce-dccm/Makefile
+Package: synce-dccm
+Version: 0.9.1-1
+Depends: +libsynce +libiconv
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: dccm for mobiles
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: Description TBD
+
+http://sourceforge.net/projects/synce/
+@@
+

@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/pptpd/Makefile
+Package: pptpd
+Submenu: VPN
+Version: 1.3.0-1
+Depends: +kmod-ppp +kmod-gre
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: PopTop pptp server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	PopTop pptp server
+
+http://www.poptop.org/
+@@
+

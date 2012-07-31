@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/shorewall-lite/Makefile
+Package: shorewall-lite
+Submenu: firewall
+Version: 4.0.12-1
+Depends: +ip +iptables +iptables-utils
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Shorewall Lite
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Shoreline Firewall Lite is an iptables-based firewall for Linux systems.
+
+http://www.shorewall.net/
+@@
+

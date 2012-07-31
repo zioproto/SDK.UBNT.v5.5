@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/multimedia/gst-plugins-base/Makefile
+Package: gst-plugins-base
+Version: 0.10.21-3
+Depends: +gstreamer +liboil +pango +libXv +libogg +libvorbis +libtheora +alsa-lib
+Provides: 
+Build-Depends: libtool
+Section: multimedia
+Category: Multimedia
+Title: gst-plugins-base
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	gstreamer base plugins
+
+http://gstreamer.freedesktop.org/
+@@
+

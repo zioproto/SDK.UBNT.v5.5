@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/veth/Makefile
+Package: veth
+Version: 1.0-1
+Depends: +kmod-tun
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Virtual Ethernet Device for Linux
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	VETH is a daemon that virtualizes a ethernet card in Linux. 
+	The virtualization is done via Universal TUN/TAP Driver.
+
+http://www.geocities.com/nestorjpg/veth/
+@@
+

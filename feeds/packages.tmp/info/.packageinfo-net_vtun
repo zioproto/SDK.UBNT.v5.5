@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/vtun/Makefile
+Package: vtun
+Submenu: VPN
+Version: 3.0.1-1
+Depends: +kmod-tun +liblzo +libopenssl +zlib
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: VPN tunneling daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	VPN tunneling daemon
+
+http://vtun.sourceforge.net
+@@
+

@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/petitboot/Makefile
+Package: petitboot
+Version: 0.2-1
+Depends: +libtwin +udev +udevextras +kexec-tools @TARGET_ps3
+Provides: 
+Build-Depends: 
+Section: boot
+Category: Boot Loaders
+Title: Graphical bootloader
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Graphical bootloader
+
+http://ozlabs.org/~jk/projects/petitboot/
+@@
+

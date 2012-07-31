@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/sound/mpc/Makefile
+Package: mpc
+Version: 0.14-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: sound
+Category: Sound
+Title: Music Player Daemon Console Client
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	MPD is a music player supporting flac, mp3 and ogg files.
+	It is typically controlled over a network using one of it's many 
+	clients including mpc(console), gmpc(gnome), phpmp(php) etc.
+	this is MPC
+
+http://www.musicpd.org/
+@@
+

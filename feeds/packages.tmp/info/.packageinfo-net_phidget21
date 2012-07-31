@@ -1,0 +1,30 @@
+Source-Makefile: feeds/packages/net/phidget21/Makefile
+Package: phidget21
+Version: 2.1.4.20080924-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: Phidget API
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  The Phidget API library.
+
+http://www.phidgets.com/
+@@
+Package: phidget-service
+Version: 2.1.4.20080924-1
+Depends: phidget21
+Provides: 
+Build-Depends: 
+Section: misc
+Category: Network
+Title: Phidget Web Service
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  The Phidget Web Service.
+
+http://www.phidgets.com/
+@@
+

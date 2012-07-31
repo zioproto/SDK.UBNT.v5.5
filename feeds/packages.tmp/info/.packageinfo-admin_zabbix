@@ -1,0 +1,47 @@
+Source-Makefile: feeds/packages/admin/zabbix/Makefile
+Package: zabbix-agent
+Submenu: zabbix
+Version: 1.6-1
+Depends: 
+Provides: 
+Build-Depends: libsqlite3
+Section: admin
+Category: Administration
+Title: Zabbix agent
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Zabbix agent
+
+http://www.zabbix.com/
+@@
+Package: zabbix-sender
+Submenu: zabbix
+Version: 1.6-1
+Depends: 
+Provides: 
+Build-Depends: libsqlite3
+Section: admin
+Category: Administration
+Title: Zabbix sender
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Zabbix sender
+
+http://www.zabbix.com/
+@@
+Package: zabbix-server
+Submenu: zabbix
+Version: 1.6-1
+Depends: +libsqlite3
+Provides: 
+Build-Depends: libsqlite3
+Section: admin
+Category: Administration
+Title: Zabbix server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Zabbix server
+
+http://www.zabbix.com/
+@@
+

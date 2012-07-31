@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/multimedia/gstreamer/Makefile
+Package: gstreamer
+Version: 0.10.21-3
+Depends: +libxml2 +glib2
+Provides: 
+Build-Depends: libtool
+Section: multimedia
+Category: Multimedia
+Title: gstreamer
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A framework for streaming media.
+
+http://gstreamer.freedesktop.org/
+@@
+

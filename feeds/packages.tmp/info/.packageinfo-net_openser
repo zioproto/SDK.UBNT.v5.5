@@ -1,0 +1,424 @@
+Source-Makefile: feeds/packages/net/openser/Makefile
+Package: openser
+Menu: 1
+Version: 1.0.1-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Configurable, free SIP server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Configurable, free SIP server
+
+http://www.openser.org
+@@
+Package: openser-mod-acc
+Menu: 0
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Accounting support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Accounting support
+
+http://www.openser.org
+@@
+Package: openser-mod-auth
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Authentication support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Authentication support
+
+http://www.openser.org
+@@
+Package: openser-mod-auth-db
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Authentication with database support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Authentication with database support
+
+http://www.openser.org
+@@
+Package: openser-mod-auth-radius
+Version: 1.0.1-1
+Depends: openser +libradiusclient-ng
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Authentication with RADIUS support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Authentication with RADIUS support
+
+http://www.openser.org
+@@
+Package: openser-mod-avp-radius
+Version: 1.0.1-1
+Depends: openser +libradiusclient-ng
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: AVP with RADIUS support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	AVP with RADIUS support
+
+http://www.openser.org
+@@
+Package: openser-mod-avpops
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: AVP options support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	AVP options support
+
+http://www.openser.org
+@@
+Package: openser-mod-dispatcher
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Dispatcher support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Dispatcher support
+
+http://www.openser.org
+@@
+Package: openser-mod-diversion
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Diversion support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Diversion support
+
+http://www.openser.org
+@@
+Package: openser-mod-flatstore
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Flatstore support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Flatstore support
+
+http://www.openser.org
+@@
+Package: openser-mod-gflags
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Gflags support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Gflags support
+
+http://www.openser.org
+@@
+Package: openser-mod-group
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Group support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Group support
+
+http://www.openser.org
+@@
+Package: openser-mod-group-radius
+Version: 1.0.1-1
+Depends: openser +libradiusclient-ng
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Group with RADIUS support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Group with RADIUS support
+
+http://www.openser.org
+@@
+Package: openser-mod-lcr
+Version: 1.0.1-1
+Depends: openser openser-mod-mysql
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Least Cost Routing support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Least Cost Routing support
+
+http://www.openser.org
+@@
+Package: openser-mod-mediaproxy
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Mediaproxy support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Mediaproxy support
+
+http://www.openser.org
+@@
+Package: openser-mod-msilo
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: MSilo support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	MSilo support
+
+http://www.openser.org
+@@
+Package: openser-mod-mysql
+Version: 1.0.1-1
+Depends: openser +libmysqlclient
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: MySQL support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	MySQL support
+
+http://www.openser.org
+@@
+Package: openser-mod-nathelper
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: NAT helper support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	NAT helper support
+
+http://www.openser.org
+@@
+Package: openser-mod-options
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Options support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Options support
+
+http://www.openser.org
+@@
+Package: openser-mod-pdt
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: PDT support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	PDT support
+
+http://www.openser.org
+@@
+Package: openser-mod-permissions
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Permissions support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Permissions support
+
+http://www.openser.org
+@@
+Package: openser-mod-pike
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: PIKE support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	PIKE support
+
+http://www.openser.org
+@@
+Package: openser-mod-sms
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: SMS support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	SMS support
+
+http://www.openser.org
+@@
+Package: openser-mod-speeddial
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Speeddial supporte
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Speeddial supporte
+
+http://www.openser.org
+@@
+Package: openser-mod-uac
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: UAC support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	UAC support
+
+http://www.openser.org
+@@
+Package: openser-mod-uac-redirect
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: UAC with redirect support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	UAC with redirect support
+
+http://www.openser.org
+@@
+Package: openser-mod-uri
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: URI support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	URI support
+
+http://www.openser.org
+@@
+Package: openser-mod-uri-db
+Version: 1.0.1-1
+Depends: openser +openser-mod-mysql
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: URI with database support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	URI with database support
+
+http://www.openser.org
+@@
+Package: openser-mod-uri-radius
+Version: 1.0.1-1
+Depends: openser +libradiusclient-ng
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: URI with RADIUS support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	URI with RADIUS support
+
+http://www.openser.org
+@@
+Package: openser-mod-xlog
+Version: 1.0.1-1
+Depends: openser
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Advanced logging support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Advanced logging support
+
+http://www.openser.org
+@@
+

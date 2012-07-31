@@ -1,0 +1,22 @@
+Source-Makefile: feeds/packages/net/nrpe/Makefile
+Package: nrpe
+Prereq-Check: 1
+Version: 2.12-1
+Depends: +libopenssl
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Daemon to execute Nagios check commands on remote hosts
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	The NRPE addon is designed to allow you to execute Nagios plugins on
+	remote Linux/Unix machines.  The main reason for doing this is to allow
+	Nagios to monitor "local" resources (like CPU load, memory usage, etc.)
+	on remote machines.  Since these public resources are not usually
+	exposed to external machines, an agent like NRPE must be installed on
+	the remote Linux/Unix machines.
+
+http://www.nagios.org/download
+@@
+

@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/psplash/Makefile
+Package: psplash
+Version: 0.1-1
+Depends: @LINUX_2_6
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: A boot splash screen
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: PSplash is a userspace graphical boot splash screen.
+
+http://projects.o-hand.com/psplash
+@@
+

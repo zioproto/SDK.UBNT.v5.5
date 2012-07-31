@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/devel/patch/Makefile
+Package: patch
+Version: 2.5.4-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: devel
+Category: Development
+Title: patch
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   The Patch package contains a program for modifying or creating files by applying a "patch" file typically created by the diff program.
+
+http://www.gnu.org/
+@@
+

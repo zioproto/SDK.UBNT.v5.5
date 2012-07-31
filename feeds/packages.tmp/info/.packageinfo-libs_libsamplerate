@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/libs/libsamplerate/Makefile
+Package: libsamplerate
+Version: 0.1.3-2
+Depends: +libsndfile
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: Sample Rate Converter
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Secret Rabbit Code (aka libsamplerate) is a Sample Rate
+ Converter for audio.
+
+http://www.mega-nerd.com/SRC/index.html
+@@
+

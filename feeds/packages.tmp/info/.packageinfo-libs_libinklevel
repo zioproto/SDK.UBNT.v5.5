@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/libinklevel/Makefile
+Package: libinklevel
+Version: 0.7.3-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: Printers Ink Level Library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:         Libinklevel is a library for checking the ink level of your printer on a system which runs Linux.
+
+http://libinklevel.sourceforge.net/
+@@
+

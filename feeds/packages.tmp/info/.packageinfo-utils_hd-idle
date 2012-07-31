@@ -1,0 +1,15 @@
+Source-Makefile: feeds/packages/utils/hd-idle/Makefile
+Package: hd-idle
+Submenu: disc
+Version: 20081006-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Another idle-daemon for attached hard drives
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Another idle-daemon for attached hard drives
+@@
+

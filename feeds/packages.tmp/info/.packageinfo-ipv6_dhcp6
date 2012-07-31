@@ -1,0 +1,30 @@
+Source-Makefile: feeds/packages/ipv6/dhcp6/Makefile
+Package: dhcp6-client
+Version: 1.0-1
+Depends: +libncurses
+Provides: 
+Build-Depends: 
+Section: ipv6
+Category: IPv6
+Title: IPv6 DHCP client
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	IPv6 DHCP client
+
+http://sourceforge.net/projects/dhcpv6-linux
+@@
+Package: dhcp6-server
+Version: 1.0-1
+Depends: +libncurses
+Provides: 
+Build-Depends: 
+Section: ipv6
+Category: IPv6
+Title: IPv6 DHCP server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	IPv6 DHCP server
+
+http://sourceforge.net/projects/dhcpv6-linux
+@@
+

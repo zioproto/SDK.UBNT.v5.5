@@ -1,0 +1,31 @@
+Source-Makefile: feeds/packages/libs/ossp-js/Makefile
+Package: js
+Submenu: JavaScript
+Version: 1.6.20070208-2
+Depends:  +libjs +libreadline +libncurses
+Provides: 
+Build-Depends: libtool
+Section: lang
+Category: Languages
+Title: Mozilla JavaScript Engine (interpreter)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Mozilla JavaScript Engine (interpreter)
+
+http://www.ossp.org/pkg/lib/js/
+@@
+Package: libjs
+Version: 1.6.20070208-2
+Depends: 
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: Mozilla JavaScript Engine (library)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Mozilla JavaScript Engine (library)
+
+http://www.ossp.org/pkg/lib/js/
+@@
+

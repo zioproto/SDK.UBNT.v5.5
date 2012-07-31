@@ -1,0 +1,45 @@
+Source-Makefile: feeds/packages/net/batman-advanced/Makefile
+Package: batmand-adv
+Version: r1176-1
+Depends: +libpthread +kmod-tun
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: B.A.T.M.A.N. layer 2 routing daemon
+Maintainer: Marek Lindner <lindner_marek@yahoo.de>
+Type: ipkg
+Description: B.A.T.M.A.N. layer 2 routing daemon
+
+https://www.open-mesh.net/
+@@
+Package: battool
+Version: r1176-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: B.A.T.M.A.N. layer 2 debug tools
+Maintainer: Marek Lindner <lindner_marek@yahoo.de>
+Type: ipkg
+Description: B.A.T.M.A.N. layer 2 debug tools
+
+https://www.open-mesh.net/
+@@
+Package: kmod-batman-advanced
+Submenu: Network Support
+Version: <LINUX_VERSION>+r1176--1
+Depends: @LINUX_2_6
+Provides: 
+Build-Depends: 
+Section: kernel
+Category: Kernel modules
+Title: Kernel routing module for B.A.T.M.A.N. layer 2
+Maintainer: Marek Lindner <lindner_marek@yahoo.de>
+Type: ipkg
+Description: Kernel routing module for B.A.T.M.A.N. layer 2
+
+https://www.open-mesh.net/
+@@
+

@@ -1,0 +1,22 @@
+Source-Makefile: feeds/packages/utils/rdiff-backup/Makefile
+Package: rdiff-backup
+Submenu: Python
+Version: 1.0.5-1
+Depends: python-core +librsync +libpopt
+Provides: 
+Build-Depends: python
+Section: lang
+Category: Languages
+Title: Incremental backup utility
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	rdiff-backup backs up one directory to another, possibly over a
+	network. The target directory ends up a copy of the source directory,
+	but extra reverse diffs are stored in a special subdirectory of that
+	target directory, so you can still recover files lost some time ago.
+	The idea is to combine the best features of a mirror and an incremental
+	backup.
+
+http://www.nongnu.org/rdiff-backup
+@@
+

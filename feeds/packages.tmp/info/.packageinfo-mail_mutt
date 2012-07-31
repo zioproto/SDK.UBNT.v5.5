@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/mail/mutt/Makefile
+Package: mutt
+Version: 1.5.18-1
+Depends: +libopenssl +libncurses
+Provides: 
+Build-Depends: 
+Section: mail
+Category: Mail
+Title: Console mail client
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Console mail client
+
+http://www.mutt.org/
+@@
+

@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/utils/strace/Makefile
+Package: strace
+Version: 4.5.18-2
+Depends: 
+Provides: 
+Build-Depends: libtool
+Section: utils
+Category: Utilities
+Title: System call tracer
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A useful diagnostic, instructional, and debugging tool.
+	Allows you to track what system calls a program makes while it is
+	running.
+
+http://strace.sourceforge.net/
+@@
+

@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/apcupsd/Makefile
+Package: apcupsd
+Version: 3.14.2-1
+Depends: +libpthread
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: UPS control software
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	UPS control software
+
+http://www.apcupsd.org/
+@@
+

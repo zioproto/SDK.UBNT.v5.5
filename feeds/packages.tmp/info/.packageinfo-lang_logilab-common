@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/logilab-common/Makefile
+Package: logilab-common
+Submenu: Python
+Version: 0.29.1-1
+Depends: python-core 
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: logilab-common
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   a bunch of modules providing low level functionnalities shared among some python projects devel
+
+http://www.logilab.fr
+@@
+

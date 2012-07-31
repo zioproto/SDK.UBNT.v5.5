@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/net/wccpd/Makefile
+Package: wccpd
+Version: 0.2-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: a Web Cache Coordination daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	wccpd is a WCCP (Web Cache Coordination Protocol) server daemon 
+	It allows a router (running Linux) to redirect web traffic to a 
+	group of Squid servers using WCCP as the monitoring/controling 
+	protocol.
+
+http://wccpd.sourceforge.net/
+@@
+

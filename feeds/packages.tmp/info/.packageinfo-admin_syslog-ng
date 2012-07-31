@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/admin/syslog-ng/Makefile
+Package: syslog-ng
+Version: 1.6.12-1
+Depends: +libol
+Provides: 
+Build-Depends: 
+Section: admin
+Category: Administration
+Title: A powerful syslog daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	syslog-ng reads and logs messages to the system console, log
+	files, other machines and/or users as specified by its
+	configuration file.
+
+http://www.balabit.com/products/syslog_ng/
+@@
+

@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/dhcp-forwarder/Makefile
+Package: dhcp-forwarder
+Version: 0.7-4
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: DHCP relay agent
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	DHCP relay agent
+
+http://www.nongnu.org/dhcp-fwd/
+@@
+

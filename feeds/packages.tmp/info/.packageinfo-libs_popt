@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/libs/popt/Makefile
+Package: libpopt
+Prereq-Check: 1
+Version: 1.7-4
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: A command line option parsing library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A command line option parsing library
+
+ftp://ftp.rpm.org/pub/rpm/dist/rpm-4.1.x/
+@@
+

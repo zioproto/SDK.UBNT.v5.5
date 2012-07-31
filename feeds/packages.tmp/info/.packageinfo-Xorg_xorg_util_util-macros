@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/util/util-macros/Makefile
+Package: util-macros
+Submenu: utils
+Version: 1.1.6-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-utils
+Category: Xorg
+Title: util-macros
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	util-macros
+
+http://xorg.freedesktop.org/
+@@
+

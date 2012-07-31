@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/proto/xf86rushproto/Makefile
+Package: xf86rushproto
+Submenu: proto
+Version: 1.1.2-3
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-proto
+Category: Xorg
+Title: xf86rushproto
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xf86rushproto
+
+http://xorg.freedesktop.org/
+@@
+

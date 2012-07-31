@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/mini_snmpd/Makefile
+Package: mini-snmpd
+Version: 1.0-1.1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: SNMP server for embedded systems
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	SNMP server for embedded systems
+
+http://members.aon.at/linuxfreak/linux/mini_snmpd.html
+@@
+

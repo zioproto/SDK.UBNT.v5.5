@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/sysfsutils/Makefile
+Package: sysfsutils
+Version: 2.1.0-1
+Depends: @LINUX_2_6
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: sysfs Utilities
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	sysfs Utilities
+
+http://linux-diag.sourceforge.net/Sysfsutils.html
+@@
+

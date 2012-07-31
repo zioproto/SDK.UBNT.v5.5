@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/tctool/Makefile
+Package: tctool
+Version: 0.9.7-1
+Depends: +libstdcpp
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: TrendChip-Modem-Utility
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	tcTool provides access to the console-service of TrendChip-based ADSL-Modems.
+
+http://speedmodem50b.berlios.de/
+@@
+

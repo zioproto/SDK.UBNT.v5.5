@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/cdparanoia/Makefile
+Package: cdparanoia
+Version: 10.2-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Cdparanoia
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Cdparanoia
+
+http://www.xiph.org/paranoia/index.html
+@@
+

@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/tsocks/Makefile
+Package: tsocks
+Version: 1.8-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Transparent SOCKS v4 proxying library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: Transparent SOCKS v4 proxying library
+
+http://tsocks.sourceforge.net/
+@@
+

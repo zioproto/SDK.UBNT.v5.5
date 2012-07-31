@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/hplip/Makefile
+Package: hplip
+Version: 2.8.9-2
+Depends:  +libjpeg +sane-libs +cups +libusb
+Provides: 
+Build-Depends: python
+Section: utils
+Category: Utilities
+Title: HP Linux Imaging and Printing
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	HPLIP is an HP developed solution for printing, scanning, and faxing with HP inkjet and laser based printers in Linux.
+
+http://sourceforge.net/projects/hplip/
+@@
+

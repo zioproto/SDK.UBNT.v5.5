@@ -1,0 +1,20 @@
+Source-Makefile: feeds/packages/net/vrrpd/Makefile
+Package: vrrpd
+Version: 1.0-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Virtual Router Redundancy Protocol daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	VRRPd is an implementation of Virtual Router Redundancy 
+	Protocol as specified in rfc2338. VRRPd is interoperable with 
+	other RFC-based VRRP implementations, including Cisco and 
+	Juniper, and is included as a standard feature on ImageStream 
+	routers.
+
+http://www.sourceforge.net/projects/vrrpd
+@@
+

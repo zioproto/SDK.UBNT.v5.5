@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/driver/xf86-input-mouse/Makefile
+Package: xf86-input-mouse
+Submenu: driver
+Version: 1.3.0-4
+Depends: +xserver-xorg
+Provides: 
+Build-Depends: randrproto inputproto xproto
+Section: xorg-driver
+Category: Xorg
+Title: xf86-input-mouse
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xf86-input-mouse
+
+http://xorg.freedesktop.org/
+@@
+

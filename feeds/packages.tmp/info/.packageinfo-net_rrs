@@ -1,0 +1,30 @@
+Source-Makefile: feeds/packages/net/rrs/Makefile
+Package: rrs
+Version: 1.70-2
+Depends: +uclibcxx +libopenssl
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: A reverse (connecting) remote shell (with SSL support)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A reverse (connecting) remote shell (with SSL support)
+
+http://www.cycom.se/dl/rrs/
+@@
+Package: rrs-nossl
+Version: 1.70-2
+Depends: +uclibcxx
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: A reverse (connecting) remote shell (without SSL support)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A reverse (connecting) remote shell (without SSL support)
+
+http://www.cycom.se/dl/rrs/
+@@
+

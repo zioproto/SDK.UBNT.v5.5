@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/utils/microcom/Makefile
+Package: microcom
+Submenu: terminal
+Version: 1.02-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: A serial terminal emulation program
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	microcom is a minicom-like serial terminal emulator with scripting 
+	support.
+
+http://microcomlinux.homestead.com/
+@@
+

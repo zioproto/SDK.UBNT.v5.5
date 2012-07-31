@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/driver/xf86-video-glamo/Makefile
+Package: xf86-video-glamo
+Submenu: driver
+Version: 20090130-1
+Depends: @DISPLAY_SUPPORT @arm||armeb +xserver-xorg
+Provides: 
+Build-Depends: xproto fontsproto randrproto renderproto videoproto
+Section: xorg-driver
+Category: Xorg
+Title: xf86-video-glamo
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  xorg video driver for the smedia glamo 3362 chip.
+
+http://github.com/larsclausen/xf86-video-glamo/tree/xf86-video-glamo
+@@
+

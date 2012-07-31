@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/usbutils/Makefile
+Package: usbutils
+Version: 0.73-1
+Depends: +libusb +zlib
+Provides: 
+Build-Depends: zlib
+Section: utils
+Category: Utilities
+Title: USB devices listing utilities
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	USB devices listing utilities
+
+http://linux-usb.sourceforge.net/
+@@
+

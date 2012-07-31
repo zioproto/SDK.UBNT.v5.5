@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/hiawatha/Makefile
+Package: hiawatha
+Submenu: Web
+Version: 6.10-1
+Depends: +libpthread
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: A very lightweight web server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   Hiawatha is a webserver for Unix.
+
+http://www.hiawatha-webserver.org/
+@@
+

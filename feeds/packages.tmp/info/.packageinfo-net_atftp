@@ -1,0 +1,28 @@
+Source-Makefile: feeds/packages/net/atftp/Makefile
+Package: atftp
+Submenu: FTP
+Version: 0.7-1
+Depends: +libreadline +libncurses
+Provides: 
+Build-Depends: libncurses libpcre libreadline
+Section: net
+Category: Network
+Title: TFTP client
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	TFTP client
+@@
+Package: atftpd
+Submenu: FTP
+Version: 0.7-1
+Depends: +libpcre +libpthread
+Provides: 
+Build-Depends: libncurses libpcre libreadline
+Section: net
+Category: Network
+Title: TFTP server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	TFTP server
+@@
+

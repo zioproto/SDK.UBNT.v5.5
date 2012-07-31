@@ -1,0 +1,172 @@
+10
+
+dir
+32837
+svn://svn.openwrt.org/openwrt/branches/packages_8.09/lang
+svn://svn.openwrt.org/openwrt
+
+
+
+2009-10-04T13:39:10.579554Z
+17852
+nico
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3c298f89-4303-0410-b956-a3cf2f4a3e73
+
+perl-html-tree
+dir
+
+perl
+dir
+
+pycairo
+dir
+
+jamvm
+dir
+
+php4
+dir
+
+xapian-bindings
+dir
+
+php5
+dir
+
+php-pear
+dir
+
+python-dbus
+dir
+
+pymysql
+dir
+
+perl-lockfile-simple
+dir
+
+perl-compress-bzip2
+dir
+
+python
+dir
+
+ruby
+dir
+
+logilab-astng
+dir
+
+psycopg
+dir
+
+perl-www
+dir
+
+pybluez
+dir
+
+pygtk
+dir
+
+perl-html-parser
+dir
+
+php-pear-db
+dir
+
+perl-uri
+dir
+
+logilab-common
+dir
+
+egenix-mx
+dir
+
+urbi
+dir
+
+cython
+dir
+
+kid
+dir
+
+numpy
+dir
+
+sablevm-sdk
+dir
+
+pysqlite
+dir
+
+pyyaml
+dir
+
+gst-python
+dir
+
+python-gnome-desktop2
+dir
+
+telepathy-python
+dir
+
+php-pear-xmlrpc
+dir
+
+tcl
+dir
+
+twisted
+dir
+
+luaprofiler
+dir
+
+pygobject
+dir
+
+eggdrop
+dir
+
+yapsnmp
+dir
+
+perl-www-curl
+dir
+
+pyserial
+dir
+
+perl-html-tagset
+dir
+
+pyevent
+dir
+
+ipython
+dir
+
+pypcap
+dir
+
+perl-dbi
+dir
+

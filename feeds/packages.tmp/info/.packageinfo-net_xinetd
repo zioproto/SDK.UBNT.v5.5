@@ -1,0 +1,20 @@
+Source-Makefile: feeds/packages/net/xinetd/Makefile
+Package: xinetd
+Version: 2.3.14-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: A powerful and secure super-server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xinetd has access control mechanisms, extensive logging capabilities,
+	the ability to make services available based on time, can place limits
+	on the number of servers that can be started, and has deployable
+	defence mechanisms to protect against port scanners, among other
+	things.
+
+http://www.xinetd.org/
+@@
+

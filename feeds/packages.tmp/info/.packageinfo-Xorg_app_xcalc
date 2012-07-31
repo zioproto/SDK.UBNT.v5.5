@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/app/xcalc/Makefile
+Package: xcalc
+Submenu: app
+Version: 1.0.2-2
+Depends: +libXaw
+Provides: 
+Build-Depends: 
+Section: xorg-app
+Category: Xorg
+Title: xcalc
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xcalc
+
+http://xorg.freedesktop.org/
+@@
+

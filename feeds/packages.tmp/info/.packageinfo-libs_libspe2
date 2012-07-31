@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/libspe2/Makefile
+Package: libspe2
+Version: 2.3.0-1
+Depends: @TARGET_ps3
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: SPE Runtime Management Library for the Cell Broadband Engine
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	SPE Runtime Management Library for the Cell Broadband Engine
+
+http://sourceforge.net/projects/libspe/
+@@
+

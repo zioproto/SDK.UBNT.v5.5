@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/libs/libnetfilter-log/Makefile
+Package: libnetfilter-log
+Version: 0.0.15
+Depends: @LINUX_2_6 +libnfnetlink +kmod-nfnetlink-log
+Provides: 
+Build-Depends: libtool libtool
+Section: libs
+Category: Libraries
+Title: API to packets logged by the kernel packet filter
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  libnetfilter_log is a userspace library providing interface to 
+ packets that have been logged by the kernel packet filter.
+
+http://www.netfilter.org/projects/libnetfilter_log/
+@@
+

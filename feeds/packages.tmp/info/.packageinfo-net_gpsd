@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/gpsd/Makefile
+Package: gpsd
+Version: 2.37-3
+Depends: +libpthread +libstdcpp
+Provides: 
+Build-Depends: libncurses libtool
+Section: net
+Category: Network
+Title: An interface daemon for GPS receivers
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	An interface daemon for GPS receivers
+
+http://gpsd.berlios.de/
+@@
+

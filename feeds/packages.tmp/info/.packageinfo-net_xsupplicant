@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/xsupplicant/Makefile
+Package: xsupplicant
+Version: 1.2.8-2.1
+Depends: +libopenssl +libiw
+Provides: 
+Build-Depends: PACKAGE_kmod-madwifi:madwifi
+Section: net
+Category: Network
+Title: A fully compliant 802.1x authenticator
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  This software allows a GNU/Linux or BSD workstation to authenticate with 
+ a RADIUS server using 802.1x and various EAP protocols.
+
+http://open1x.sourceforge.net/
+@@
+

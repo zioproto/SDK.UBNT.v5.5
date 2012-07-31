@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/utils/stress/Makefile
+Package: stress
+Version: 1.0.0-1
+Depends: @LINUX_2_6
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: stress is a simple stress utility
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	stress is a simple tool that imposes certain types of compute \	stress
+	on UNIX-like operating systems.
+
+http://weather.ou.edu/~apw/projects/stress/
+@@
+

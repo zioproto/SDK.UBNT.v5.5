@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/lib/libXfixes/Makefile
+Package: libXfixes
+Submenu: libraries
+Version: 4.0.3-4
+Depends: +libX11
+Provides: 
+Build-Depends: xproto fixesproto xextproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: libXfixes
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libXfixes
+
+http://xorg.freedesktop.org/
+@@
+

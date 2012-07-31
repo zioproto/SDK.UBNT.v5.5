@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/utils/coreutils/Makefile
+Package: coreutils
+Version: 6.9-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: The GNU core utilities
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Full versions of standard GNU utilities.  Normally, you would not
+	use this package, since the functionality in BusyBox is more than
+        sufficient and much smaller.
+
+http://www.gnu.org/software/coreutils/
+@@
+

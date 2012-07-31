@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/libosip2/Makefile
+Package: libosip2
+Version: 3.1.0-1
+Depends: +libpthread
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: GNU oSIP library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	GNU oSIP library
+
+http://www.gnu.org/software/osip/
+@@
+

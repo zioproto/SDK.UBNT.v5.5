@@ -1,0 +1,50 @@
+Source-Makefile: feeds/packages/Xorg/xorg/xserver/xorg-kdrive/Makefile
+Package: xserver-kdrive-xvesa
+Submenu: server
+Version: 1.5.1-1.1
+Depends: @!avr32 +xserver-common +libpthread +libxkbfile +libXfont +libXau +libXv +libfontenc +pixman +libopenssl @DISPLAY_SUPPORT +X_TSLIB:tslib +X_DRI:libdrm @TARGET_x86
+Provides: xserver
+Build-Depends: randrproto renderproto fixesproto damageproto xcmiscproto xextproto xproto bigreqsproto resourceproto fontsproto inputproto kbproto videoproto resourceproto xf86dgaproto xtrans xf86driproto calibrateproto compositeproto xineramaproto
+Section: xorg-server
+Category: Xorg
+Title: Kdrive vesa xserver
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Kdrive vesa xserver
+
+http://xorg.freedesktop.org/
+@@
+Config: 
+	source "feeds/packages/Xorg/xorg/xserver/xorg-kdrive/Config.in"
+@@
+Package: xserver-kdrive-xfbdev
+Submenu: server
+Version: 1.5.1-1.1
+Depends: @!avr32 +xserver-common +libpthread +libxkbfile +libXfont +libXau +libXv +libfontenc +pixman +libopenssl @DISPLAY_SUPPORT +X_TSLIB:tslib +X_DRI:libdrm
+Provides: xserver
+Build-Depends: randrproto renderproto fixesproto damageproto xcmiscproto xextproto xproto bigreqsproto resourceproto fontsproto inputproto kbproto videoproto resourceproto xf86dgaproto xtrans xf86driproto calibrateproto compositeproto xineramaproto
+Section: xorg-server
+Category: Xorg
+Title: Kdrive framebuffer xserver
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Kdrive framebuffer xserver
+
+http://xorg.freedesktop.org/
+@@
+Package: xserver-kdrive-xephyr
+Submenu: server
+Version: 1.5.1-1.1
+Depends: @!avr32 +xserver-common +libpthread +libxkbfile +libXfont +libXau +libXv +libfontenc +pixman +libopenssl @DISPLAY_SUPPORT +X_TSLIB:tslib +X_DRI:libdrm
+Provides: xserver
+Build-Depends: randrproto renderproto fixesproto damageproto xcmiscproto xextproto xproto bigreqsproto resourceproto fontsproto inputproto kbproto videoproto resourceproto xf86dgaproto xtrans xf86driproto calibrateproto compositeproto xineramaproto
+Section: xorg-server
+Category: Xorg
+Title: Kdrive ephyr xserver
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Kdrive ephyr xserver
+
+http://xorg.freedesktop.org/
+@@
+

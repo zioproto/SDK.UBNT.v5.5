@@ -1,0 +1,53 @@
+Source-Makefile: feeds/packages/ipv6/dibbler/Makefile
+Package: dibbler-client
+Version: 0.7.1-1
+Depends: +uclibcxx @LINUX_2_6
+Provides: 
+Build-Depends: 
+Section: ipv6
+Category: IPv6
+Title: Dibbler, a portable DHCPv6 implementation (client)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   	Dibbler is a portable DHCPv6 implementation. It supports stateful (i.e.
+	IPv6 address granting) as well as stateless (i.e. option granting)
+	autoconfiguration for IPv6.
+  This package contains the dibbler client.
+
+http://klub.com.pl/dhcpv6/
+@@
+Package: dibbler-relay
+Version: 0.7.1-1
+Depends: +uclibcxx @LINUX_2_6
+Provides: 
+Build-Depends: 
+Section: ipv6
+Category: IPv6
+Title: Dibbler, a portable DHCPv6 implementation (relay)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   	Dibbler is a portable DHCPv6 implementation. It supports stateful (i.e.
+	IPv6 address granting) as well as stateless (i.e. option granting)
+	autoconfiguration for IPv6.
+  This package contains the dibbler relay.
+
+http://klub.com.pl/dhcpv6/
+@@
+Package: dibbler-server
+Version: 0.7.1-1
+Depends: +uclibcxx @LINUX_2_6
+Provides: 
+Build-Depends: 
+Section: ipv6
+Category: IPv6
+Title: Dibbler, a portable DHCPv6 implementation (server)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   	Dibbler is a portable DHCPv6 implementation. It supports stateful (i.e.
+	IPv6 address granting) as well as stateless (i.e. option granting)
+	autoconfiguration for IPv6.
+  This package contains the dibbler server.
+
+http://klub.com.pl/dhcpv6/
+@@
+

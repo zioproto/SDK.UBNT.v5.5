@@ -1,0 +1,36 @@
+--- a/src/config.c
++++ b/src/config.c
+@@ -336,15 +336,19 @@ struct SubnetList *parseSubnetAddress(ch
+     tmpStr = strtok(NULL, "/");
+     if(tmpStr != NULL) {
+         int bitcnt = atoi(tmpStr);
+-        if(bitcnt <= 0 || bitcnt > 32) {
++        if(bitcnt < 0 || bitcnt > 32) {
+             my_log(LOG_WARNING, 0, "The bits part of the address is invalid : %d.",tmpStr);
+             return NULL;
+         }
+ 
+-        mask <<= (32 - bitcnt);
++	if (bitcnt) {
++	    mask <<= (32 - bitcnt);
++	} else {
++	    mask = 0;
++	}
+     }
+ 
+-    if(addr == -1 || addr == 0) {
++    if(addr == -1) {
+         my_log(LOG_WARNING, 0, "Unable to parse address token '%s'.", addrstr);
+         return NULL;
+     }
+--- a/src/igmp.c
++++ b/src/igmp.c
+@@ -138,7 +138,7 @@ void acceptIgmp(int recvlen) {
+                     inetFmt(src, s1), inetFmt(dst, s2));
+                 return;
+             }
+-            else if(!isAdressValidForIf(checkVIF, src)) {
++            else if(/*Allow any*/0 && !isAdressValidForIf(checkVIF, src)) {
+                 my_log(LOG_WARNING, 0, "The source address %s for group %s, is not in any valid net for upstream VIF.",
+                     inetFmt(src, s1), inetFmt(dst, s2));
+                 return;

@@ -1,0 +1,494 @@
+Source-Makefile: feeds/packages/utils/collectd/Makefile
+Package: collectd
+Menu: 1
+Version: 4.4.4-2
+Depends: +libgcc +libpthread
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: Lightweight system statistics collection daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd is a small daemon which collects system information periodically 
+	and provides mechanismns to store the values in a variety of ways.
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-apache
+Version: 4.4.4-2
+Depends: collectd +libcurl
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - apache status input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - apache status input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-apcups
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - apcups status input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - apcups status input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-ascent
+Version: 4.4.4-2
+Depends: collectd +libcurl +libxml2
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - ascent status input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - ascent status input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-cpu
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - cpu input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - cpu input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-csv
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - csv output plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - csv output plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-df
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - disk space input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - disk space input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-disk
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - disk usage/timing input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - disk usage/timing input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-dns
+Version: 4.4.4-2
+Depends: collectd +libpcap
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - dns traffic input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - dns traffic input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-email
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - email output plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - email output plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-exec
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - process exec input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - process exec input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-interface
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - network interfaces input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - network interfaces input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-iptables
+Version: 4.4.4-2
+Depends: collectd +iptables
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - iptables status input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - iptables status input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-irq
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - interrupt usage input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - interrupt usage input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-load
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - system load input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - system load input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-logfile
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - logfile output plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - logfile output plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-netlink
+Version: 4.4.4-2
+Depends: collectd +ip
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - netlink input plugin (uses iproute2)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - netlink input plugin (uses iproute2)
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-network
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - network input/output plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - network input/output plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-nginx
+Version: 4.4.4-2
+Depends: collectd +libcurl
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - nginx status input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - nginx status input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-ntpd
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - ntp daemon status input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - ntp daemon status input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-nut
+Version: 4.4.4-2
+Depends: collectd @BROKEN
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - UPS monitoring input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - UPS monitoring input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-ping
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - ping status input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - ping status input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-powerdns
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - powerdns server status input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - powerdns server status input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-processes
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - process status plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - process status plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-rrdtool1
+Version: 4.4.4-2
+Depends: collectd +librrd1
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - rrdtool 1.0.x output plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - rrdtool 1.0.x output plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-sensors
+Version: 4.4.4-2
+Depends: collectd +libsensors @BROKEN
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - lm_sensors input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - lm_sensors input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-snmp
+Version: 4.4.4-2
+Depends: collectd +libnetsnmp
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - snmp input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - snmp input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-syslog
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - syslog output plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - syslog output plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-tail
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - tail input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - tail input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-teamspeak2
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - teamspeak2 input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - teamspeak2 input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-tcpconns
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - tcp connection tracking input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - tcp connection tracking input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-unixsock
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - unix socket output plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - unix socket output plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-users
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - user login status input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - user login status input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-vmem
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - virtual memory usage input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - virtual memory usage input plugin
+
+http://verplant.org/collectd/
+@@
+Package: collectd-mod-wireless
+Version: 4.4.4-2
+Depends: collectd
+Provides: 
+Build-Depends: +libxml2 +libnetsnmp +libcurl +librrd1 libtool
+Section: utils
+Category: Utilities
+Title: collectd - wireless status input plugin
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	collectd - wireless status input plugin
+
+http://verplant.org/collectd/
+@@
+

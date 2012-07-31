@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/utils/minicom/Makefile
+Package: minicom
+Submenu: terminal
+Version: 2.3-1
+Depends: +libncurses
+Provides: 
+Build-Depends: libtool
+Section: utils
+Category: Utilities
+Title: Terminal emulation program
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Terminal emulation program
+
+http://alioth.debian.org/projects/minicom/
+@@
+

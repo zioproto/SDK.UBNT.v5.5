@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/utils/zile/Makefile
+Package: zile
+Submenu: Editors
+Version: 2.2.59-1
+Depends: +libncurses
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: very small emacs-like editor
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Zile is a small Emacs clone. Zile is a customizable, self-documenting
+	real-time display editor. Zile was written to be as similar as possible
+	to Emacs; every Emacs user should feel at home with Zile.
+
+http://zile.sourceforge.net
+@@
+

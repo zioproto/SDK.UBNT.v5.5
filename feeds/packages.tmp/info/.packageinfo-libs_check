@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/check/Makefile
+Package: check
+Version: 0.9.5-1
+Depends: 
+Provides: 
+Build-Depends: libtool
+Section: lib
+Category: Libraries
+Title: check
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   unit testing library
+
+http://check.sourceforge.net/
+@@
+

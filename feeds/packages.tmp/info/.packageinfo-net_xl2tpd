@@ -1,0 +1,20 @@
+Source-Makefile: feeds/packages/net/xl2tpd/Makefile
+Package: xl2tpd
+Submenu: VPN
+Version: 1.1.12-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: An L2TP (Layer 2 Tunneling Protocol) daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  l2tpd is the open source implementation of the L2TP tunneling protocol
+ (RFC2661). It does implement both LAC and LNS role in a L2TP networking
+ architecture. The main goal of this protocol is to tunnel PPP frame trough
+ an ip network.
+
+http://www.xelerance.com/software/xl2tpd
+@@
+

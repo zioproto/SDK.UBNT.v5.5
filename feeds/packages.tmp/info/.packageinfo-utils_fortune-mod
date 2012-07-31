@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/fortune-mod/Makefile
+Package: fortune-mod
+Version: 1.2.1-2
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: display fortune cookies on demand.
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: Fortune mod displays fortune cookies on demand
+
+http://freeware.sgi.com/source/fortune-mod
+@@
+

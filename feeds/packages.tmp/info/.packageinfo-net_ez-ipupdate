@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/ez-ipupdate/Makefile
+Package: ez-ipupdate
+Version: 3.0.11b8-3
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Dynamic DNS services client
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Dynamic DNS services client
+
+http://ez-ipupdate.com/
+@@
+

@@ -1,0 +1,47 @@
+Source-Makefile: feeds/packages/net/snort/Makefile
+Package: snort
+Submenu: snort (Ligthweight Network Intrusion Detection System)
+Version: 2.4.4-1
+Depends: +libnet0 +libpcap +libpcre
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Ligthweight Network Intrusion Detection System
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Ligthweight Network Intrusion Detection System
+
+http://www.snort.org/
+@@
+Package: snort-mysql
+Submenu: snort (Ligthweight Network Intrusion Detection System)
+Version: 2.4.4-1
+Depends: +libnet0 +libpcap +libpcre +libmysqlclient
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Ligthweight Network Intrusion Detection System (MySQL)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Ligthweight Network Intrusion Detection System (MySQL)
+
+http://www.snort.org/
+@@
+Package: snort-pgsql
+Submenu: snort (Ligthweight Network Intrusion Detection System)
+Version: 2.4.4-1
+Depends: +libnet0 +libpcap +libpcre +libpq
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Ligthweight Network Intrusion Detection System (PostgreSQL)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Ligthweight Network Intrusion Detection System (PostgreSQL)
+
+http://www.snort.org/
+@@
+

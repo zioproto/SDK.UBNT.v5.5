@@ -1,0 +1,30 @@
+Source-Makefile: feeds/packages/net/dhcp/Makefile
+Package: dhcp-relay
+Version: 3.1.0-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: ISC's DHCP relay
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	ISC's DHCP relay
+
+http://www.isc.org/
+@@
+Package: dhcp-server
+Version: 3.1.0-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: ISC's DHCP server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	ISC's DHCP server
+
+http://www.isc.org/
+@@
+

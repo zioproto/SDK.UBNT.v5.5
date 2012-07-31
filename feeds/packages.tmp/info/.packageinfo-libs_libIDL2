@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/libs/libIDL2/Makefile
+Package: libIDL2
+Version: 0.8.11-2
+Depends: +glib2
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: IDL Compiling Library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   libIDL is a library licensed under the GNU LGPL for creating trees of
+  CORBA Interface Definition Language (IDL) files, which is a
+  specification for defining portable interfaces.
+
+http://andrewtv.org/libIDL/
+@@
+

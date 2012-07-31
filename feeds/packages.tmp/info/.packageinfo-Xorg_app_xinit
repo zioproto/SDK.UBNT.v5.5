@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/app/xinit/Makefile
+Package: xinit
+Submenu: app
+Version: 1.0.5-1
+Depends: +libX11
+Provides: 
+Build-Depends: 
+Section: xorg-app
+Category: Xorg
+Title: xinit
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xinit
+
+http://xorg.freedesktop.org/
+@@
+

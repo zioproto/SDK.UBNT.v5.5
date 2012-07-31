@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/rp-l2tp/Makefile
+Package: rp-l2tpd
+Submenu: dial-in/up
+Version: 0.4-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Roaring Penguin L2TP daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Roaring Penguin L2TP (Layer 2 Tunneling Protocol) implementation.
+
+http://sourceforge.net/projects/rp-l2tp/
+@@
+

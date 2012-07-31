@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/perl-www-curl/Makefile
+Package: perl-www-curl
+Submenu: Perl
+Version: 4.00-1
+Depends: libcurl perl
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: Perl bindings to libcurl
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Perl bindings to libcurl
+
+http://search.cpan.org/~crisb/WWW-Curl-3.02/
+@@
+

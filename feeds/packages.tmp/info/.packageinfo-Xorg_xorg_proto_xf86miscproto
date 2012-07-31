@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/proto/xf86miscproto/Makefile
+Package: xf86miscproto
+Submenu: proto
+Version: 0.9.2-3
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-proto
+Category: Xorg
+Title: xf86miscproto
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xf86miscproto
+
+http://xorg.freedesktop.org/
+@@
+

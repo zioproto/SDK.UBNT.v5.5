@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/openrrcp/Makefile
+Package: openrrcp
+Version: 0.2.1-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: OpenRRCP toolset for managing RRCP-capable Ethernet switches
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	OpenRRCP toolset for managing RRCP-capable Ethernet switches
+
+http://openrrcp.org.ru/
+@@
+

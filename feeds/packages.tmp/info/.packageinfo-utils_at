@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/at/Makefile
+Package: at
+Version: 3.1.10ubuntu4-2
+Depends: +libelf
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Delayed job execution and batch processing
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  At and batch read shell commands from standard input
+ storing them as a job to be scheduled for execution in the
+ future.
+@@
+

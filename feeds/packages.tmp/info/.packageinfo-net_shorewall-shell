@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/shorewall-shell/Makefile
+Package: shorewall-shell
+Submenu: firewall
+Version: 4.2.4-1
+Depends: +iptables +iptables-mod-extra +ip
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Shorewall Shell
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Shoreline Firewall shell-based compiler.
+
+http://www.shorewall.net/
+@@
+

@@ -1,0 +1,32 @@
+Source-Makefile: feeds/packages/utils/gadgetfs-test/Makefile
+Package: gadgetfs-test-bulk
+Version: 2007-11-29-1
+Depends: @DEVEL @LINUX_2_6 +libpthread
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Test program for gadgetfs (BULK transfer)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Test program for gadgetfs from linux-usb.org.
+ This package is built with BULK transfer support.
+
+http://linux-usb.org/gadget
+@@
+Package: gadgetfs-test-isoc
+Version: 2007-11-29-1
+Depends: @DEVEL @LINUX_2_6 +libpthread +libaio
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Test program for gadgetfs (ISOCHRONOUS transfer)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Test program for gadgetfs from linux-usb.org.
+ This package is built with ISOCHRONOUS transfer support using libaio.
+
+http://linux-usb.org/gadget
+@@
+

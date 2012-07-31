@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/mail/dovecot/Makefile
+Package: dovecot
+Version: 1.0.beta8-1
+Depends: +libopenssl
+Provides: 
+Build-Depends: 
+Section: mail
+Category: Mail
+Title: An IMAP and POP3 daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Dovecot is a program which provides POP3 and IMAP services.
+
+http://www.dovecot.org/
+@@
+

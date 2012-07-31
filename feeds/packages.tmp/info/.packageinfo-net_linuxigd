@@ -1,0 +1,20 @@
+Source-Makefile: feeds/packages/net/linuxigd/Makefile
+Package: linuxigd
+Version: 1.0-1
+Depends: +libupnp +libpthread
+Provides: 
+Build-Depends: iptables libupnp
+Section: net
+Category: Network
+Title: UPnP daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	It implements the UPnP Internet Gateway Device specification (IGD) 
+	and allows UPnP aware clients, such as MSN Messenger, Azureus or 
+	Miranda to work properly from behind a NAT firewall. 
+	
+	Please edit /etc/upnpd.conf before using upnpd!
+
+http://linux-igd.sourceforge.net/
+@@
+

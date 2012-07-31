@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/sdparm/Makefile
+Package: sdparm
+Submenu: disc
+Version: 1.03-1
+Depends: +kmod-scsi-generic
+Provides: 
+Build-Depends: libtool
+Section: utils
+Category: Utilities
+Title: Read or modify SCSI or USB disk parameters
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	The sdparm utility outputs and in some cases modifies SCSI device
+	parameters.
+@@
+

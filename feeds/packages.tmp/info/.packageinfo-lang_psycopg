@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/lang/psycopg/Makefile
+Package: python-psycopg
+Submenu: Python
+Version: 1.1.21-1
+Depends: python-core +libpq +python-egenix-mx
+Provides: 
+Build-Depends: python
+Section: lang
+Category: Languages
+Title: PostgreSQL database adapter for Python
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  This package contains is a PostgreSQL database adapter for the Python 
+ programming language.
+
+http://www.initd.org/
+@@
+

@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/net/matrixtunnel/Makefile
+Package: matrixtunnel
+Submenu: VPN
+Version: 0.2-1
+Depends: +libmatrixssl
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: SSL tunnel based on matrixssl
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	matrixtunnel is a stripped down version of stunnel 
+	based on matrixssl library.
+
+http://znerol.ch/svn/matrixtunnel/trunk/
+@@
+

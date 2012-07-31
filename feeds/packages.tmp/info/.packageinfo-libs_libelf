@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/libelf/Makefile
+Package: libelf
+Version: 0.8.10-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: ELF object file access library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	ELF object file access library
+
+http://www.stud.uni-hannover.de/~michael/software/
+@@
+

@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/sound/mt-daapd/Makefile
+Package: mt-daapd
+Version: 0.2.4.2-1
+Depends: +libgdbm +libhowl +libid3tag
+Provides: 
+Build-Depends: 
+Section: sound
+Category: Sound
+Title: A multi-threaded DAAP (Digital Audio Access Protocol) daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	mt-daapd is a program which acts as an iTunes (DAAP) server for Linux.
+
+http://www.mt-daapd.org/
+@@
+

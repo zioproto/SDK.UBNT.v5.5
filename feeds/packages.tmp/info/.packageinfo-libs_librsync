@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/libs/librsync/Makefile
+Package: librsync
+Version: 0.9.7-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: implementation of the rolling-checksum algorithm
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	librsync implements the rolling-checksum algorithm of remote file
+	synchronization that was popularized by the rsync utility and is
+	used in rproxy. This algorithm transfers the differences between 2
+	files without needing both files on the same system.
+@@
+

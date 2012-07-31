@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/ifstat/Makefile
+Package: ifstat
+Version: 1.1-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Network interface bandwidth usage
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Network interface bandwidth usage, with support for snmp targets
+
+http://gael.roualland.free.fr/ifstat/
+@@
+

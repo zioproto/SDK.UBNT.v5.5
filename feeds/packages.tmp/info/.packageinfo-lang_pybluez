@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/pybluez/Makefile
+Package: python-bluez
+Submenu: Python
+Version: 0.13-1
+Depends: python-core +bluez-libs
+Provides: 
+Build-Depends: python
+Section: lang
+Category: Languages
+Title: Python wrapper for the BlueZ Bluetooth stack
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Python wrapper for the BlueZ Bluetooth stack
+
+http://org.csail.mit.edu/pybluez/
+@@
+

@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/gst-python/Makefile
+Package: gst-python
+Submenu: Python
+Version: 0.10.13-1
+Depends: +gstreamer +gst-plugins-base +python-gobject
+Provides: 
+Build-Depends: libtool
+Section: lang
+Category: Languages
+Title: python bindings for gstreamer
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   python bindings for gstreamer
+
+http://gstreamer.freedesktop.org/
+@@
+

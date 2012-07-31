@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/tmsnc/Makefile
+Package: tmsnc
+Submenu: Instant Messaging
+Version: 0.3.2-1
+Depends: +libncurses +libopenssl +libpthread
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: text-based MSN client
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	TMSNC is a textbased (console) MSN client written in C.
+
+http://tmsnc.sourceforge.net
+@@
+

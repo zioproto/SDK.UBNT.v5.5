@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/portmap/Makefile
+Package: portmap
+Version: 6.0-2
+Depends: +libwrap
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: The RPC Portmapper
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Portmap is a server that converts RPC (Remote Procedure Call) program
+ numbers into DARPA protocol port numbers.
+
+ftp://ftp.porcupine.org/pub/security
+@@
+

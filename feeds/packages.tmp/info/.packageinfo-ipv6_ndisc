@@ -1,0 +1,47 @@
+Source-Makefile: feeds/packages/ipv6/ndisc/Makefile
+Package: ndisc6
+Submenu: IPv6 discovery tools
+Version: 0.5.1-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: ipv6
+Category: IPv6
+Title: An ICMPv6 neighbour discovery tool
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: An ICMPv6 neighbour discovery tools
+
+http://people.via.ecp.fr/~rem/ndisc6/
+@@
+Package: rdisc6
+Submenu: IPv6 discovery tools
+Version: 0.5.1-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: ipv6
+Category: IPv6
+Title: An ICMPv6 router discovery tool
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: An ICMPv6 router discovery tool
+
+http://people.via.ecp.fr/~rem/ndisc6/
+@@
+Package: tcptraceroute6
+Submenu: IPv6 discovery tools
+Version: 0.5.1-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: ipv6
+Category: IPv6
+Title: A TCP/IPv6-based traceroute implementation
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: A TCP/IPv6-based traceroute implementation
+
+http://people.via.ecp.fr/~rem/ndisc6/
+@@
+

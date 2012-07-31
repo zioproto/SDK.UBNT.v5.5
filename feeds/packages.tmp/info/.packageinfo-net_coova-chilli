@@ -1,0 +1,23 @@
+Source-Makefile: feeds/packages/net/coova-chilli/Makefile
+Package: coova-chilli
+Submenu: Captive Portals
+Version: 1.0.12-1
+Depends: +kmod-tun
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Wireless LAN HotSpot controller (Coova Chilli Version)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	CoovaChilli is an open source access controller for wireless LAN
+	access points and is based on ChilliSpot. It is used for authenticating
+	users of a wireless (or wired) LAN. It supports web based login (UAM)
+	which is today's standard for public HotSpots and it supports Wireless Protected
+	Access (WPA) which is the standard of the future. Authentication,
+	authorization and accounting (AAA) is handled by your favorite
+	radius server.
+
+http://coova.org/wiki/index.php/CoovaChilli
+@@
+

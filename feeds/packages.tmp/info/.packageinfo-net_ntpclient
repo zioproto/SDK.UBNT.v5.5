@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/ntpclient/Makefile
+Package: ntpclient
+Submenu: Time Synchronization
+Version: 2007_365-1.2
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: NTP (Network Time Protocol) client
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	NTP client for setting system time from NTP servers.
+
+http://doolittle.icarus.com/ntpclient/
+@@
+

@@ -1,0 +1,30 @@
+Source-Makefile: feeds/packages/Xorg/lib/gtk2/Makefile
+Package: gtk2
+Submenu: framework
+Prereq-Check: 1
+Version: 2.14.4-6
+Depends: +cairo +pango +libpng +libjpeg +atk +libtiff +libX11 +libXext +libXrender +libXfixes +libXrandr +libXcursor +libXdamage +libXcomposite +libXi
+Provides: 
+Build-Depends: libtool
+Section: xorg-framework
+Category: Xorg
+Title: GTK+-2.0
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	GTK+-2.0
+@@
+Package: gtk2-cups
+Submenu: framework
+Prereq-Check: 1
+Version: 2.14.4-6
+Depends: gtk2 +cups
+Provides: 
+Build-Depends: libtool
+Section: xorg-framework
+Category: Xorg
+Title: CUPS print backend for GTK+-2.0
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	CUPS print backend for GTK+-2.0
+@@
+

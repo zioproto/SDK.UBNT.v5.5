@@ -1,0 +1,32 @@
+Source-Makefile: feeds/packages/Xorg/xorg/xserver/xorg-server/Makefile
+Package: xserver-common
+Submenu: server
+Version: 1.5.1-1.1
+Depends: @!avr32
+Provides: 
+Build-Depends: randrproto renderproto fixesproto damageproto xcmiscproto xextproto xproto scrnsaverproto bigreqsproto resourceproto fontsproto inputproto kbproto videoproto resourceproto xf86dgaproto xtrans xf86driproto
+Section: xorg-server
+Category: Xorg
+Title: meta-package
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	meta-package
+
+http://xorg.freedesktop.org/
+@@
+Package: xserver-xorg
+Submenu: server
+Version: 1.5.1-1.1
+Depends: +xserver-common +libpthread +libxkbfile +libXfont +libXau +libXv +libfontenc +pixman +libopenssl +libpciaccess +libdrm +libgl-mesa @DISPLAY_SUPPORT
+Provides: xserver
+Build-Depends: randrproto renderproto fixesproto damageproto xcmiscproto xextproto xproto scrnsaverproto bigreqsproto resourceproto fontsproto inputproto kbproto videoproto resourceproto xf86dgaproto xtrans xf86driproto
+Section: xorg-server
+Category: Xorg
+Title: Xorg xserver
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Xorg xserver
+
+http://xorg.freedesktop.org/
+@@
+

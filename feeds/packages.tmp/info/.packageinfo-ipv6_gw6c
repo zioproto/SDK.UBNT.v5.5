@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/ipv6/gw6c/Makefile
+Package: gw6c
+Version: 5.0-1
+Depends: +libpthread +ip +kmod-tun +kmod-ipv6 +uclibcxx +radvd
+Provides: 
+Build-Depends: 
+Section: ipv6
+Category: IPv6
+Title: IPv6 tunnel client software
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   Client to configure an IPv6 tunnel to
+  Hexago/freenet6/go6.net's migration broker.
+
+http://www.go6.net
+@@
+

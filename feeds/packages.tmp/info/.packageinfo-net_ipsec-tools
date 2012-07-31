@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/ipsec-tools/Makefile
+Package: ipsec-tools
+Version: 0.7-1.1
+Depends: @LINUX_2_6 +libopenssl
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: IPsec management tools
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	IPsec management tools
+
+http://ipsec-tools.sourceforge.net/
+@@
+

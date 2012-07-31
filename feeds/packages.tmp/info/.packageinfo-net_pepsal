@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/net/pepsal/Makefile
+Package: pepsal
+Version: 1.2.1-1
+Depends: +libnetfilter-queue
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Performance Enhancing Proxy
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  PEPsal is an integrated, multi-layer, transparent TCP Performance Enhancing 
+ Proxy which splits the connection into two parts, making use of Linux TCP 
+ enhancements when sending data, and largely improving performance in 
+ links with different characteristics 
+
+http://pepsal.sourceforge.net/
+@@
+

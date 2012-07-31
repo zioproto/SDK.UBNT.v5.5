@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/libs/libcli/Makefile
+Package: libcli
+Version: 1.9.3-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: A Cisco-like CLI library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Libcli provides a shared library for including a Cisco-like 
+	command-line interface into other software. It's a telnet 
+	interface which supports command-line editing, history, 
+	authentication and callbacks for a user-definable function tree.
+
+http://libcli.sourceforge.net/
+@@
+

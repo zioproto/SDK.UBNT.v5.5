@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/yafc/Makefile
+Package: yafc
+Submenu: FTP
+Version: 1.1.1-1
+Depends: +libncurses +libreadline
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Yafc is yet another ftp client.
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Yafc is yet another ftp client.
+
+http://yafc.sourceforge.net/
+@@
+

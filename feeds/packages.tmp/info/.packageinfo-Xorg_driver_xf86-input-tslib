@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/driver/xf86-input-tslib/Makefile
+Package: xf86-input-tslib
+Submenu: driver
+Version: 0.0.5-1.1
+Depends: +xserver-xorg +tslib
+Provides: 
+Build-Depends: randrproto inputproto xproto
+Section: xorg-driver
+Category: Xorg
+Title: xf86-input-tslib
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xf86-input-tslib
+
+http://www.pengutronix.de/software/xf86-input-tslib/
+@@
+

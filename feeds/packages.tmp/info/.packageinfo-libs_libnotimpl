@@ -1,0 +1,14 @@
+Source-Makefile: feeds/packages/libs/libnotimpl/Makefile
+Package: libnotimpl
+Version: 1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: Implements functions missing from uClibc
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Implements functions missing from uClibc
+@@
+

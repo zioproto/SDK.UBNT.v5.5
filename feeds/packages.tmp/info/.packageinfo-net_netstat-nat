@@ -1,0 +1,20 @@
+Source-Makefile: feeds/packages/net/netstat-nat/Makefile
+Package: netstat-nat
+Version: 1.4.6-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: A netstat variant for NAT connections
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Netstat-nat is a small program written in C.
+	It displays NAT connections, managed by netfilter/iptables which comes 
+	with the > 2.4.x linux kernels.
+	The program reads its information from '/proc/net/ip_conntrack', which 
+	is the temporary conntrack-storage of netfilter.
+
+http://tweegy.demon.nl/projects/netstat-nat/
+@@
+

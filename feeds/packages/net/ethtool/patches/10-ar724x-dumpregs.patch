@@ -1,0 +1,195 @@
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -53,15 +53,15 @@ am__installdirs = "$(DESTDIR)$(sbindir)"
+ sbinPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
+ PROGRAMS = $(sbin_PROGRAMS)
+ am_ethtool_OBJECTS = ethtool.$(OBJEXT) amd8111e.$(OBJEXT) \
+ 	de2104x.$(OBJEXT) e100.$(OBJEXT) e1000.$(OBJEXT) \
+ 	fec_8xx.$(OBJEXT) ibm_emac.$(OBJEXT) ixgb.$(OBJEXT) \
+ 	natsemi.$(OBJEXT) pcnet32.$(OBJEXT) realtek.$(OBJEXT) \
+ 	tg3.$(OBJEXT) marvell.$(OBJEXT) vioc.$(OBJEXT) \
+-	smsc911x.$(OBJEXT) ixp4xx.$(OBJEXT)
++	smsc911x.$(OBJEXT) ixp4xx.$(OBJEXT) ar724x.$(OBJEXT)
+ ethtool_OBJECTS = $(am_ethtool_OBJECTS)
+ ethtool_LDADD = $(LDADD)
+ DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__depfiles_maybe = depfiles
+ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+ 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+--- /dev/null
++++ b/ar724x.c
+@@ -0,0 +1,141 @@
++#include <stdio.h>
++#include "ethtool-util.h"
++
++void 
++reg_miicfg(u_int32_t reg)
++{
++	fprintf(stdout,
++		"	MDC				0x%1X\n"
++		"	Preamble suppresion		%s\n"
++		"	Scan auto increment		%s\n"
++		"	Reset MII Management		%s\n",
++		reg & 0x0000000F,
++		reg & 0x00000010 ? "on" : "off",
++		reg & 0x00000020 ? "on" : "off",
++		reg & 0x80000000 ? "on" : "off");
++}
++
++void 
++reg_phy_spec_status(u_int32_t reg)
++{
++	int speed = (reg >> 14) & 3;
++	fprintf(stdout,
++		"	Jabber:				%s\n"
++		"	Polarity			%s\n"
++		"	Receive Pause			%s\n"
++		"	Transmit Pause			%s\n"
++		"	Smartspeed Downgrade		%s\n"
++		"	MDI Crossover			%s\n"
++		"	LINK				%s\n"
++		"	Speed Duplex			%s\n"
++		"	Page received			%s\n"
++		"	Duplex				%s\n"
++		"	Speed				%s\n",
++		reg & (1 <<  0) ? "Jabber" : "No Jabber",
++		reg & (1 <<  1) ? "Reversed" : "Normal",
++		reg & (1 <<  2) ? "Enabled" : "Disabled",
++		reg & (1 <<  3) ? "Enabled" : "Disabled",
++		reg & (1 <<  5) ? "Occurs" : "Not",
++		reg & (1 <<  6) ? "MDIX" : "MDI",
++		reg & (1 << 10) ? "Up" : "Down",
++		reg & (1 << 11) ? "Resolved" : "Not Resolved",
++		reg & (1 << 12) ? "Received" : "Not Received",
++		reg & (1 << 13) ? "Full" : "Half",
++		speed == 2 ? "1000" : speed == 1 ? "100" :  "10");
++}
++
++reg_phy_control(u_int32_t reg)
++{
++	int speed = ((reg >> 5) & 2) | ((reg >> 13) & 1);
++	fprintf(stdout,
++		"	Speed				%s\n"
++		"	Collision test			%s\n"
++		"	Duplex mode			%s\n"
++		"	Restart autoneg			%s\n"
++		"	Isolate				%s\n"
++		"	Power down			%s\n"
++		"	Autoneg				%s\n"
++		"	Loopback			%s\n"
++		"	Reset				%s\n",
++		speed == 2 ? "1000" : speed == 1 ? "100" :  "10",
++		reg & (1 <<  7) ? "Enable" : "Disable",
++		reg & (1 <<  8) ? "Full" : "Half",
++		reg & (1 <<  9) ? "On" : "Off",
++		reg & (1 << 10) ? "On" : "Off",
++		reg & (1 << 11) ? "On" : "Off",
++		reg & (1 << 12) ? "Enable" : "Disable",
++		reg & (1 << 14) ? "Enable" : "Disable",
++		reg & (1 << 15) ? "On" : "Off");
++}
++
++struct reg_def {
++	u_int32_t addr;
++	const char *name;
++	void (*reg_details)(u32 reg);
++};
++
++static struct reg_def eth_regs[] = {
++	{ 0x00000020,	"MII Configuration                      ", reg_miicfg },
++	{ 0x00000038,	"Interface Control                      ", NULL },
++};
++
++static struct reg_def mac_regs[] = {
++	{ 0x00000010,	"Global Interrupt                       ", NULL },
++	{ 0x00000014,	"Global Interrupt Mask                  ", NULL },
++	{ 0x00000100,	"Port 0 Status                          ", NULL },
++};
++
++static struct reg_def phy_regs[] = {
++	{ 0x00000000,	"PHY control                            ", reg_phy_control },
++	{ 0x00000001,	"PHY status                             ", NULL },
++	{ 0x00000011,	"PHY-specific status                    ", reg_phy_spec_status },
++	{ 0x00000012,	"PHY Interrupt                          ", NULL },
++	{ 0x00000013,	"PHY Interrupt Status                   ", NULL },
++};
++
++static struct reg_def *
++lookup_reg_def(struct reg_def *reg_defs, size_t reg_defs_cnt, u_int32_t addr)
++{
++	int i;
++	static struct reg_def default_reg_def = { 0, "\t\t\t\t\t", NULL };
++	for (i = 0; i < reg_defs_cnt; i++) {
++		if (reg_defs[i].addr == addr)
++			return &reg_defs[i];
++	}
++	return &default_reg_def;
++}
++
++static void
++print_regs(u_int32_t *regs, size_t reg_cnt,
++		struct reg_def *reg_defs, size_t reg_defs_cnt)
++{
++	int i, r = 0;
++
++	for (i = 0; i < reg_cnt; i++) {
++		u_int32_t addr = regs[r++];
++		u_int32_t val = regs[r++];
++		struct reg_def *def;
++
++		if (addr == 0xFFFFFFFF)
++			break;
++		def = lookup_reg_def(reg_defs, reg_defs_cnt, addr);
++		fprintf(stdout, "0x%08X: %s 0x%08X\n", addr, def->name, val);
++		if (def->reg_details)
++			def->reg_details(val);
++	}
++}
++int
++ar724x_dump_regs(struct ethtool_drvinfo *info, struct ethtool_regs *regs)
++{
++	u_int32_t *regs_buff = (u_int32_t *)regs->data;
++	int i;
++
++	fprintf(stdout, "=== GE\n");
++	print_regs(regs_buff, 16, eth_regs, sizeof(eth_regs)/sizeof(eth_regs[0]));
++	fprintf(stdout, "=== MAC\n");
++	print_regs(regs_buff + 16, 16, mac_regs, sizeof(mac_regs)/sizeof(mac_regs[0]));
++	fprintf(stdout, "=== PHY\n");
++	print_regs(regs_buff + 32, 16, phy_regs, sizeof(phy_regs)/sizeof(phy_regs[0]));
++	return 0;
++}
++
+--- a/ethtool-util.h
++++ b/ethtool-util.h
+@@ -68,8 +68,11 @@ int vioc_dump_regs(struct ethtool_drvinf
+ 
+ /* SMSC LAN911x/LAN921x embedded ethernet controller */
+ int smsc911x_dump_regs(struct ethtool_drvinfo *info, struct ethtool_regs *regs);
+ 
+ /* Intel IXP4xx internal MAC */
+ int ixp4xx_dump_regs(struct ethtool_drvinfo *info, struct ethtool_regs *regs);
+ 
++/* Atheros AR724X */
++int ar724x_dump_regs(struct ethtool_drvinfo *info, struct ethtool_regs *regs);
++
+ #endif
+--- a/ethtool.c
++++ b/ethtool.c
+@@ -1012,14 +1012,15 @@ static struct {
+ 	{ "ibm_emac", ibm_emac_dump_regs },
+ 	{ "tg3", tg3_dump_regs },
+ 	{ "skge", skge_dump_regs },
+ 	{ "sky2", sky2_dump_regs },
+         { "vioc", vioc_dump_regs },
+         { "smsc911x", smsc911x_dump_regs },
+ 	{ "ixp4xx_mac", ixp4xx_dump_regs },
++	{ "ar724x-eth v9.2", ar724x_dump_regs },
+ };
+ 
+ static int dump_regs(struct ethtool_drvinfo *info, struct ethtool_regs *regs)
+ {
+ 	int i;
+ 
+ 	if (gregs_dump_raw) {

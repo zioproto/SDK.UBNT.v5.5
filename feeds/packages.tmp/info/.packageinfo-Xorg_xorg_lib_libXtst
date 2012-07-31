@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/lib/libXtst/Makefile
+Package: libXtst
+Submenu: libraries
+Version: 1.0.3-3
+Depends: +libX11 +libXext
+Provides: 
+Build-Depends: recordproto xextproto inputproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: libXtst
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libXtst
+
+http://xorg.freedesktop.org/
+@@
+

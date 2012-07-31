@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/isakmpd/Makefile
+Package: isakmpd
+Version: 20041012-1
+Depends: @LINUX_2_6 +libopenssl +keynote +libgmp
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: IPsec management tools
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	IPsec management tools
+
+http://isakmpd.sourceforge.net/
+@@
+

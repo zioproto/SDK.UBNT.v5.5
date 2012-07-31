@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/data/xbitmaps/Makefile
+Package: xbitmaps
+Submenu: data
+Version: 1.0.1-2
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-data
+Category: Xorg
+Title: xbitmaps
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xbitmaps
+
+http://xorg.freedesktop.org/
+@@
+

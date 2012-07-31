@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/proto/trapproto/Makefile
+Package: trapproto
+Submenu: proto
+Version: 3.4.3-3
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-proto
+Category: Xorg
+Title: trapproto
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	trapproto
+
+http://xorg.freedesktop.org/
+@@
+

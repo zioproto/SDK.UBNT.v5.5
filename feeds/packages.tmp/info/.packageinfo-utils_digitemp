@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/utils/digitemp/Makefile
+Package: digitemp
+Version: 3.6.0-1
+Depends: +libusb
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: DigiTemp is a simple to use program for reading values from 1-wire devices.
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	DigiTemp is a simple to use program for reading values from 1-wire devices.
+	Its main use is for reading temperature sensors, but it also reads counters,
+	and understands the 1-wire hubs with devices on different branches of the network.
+
+http://www.digitemp.com
+@@
+

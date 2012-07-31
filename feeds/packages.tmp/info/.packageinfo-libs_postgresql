@@ -1,0 +1,47 @@
+Source-Makefile: feeds/packages/libs/postgresql/Makefile
+Package: libpq
+Submenu: database
+Version: 8.3.3-1
+Depends: +zlib +libreadline +libncurses
+Provides: 
+Build-Depends: libnotimpl
+Section: libs
+Category: Libraries
+Title: PostgreSQL client library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: PostgreSQL client library.
+
+http://www.postgresql.org/
+@@
+Package: pgsql-cli
+Submenu: database
+Version: 8.3.3-1
+Depends: +libpq
+Provides: 
+Build-Depends: libnotimpl
+Section: utils
+Category: Utilities
+Title: Command Line Interface (CLI) to PostgreSQL databases
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: Command Line Interface (CLI) to PostgreSQL databases.
+
+http://www.postgresql.org/
+@@
+Package: pgsql-server
+Submenu: database
+Version: 8.3.3-1
+Depends: +libpq
+Provides: 
+Build-Depends: libnotimpl
+Section: utils
+Category: Utilities
+Title: PostgreSQL databases Server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: PostgreSQL databases Server.
+
+http://www.postgresql.org/
+@@
+

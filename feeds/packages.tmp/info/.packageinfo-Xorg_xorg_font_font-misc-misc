@@ -1,0 +1,34 @@
+Source-Makefile: feeds/packages/Xorg/xorg/font/font-misc-misc/Makefile
+Package: font-misc-misc
+Submenu: font
+Prereq-Check: 1
+Version: 1.0.0-1
+Depends: font-base
+Provides: 
+Build-Depends: 
+Section: xorg-fonts
+Category: Xorg
+Title: font-misc-misc 
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	font-misc-misc 
+
+http://xorg.freedesktop.org/
+@@
+Package: font-base
+Submenu: font
+Prereq-Check: 1
+Version: 1.0.0-1
+Depends: +xserver +font-util @DISPLAY_SUPPORT
+Provides: 
+Build-Depends: 
+Section: xorg-fonts
+Category: Xorg
+Title: font-base 
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	font-base 
+
+http://xorg.freedesktop.org/
+@@
+

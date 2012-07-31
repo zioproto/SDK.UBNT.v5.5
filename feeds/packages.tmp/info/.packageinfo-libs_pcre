@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/pcre/Makefile
+Package: libpcre
+Version: 7.6-2
+Depends: 
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: A Perl Compatible Regular Expression library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A Perl Compatible Regular Expression library
+
+http://www.pcre.org/
+@@
+

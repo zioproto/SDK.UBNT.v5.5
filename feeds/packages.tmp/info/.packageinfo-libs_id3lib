@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/id3lib/Makefile
+Package: id3lib
+Version: 3.8.3-1
+Depends: +zlib +uclibcxx
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: An ID3v1/ID3v2 tag manipulation library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	An ID3v1/ID3v2 tag manipulation library
+
+http://www.id3lib.org/
+@@
+

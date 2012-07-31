@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/net/raddump/Makefile
+Package: raddump
+Version: 0.3.1-1
+Depends: +libpcap +libopenssl
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: raddump interprets captured RADIUS packets.
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	raddump interprets captured RADIUS packets to print a 
+	timestamp, packet length, RADIUS packet type, source and 
+	destination hosts and ports, and included attribute names and 
+	values for each packet.
+
+http://sourceforge.net/projects/raddump
+@@
+

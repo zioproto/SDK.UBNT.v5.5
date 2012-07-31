@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/httptunnel/Makefile
+Package: httptunnel
+Version: 3.3-1
+Depends: +libopenssl
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: bidirectional tunnel in HTTP requests
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	httptunnel creates a bidirectional virtual data connection tunnelled in HTTP requests.
+	The HTTP requests can be sent via an HTTP proxy if so desired.
+
+http://www.nocrew.org/software/httptunnel.html
+@@
+

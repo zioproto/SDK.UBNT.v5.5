@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/n2n/Makefile
+Package: n2n
+Submenu: VPN
+Version: 3667-1
+Depends: +libpthread +kmod-tun
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: VPN tunneling daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	VPN tunneling daemon
+
+http://www.ntop.org/n2n/
+@@
+

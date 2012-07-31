@@ -1,0 +1,33 @@
+Source-Makefile: feeds/packages/multimedia/qc-usb/Makefile
+Package: qc-usb-utils
+Version: 0.6.6-1.1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Utility programs for the qc-usb kernel module
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Utilities to tweak parameters of your QuickCam Express or similar webcam. 
+ These programs are completely useless without a qc-usb-modules package.
+
+http://qce-ga.sourceforge.net/
+@@
+Package: kmod-video-quickcam
+Submenu: Video Support
+Version: <LINUX_VERSION>+0.6.6--1.1
+Depends: @USB_SUPPORT @!LINUX_2_6_27 @!LINUX_2_6_28 +kmod-usb-core +kmod-video-core
+Provides: 
+Build-Depends: 
+Section: kernel
+Category: Kernel modules
+Title: QuickCam Express USB webcam support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  Kernel support for Logitech's QuickCam Express webcam and other webcams 
+ with similar chipsets.
+
+http://qce-ga.sourceforge.net/
+@@
+

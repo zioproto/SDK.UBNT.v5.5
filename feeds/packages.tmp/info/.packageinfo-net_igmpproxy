@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/igmpproxy/Makefile
+Package: igmpproxy
+Version: 0.1-beta2-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Multicast Routing Daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	IGMPproxy is a simple dynamic Multicast Routing Daemon using 
+	only IGMP signalling (Internet Group Management Protocol).
+
+http://sourceforge.net/projects/igmpproxy
+@@
+

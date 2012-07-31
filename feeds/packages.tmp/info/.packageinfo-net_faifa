@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/net/faifa/Makefile
+Package: faifa
+Version: r11-1
+Depends: +libpthread +libopenssl +libpcap
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: configure HomePlug 1.0/AV PLC devices
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   Faifa can configure any Intellon-based Power Line Communication
+  device using Intellon INT5000 and INT6000 series chips
+  (6000 and 6300 chips). It supports all Intellon-specific management
+  and control frames as well as standard management frames.
+
+http://open-plc.org
+@@
+

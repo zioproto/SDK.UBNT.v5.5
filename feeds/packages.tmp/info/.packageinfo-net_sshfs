@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/sshfs/Makefile
+Package: sshfs
+Version: 1.8-1
+Depends: +libfuse +fuse-utils +glib2 +libpthread
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: SSHFS
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Mount remote system over sftp.
+
+http://fuse.sourceforge.net/
+@@
+

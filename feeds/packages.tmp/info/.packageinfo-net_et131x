@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/et131x/Makefile
+Package: kmod-et131x
+Submenu: Network Devices
+Version: <LINUX_VERSION>+1.2.3-3--1
+Depends: @LINUX_2_6 @PCI_SUPPORT
+Provides: 
+Build-Depends: 
+Section: kernel
+Category: Kernel modules
+Title: Agere ET131x Gigabit Ethernet driver
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   This package contains the et131x kernel module.
+
+http://sourceforge.net/projects/et131x
+@@
+

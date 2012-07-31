@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/sound/mpd/Makefile
+Package: mpd
+Version: 0.14-1.1
+Depends: +libflac +libid3tag +libmad +libvorbisidec +glib2 +CONFIG_PACKAGE_kmod-sound-core:alsa-lib
+Provides: 
+Build-Depends: 
+Section: sound
+Category: Sound
+Title: Music Player Daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	MPD is a music player supporting flac, mp3 and ogg files.
+	It is typically controlled over a network using one of it's many
+	clients including mpc(console), gmpc(gnome), phpmp(php) etc.
+
+http://www.musicpd.org/
+@@
+

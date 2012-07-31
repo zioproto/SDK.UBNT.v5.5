@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/utils/foxboard-utils/Makefile
+Package: foxboard-utils
+Version: 1-1
+Depends: @TARGET_etrax
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Base system
+Title: Foxboard base tools
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  This package contains a collection of tools for configuring the foxboard 
+ gpio pins/leds.
+
+http://www.acmesystems.it
+@@
+

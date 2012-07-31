@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/app/x11perf/Makefile
+Package: x11perf
+Submenu: app
+Version: 1.5-2
+Depends: +libX11 +libXmuu +libXrender +libXft +libXext
+Provides: 
+Build-Depends: 
+Section: xorg-app
+Category: Xorg
+Title: x11perf
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	x11perf
+
+http://xorg.freedesktop.org/
+@@
+

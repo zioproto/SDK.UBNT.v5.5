@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/app/xmessage/Makefile
+Package: xmessage
+Submenu: app
+Version: 1.0.2-2
+Depends: 
+Provides: 
+Build-Depends: 
+Section: xorg-app
+Category: Xorg
+Title: xmessage
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xmessage
+
+http://xorg.freedesktop.org/
+@@
+

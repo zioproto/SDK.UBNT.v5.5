@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/mvprelay/Makefile
+Package: mvprelay
+Version: 0.1-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: relays requests from the MVP
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Relays requests from the MediaMVP to the TFTP server
+
+http://downloads.openwrt.org/sources/
+@@
+

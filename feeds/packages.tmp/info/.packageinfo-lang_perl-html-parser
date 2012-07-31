@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/perl-html-parser/Makefile
+Package: perl-html-parser
+Submenu: Perl
+Version: 3.56-1
+Depends: perl perl-html-tagset perl-uri
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: A collection of modules that parse HTML text documents
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A collection of modules that parse HTML text documents
+
+http://search.cpan.org/~gaas/HTML-Parser/
+@@
+

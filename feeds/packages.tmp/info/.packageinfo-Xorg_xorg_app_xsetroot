@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/app/xsetroot/Makefile
+Package: xsetroot
+Submenu: app
+Version: 1.0.2-4
+Depends: +xbitmaps +libXmuu +libX11
+Provides: 
+Build-Depends: 
+Section: xorg-app
+Category: Xorg
+Title: xsetroot
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	xsetroot
+
+http://xorg.freedesktop.org/
+@@
+

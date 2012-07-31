@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/flow-tools/Makefile
+Package: flow-tools
+Version: 0.68-1
+Depends: 
+Provides: 
+Build-Depends: +zlib
+Section: net
+Category: Network
+Title: flow-tools
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Flow-tools is a software package for collecting and processing 
+	NetFlow data from Cisco and Juniper routers.
+
+http://www.splintered.net/sw/flow-tools/
+@@
+

@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/perl-lockfile-simple/Makefile
+Package: perl-lockfile-simple
+Submenu: Perl
+Version: 0.206-1
+Depends: perl
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: Simple advisory file locking
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Simple advisory file locking
+
+http://search.cpan.org/~ram/LockFile-Simple/
+@@
+

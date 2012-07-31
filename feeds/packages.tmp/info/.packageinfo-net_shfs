@@ -1,0 +1,39 @@
+Source-Makefile: feeds/packages/net/shfs/Makefile
+Package: kmod-shfs
+Submenu: Filesystems
+Version: <LINUX_VERSION>+0.35--2
+Depends: @LINUX_2_4
+Provides: 
+Build-Depends: 
+Section: kernel
+Category: Kernel modules
+Title: ShFS (kernel module)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  ShFS is a simple and easy to use Linux kernel module which allows you to 
+ mount remote filesystems using a plain shell (SSH) connection. When using 
+ ShFS, you can access all remote files just like the local ones, only the 
+ access is governed through the transport security of SSH.
+ This package contains the ShFS kernel module.
+
+http://shfs.sourceforge.net/
+@@
+Package: shfs-utils
+Version: 0.35-2
+Depends:  +kmod-shfs
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: ShFS (utilities)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  ShFS is a simple and easy to use Linux kernel module which allows you to 
+ mount remote filesystems using a plain shell (SSH) connection. When using 
+ ShFS, you can access all remote files just like the local ones, only the 
+ access is governed through the transport security of SSH.
+ This package contains the ShFS utilities.
+
+http://shfs.sourceforge.net/
+@@
+

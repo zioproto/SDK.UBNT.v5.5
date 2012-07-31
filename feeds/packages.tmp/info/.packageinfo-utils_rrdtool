@@ -1,0 +1,51 @@
+Source-Makefile: feeds/packages/utils/rrdtool/Makefile
+Package: librrd
+Version: 1.2.23-1
+Depends:  +libart +libfreetype +libpng +zlib
+Provides: 
+Build-Depends: python libnotimpl libtool
+Section: libs
+Category: Libraries
+Title: Round Robin Database (RRD) management library (v1.2.x)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Round Robin Database (RRD) management library (v1.2.x)
+@@
+Package: rrdcgi
+Version: 1.2.23-1
+Depends:  +librrd +cgilib
+Provides: 
+Build-Depends: python libnotimpl libtool
+Section: utils
+Category: Utilities
+Title: Round Robin Database (RRD) CGI graphing tool (v1.2.x)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Round Robin Database (RRD) CGI graphing tool (v1.2.x)
+@@
+Package: rrdtool
+Version: 1.2.23-1
+Depends:  +librrd
+Provides: 
+Build-Depends: python libnotimpl libtool
+Section: utils
+Category: Utilities
+Title: Round Robin Database (RRD) management tools (v1.2.x)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Round Robin Database (RRD) management tools (v1.2.x)
+@@
+Package: python-rrd
+Submenu: Python
+Version: 1.2.23-1
+Depends:  python-core +librrd
+Provides: 
+Build-Depends: python libnotimpl libtool
+Section: lang
+Category: Languages
+Title: Round Robin Database (RRD) python bindings (v1.2.x)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Round Robin Database (RRD) python bindings (v1.2.x)
+@@
+

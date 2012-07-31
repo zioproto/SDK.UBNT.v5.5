@@ -1,0 +1,160 @@
+Source-Makefile: feeds/packages/net/updatedd/Makefile
+Package: updatedd
+Menu: 1
+Version: 2.6-6
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: A tool to update dynamic dns services
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: Updatedd is a small tool that will update one of many dynamic 
+	dns services on boot. 
+	Please look at the /etc/init.d/ddns script for more info. 
+
+
+http://www.philipp-benner.de/updatedd/
+@@
+Package: updatedd-mod-changeip
+Version: 2.6-6
+Depends: updatedd
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: changeip.com
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	changeip.com
+
+http://www.philipp-benner.de/updatedd/
+@@
+Package: updatedd-mod-dyndns
+Version: 2.6-6
+Depends: updatedd
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: dyndns.org
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	dyndns.org
+
+http://www.philipp-benner.de/updatedd/
+@@
+Package: updatedd-mod-eurodyndns
+Version: 2.6-6
+Depends: updatedd
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: eurodyndns.org
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	eurodyndns.org
+
+http://www.philipp-benner.de/updatedd/
+@@
+Package: updatedd-mod-hn
+Version: 2.6-6
+Depends: updatedd
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: hn.org
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	hn.org
+
+http://www.philipp-benner.de/updatedd/
+@@
+Package: updatedd-mod-noip
+Version: 2.6-6
+Depends: updatedd
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: no-ip.com
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	no-ip.com
+
+http://www.philipp-benner.de/updatedd/
+@@
+Package: updatedd-mod-ods
+Version: 2.6-6
+Depends: updatedd
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: ods.org
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	ods.org
+
+http://www.philipp-benner.de/updatedd/
+@@
+Package: updatedd-mod-ovh
+Version: 2.6-6
+Depends: updatedd
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: ovh.com
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	ovh.com
+
+http://www.philipp-benner.de/updatedd/
+@@
+Package: updatedd-mod-regfish
+Version: 2.6-6
+Depends: updatedd
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: regfish.com
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	regfish.com
+
+http://www.philipp-benner.de/updatedd/
+@@
+Package: updatedd-mod-tzo
+Version: 2.6-6
+Depends: updatedd
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: tzo.com
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	tzo.com
+
+http://www.philipp-benner.de/updatedd/
+@@
+Package: updatedd-mod-zoneedit
+Version: 2.6-6
+Depends: updatedd
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: zoneedit.com
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	zoneedit.com
+
+http://www.philipp-benner.de/updatedd/
+@@
+

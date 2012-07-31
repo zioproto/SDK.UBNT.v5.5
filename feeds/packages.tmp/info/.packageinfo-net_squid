@@ -1,0 +1,156 @@
+Source-Makefile: feeds/packages/net/squid/Makefile
+Package: squid
+Menu: 1
+Prereq-Check: 1
+Version: 2.6.STABLE14-1
+Depends: +libopenssl +libpthread @LINUX_2_6
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: full-featured Web proxy cache
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Squid is a high-performance proxy caching server for web clients, 
+	supporting FTP, gopher, and HTTP data objects. Unlike traditional 
+	caching software, Squid handles all requests in a single, 
+	non-blocking, I/O-driven process.
+
+http://www.squid-cache.org/
+@@
+Package: squid-mod-cachemgr
+Prereq-Check: 1
+Version: 2.6.STABLE14-1
+Depends: squid
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Web based proxy manager and reporting tool
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Web based proxy manager and reporting tool
+
+http://www.squid-cache.org/
+@@
+Package: squid-mod-basic-auth-getpwnam
+Prereq-Check: 1
+Version: 2.6.STABLE14-1
+Depends: squid
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: getpwnam basic authentication helper
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	getpwnam basic authentication helper
+
+http://www.squid-cache.org/
+@@
+Package: squid-mod-basic-auth-ncsa
+Prereq-Check: 1
+Version: 2.6.STABLE14-1
+Depends: squid
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: NCSA basic authentication helper
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	NCSA basic authentication helper
+
+http://www.squid-cache.org/
+@@
+Package: squid-mod-basic-auth-smb
+Prereq-Check: 1
+Version: 2.6.STABLE14-1
+Depends: squid
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Samba basic authentication helper
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Samba basic authentication helper
+
+http://www.squid-cache.org/
+@@
+Package: squid-mod-digest-auth-password
+Prereq-Check: 1
+Version: 2.6.STABLE14-1
+Depends: squid
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Password digest authentication helper
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Password digest authentication helper
+
+http://www.squid-cache.org/
+@@
+Package: squid-mod-external-acl-ip-user
+Prereq-Check: 1
+Version: 2.6.STABLE14-1
+Depends: squid
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: IP user external ACL helper
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	IP user external ACL helper
+
+http://www.squid-cache.org/
+@@
+Package: squid-mod-external-acl-unix-group
+Prereq-Check: 1
+Version: 2.6.STABLE14-1
+Depends: squid
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Unix group external ACL helper
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Unix group external ACL helper
+
+http://www.squid-cache.org/
+@@
+Package: squid-mod-ntlm-auth-fakeauth
+Prereq-Check: 1
+Version: 2.6.STABLE14-1
+Depends: squid
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Fakeauth NTLM authentication helper
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Fakeauth NTLM authentication helper
+
+http://www.squid-cache.org/
+@@
+Package: squid-mod-ntlm-auth-smb-auth
+Prereq-Check: 1
+Version: 2.6.STABLE14-1
+Depends: squid
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Samba NTLM authentication helper
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Samba NTLM authentication helper
+
+http://www.squid-cache.org/
+@@
+

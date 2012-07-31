@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/libs/libvorbisidec/Makefile
+Package: libvorbisidec
+Version: 1.0.2+svn14261-1
+Depends: 
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: A fixed-point Ogg/Vorbis decoder library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libvorbisidec is "tremor", a fixed-point implementation of libvorbis.
+	It also has libogg built-in. It is suitable as a replacement for 
+	libvorbis and libogg in tremor-aware applications.
+	Tremor is a decoder only.
+
+http://wiki.xiph.org/index.php/Tremor
+@@
+

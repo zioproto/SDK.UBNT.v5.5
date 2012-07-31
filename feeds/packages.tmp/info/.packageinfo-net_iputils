@@ -1,0 +1,122 @@
+Source-Makefile: feeds/packages/net/iputils/Makefile
+Package: iputils-arping
+Version: 20071127-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: iputils - arping
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   Program arping from iputils.
+  Sends ARP REQUEST to a neighbour host.
+
+http://www.skbuff.net/iputils
+@@
+Package: iputils-clockdiff
+Version: 20071127-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: iputils - clockdiff
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   Program clockdiff from iputils.
+  Measures clock difference between hosts.
+
+http://www.skbuff.net/iputils
+@@
+Package: iputils-ping
+Version: 20071127-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: iputils - ping
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   Program ping from iputils.
+  Sends ICMP ECHO_REQUEST to network hosts (IPv4).
+
+http://www.skbuff.net/iputils
+@@
+Package: iputils-ping6
+Version: 20071127-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: iputils - ping6
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   Program ping6 from iputils.
+  Sends ICMP ECHO_REQUEST to network hosts (IPv6).
+
+http://www.skbuff.net/iputils
+@@
+Package: iputils-tftpd
+Version: 20071127-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: iputils - tftpd
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   Program tftpd from iputils
+  Trivial File Transfer Protocol server.
+
+http://www.skbuff.net/iputils
+@@
+Package: iputils-tracepath
+Version: 20071127-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: iputils - tracepath
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   Program tracepath from iputils.
+  Traces path to a network host discovering MTU along this path (IPv4).
+
+http://www.skbuff.net/iputils
+@@
+Package: iputils-tracepath6
+Version: 20071127-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: iputils - tracepath6
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   Program tracepath6 from iputils.
+  Traces path to a network host discovering MTU along this path (IPv6).
+
+http://www.skbuff.net/iputils
+@@
+Package: iputils-traceroute6
+Version: 20071127-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: iputils - traceroute6
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   Program traceroute6 from iputils.
+  Traces path to a network host (IPv6).
+
+http://www.skbuff.net/iputils
+@@
+

@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/alsa-utils/Makefile
+Package: alsa-utils
+Version: 1.0.19-1
+Depends: +alsa-lib +libncurses +libpthread
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: ALSA (Advanced Linux Sound Architecture) utilities
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	ALSA (Advanced Linux Sound Architecture) utilities
+
+http://www.alsa-project.org/
+@@
+

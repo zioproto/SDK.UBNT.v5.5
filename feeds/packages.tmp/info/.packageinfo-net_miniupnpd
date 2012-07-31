@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/net/miniupnpd/Makefile
+Package: miniupnpd
+Version: 1.4-1
+Depends: +iptables
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Lightweight UPnP daemon
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	Lightweight UPnP daemon
+
+http://miniupnp.free.fr/
+@@
+

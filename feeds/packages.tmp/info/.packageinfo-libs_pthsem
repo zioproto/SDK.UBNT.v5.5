@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/libs/pthsem/Makefile
+Package: pthsem
+Version: 2.0.7-2
+Depends: 
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: GNU pth extended with semaphore support
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:   GNU pth is a user mode multi threading library.
+  pthsem is an extend version, with support for semaphores added. It can be installed parallel to a normal pth.
+
+http://www.auto.tuwien.ac.at/~mkoegler/index.php/pth
+@@
+

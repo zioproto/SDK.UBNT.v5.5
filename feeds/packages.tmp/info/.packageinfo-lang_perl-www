@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/lang/perl-www/Makefile
+Package: perl-www
+Submenu: Perl
+Version: 5.812-1
+Depends: perl perl-html-parser perl-uri
+Provides: 
+Build-Depends: 
+Section: lang
+Category: Languages
+Title: WWW client/server library for Perl (aka LWP)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	WWW client/server library for Perl (aka LWP)
+
+http://search.cpan.org/dist/libwww-perl/
+@@
+

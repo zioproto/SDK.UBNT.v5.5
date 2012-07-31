@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/libs/libdvbpsi4/Makefile
+Package: libdvbpsi4
+Version: 0.1.5-2
+Depends: 
+Provides: 
+Build-Depends: libtool
+Section: libs
+Category: Libraries
+Title: MPEG TS and DVB PSI tables decoding and generating
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libdvbpsi is a simple library designed for MPEG TS and DVB PSI tables
+	decoding and generating.
+
+http://www.videolan.org/developers/libdvbpsi.html
+@@
+

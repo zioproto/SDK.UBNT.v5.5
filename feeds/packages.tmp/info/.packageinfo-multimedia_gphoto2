@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/multimedia/gphoto2/Makefile
+Package: gphoto2
+Version: 2.4.1-1
+Depends: +libexif +libgphoto2 +libltdl +libpopt +libpthread
+Provides: 
+Build-Depends: libtool
+Section: multimedia
+Category: Multimedia
+Title: Gphoto Digital Camera Control
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	For downloading and controlling digital cameras
+
+http://www.gphoto.org/
+@@
+

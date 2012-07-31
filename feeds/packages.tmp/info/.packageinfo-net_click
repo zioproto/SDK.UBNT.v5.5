@@ -1,0 +1,31 @@
+Source-Makefile: feeds/packages/net/click/Makefile
+Package: click
+Menu: 1
+Version: cvs.2006.03.02-1
+Depends: @BROKEN
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: The Click Modular Router
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: The Click Modular Router
+
+http://www.read.cs.ucla.edu/click/
+@@
+Package: roofnet
+Version: cvs.2006.03.02-1
+Depends: @BROKEN click
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: roofnet mesh networking scripts
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: roofnet mesh networking scripts
+
+http://pdos.csail.mit.edu/roofnet/
+@@
+

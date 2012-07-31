@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/db/Makefile
+Package: libdb
+Version: 4.2.52-1
+Depends: +libxml2
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: Berkeley DB library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: Berkeley DB library.
+
+http://www.sleepycat.com/products/db.shtml
+@@
+

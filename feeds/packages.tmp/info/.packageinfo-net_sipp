@@ -1,0 +1,19 @@
+Source-Makefile: feeds/packages/net/sipp/Makefile
+Package: sipp
+Version: 3.1-1
+Depends: +libncurses +libpthread +uclibcxx
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: test tool / traffic generator for the SIP protocol
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  SIPp is a free Open Source test tool / traffic generator for the SIP
+ protocol. It includes a few basic SipStone user agent scenarios (UAC and
+ UAS) and establishes and releases multiple calls with the INVITE and BYE
+ methods.
+
+http://sipp.sourceforge.net/
+@@
+

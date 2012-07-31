@@ -1,0 +1,137 @@
+Source-Makefile: feeds/packages/net/bind/Makefile
+Package: bind-libs
+Submenu: DNS
+Version: 9.5.0-P1-1.1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: bind shared libraries
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	bind shared libraries
+
+http://www.isc.org/sw/bind/
+@@
+Package: bind-server
+Submenu: DNS
+Version: 9.5.0-P1-1.1
+Depends: +bind-libs +libopenssl
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: bind DNS server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	bind DNS server
+
+http://www.isc.org/sw/bind/
+@@
+Package: bind-client
+Submenu: DNS
+Version: 9.5.0-P1-1.1
+Depends: +bind-libs +libopenssl
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: bind dynamic DNS client
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	bind dynamic DNS client
+
+http://www.isc.org/sw/bind/
+@@
+Package: bind-tools
+Submenu: DNS
+Version: 9.5.0-P1-1.1
+Depends: +bind-libs +libopenssl
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: bind administration tools (all)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	bind administration tools (all)
+
+http://www.isc.org/sw/bind/
+@@
+Package: bind-rndc
+Submenu: DNS
+Version: 9.5.0-P1-1.1
+Depends: +bind-libs +libopenssl
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: bind administration tools (rndc and rndc-confgen only)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	bind administration tools (rndc and rndc-confgen only)
+
+http://www.isc.org/sw/bind/
+@@
+Package: bind-check
+Submenu: DNS
+Version: 9.5.0-P1-1.1
+Depends: +bind-libs +libopenssl
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: bind administration tools (named-checkconf and named-checkzone only)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	bind administration tools (named-checkconf and named-checkzone only)
+
+http://www.isc.org/sw/bind/
+@@
+Package: bind-dnssec
+Submenu: DNS
+Version: 9.5.0-P1-1.1
+Depends: +bind-libs +libopenssl
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: bind administration tools (dnssec-keygen and dnssec-signzone only)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	bind administration tools (dnssec-keygen and dnssec-signzone only)
+
+http://www.isc.org/sw/bind/
+@@
+Package: bind-host
+Submenu: DNS
+Version: 9.5.0-P1-1.1
+Depends: +bind-libs +libopenssl
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: bind simple DNS client
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	bind simple DNS client
+
+http://www.isc.org/sw/bind/
+@@
+Package: bind-dig
+Submenu: DNS
+Version: 9.5.0-P1-1.1
+Depends: +bind-libs +libopenssl
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: bind DNS excavation tool
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	bind DNS excavation tool
+
+http://www.isc.org/sw/bind/
+@@
+

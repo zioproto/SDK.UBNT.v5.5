@@ -1,0 +1,47 @@
+Source-Makefile: feeds/packages/utils/sane-backends/Makefile
+Package: sane-backends
+Version: 1.0.19-2
+Depends: +sane-libs
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Scanner Access Now Easy (backends)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  SANE (Scanner Access Now Easy) is a universal scanner interface.
+ This package contains the SANE daemon.
+
+http://www.sane-project.org/
+@@
+Package: sane-libs
+Version: 1.0.19-2
+Depends: +libjpeg +libpthread +libusb
+Provides: 
+Build-Depends: 
+Section: libs
+Category: Libraries
+Title: Scanner Access Now Easy (libraries)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  SANE (Scanner Access Now Easy) is a universal scanner interface.
+ This package contains the SANE shared libraries.
+
+http://www.sane-project.org/
+@@
+Package: sane-frontends
+Version: 1.0.19-2
+Depends: +sane-backends
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Scanner Access Now Easy (frontends)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  SANE (Scanner Access Now Easy) is a universal scanner interface.
+ This package contains the SANE frontends.
+
+http://www.sane-project.org/
+@@
+

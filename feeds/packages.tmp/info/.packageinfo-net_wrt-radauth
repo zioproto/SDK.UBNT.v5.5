@@ -1,0 +1,18 @@
+Source-Makefile: feeds/packages/net/wrt-radauth/Makefile
+Package: wrt-radauth
+Version: 0.1-1
+Depends: +kmod-brcm-wl +nvram
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: A Radius MAC authenticator for Broadcom based access points
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	This software watches the stations associating to a broadcom based 
+	AccessPoint (e.g. Linksys WRT54G) and sends an authentication request 
+	to the radius-server specified in nvram.
+
+http://www.zerfleddert.de/wrt54g/
+@@
+

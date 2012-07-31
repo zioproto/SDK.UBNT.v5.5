@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/utils/memtester/Makefile
+Package: memtester
+Version: 4.0.8-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: Userspace utility for testing the memory subsystem for faults
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:  A userspace utility for testing the memory subsystem for faults.
+
+http://pyropus.ca/software/memtester/
+@@
+

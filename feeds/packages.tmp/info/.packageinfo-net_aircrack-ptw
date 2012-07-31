@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/aircrack-ptw/Makefile
+Package: aircrack-ptw
+Submenu: wireless
+Version: 1.0.0-1
+Depends: +libpcap
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: A tool using a new method for breaking WEP Keys
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A tool using a new method for breaking WEP Keys
+
+http://www.cdc.informatik.tu-darmstadt.de/aircrack-ptw/
+@@
+

@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/lib/libXft/Makefile
+Package: libXft
+Submenu: libraries
+Version: 2.1.13-3
+Depends: +fontconfig +libfreetype +libXrender
+Provides: 
+Build-Depends: libtool
+Section: xorg-libraries
+Category: Xorg
+Title: libXft
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libXft
+
+http://xorg.freedesktop.org/
+@@
+

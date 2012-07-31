@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/Xorg/xorg/lib/libxkbfile/Makefile
+Package: libxkbfile
+Submenu: libraries
+Version: 1.0.5-4
+Depends: +libX11
+Provides: 
+Build-Depends: kbproto libtool
+Section: xorg-lib
+Category: Xorg
+Title: libxkbfile
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	libxkbfile
+
+http://xorg.freedesktop.org/
+@@
+

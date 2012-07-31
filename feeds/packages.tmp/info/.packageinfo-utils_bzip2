@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/utils/bzip2/Makefile
+Package: bzip2
+Version: 1.0.5-1
+Depends: 
+Provides: 
+Build-Depends: 
+Section: utils
+Category: Utilities
+Title: bzip2 is a compression utility.
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	bzip2 is a freely available, patent free, high-quality
+	data compressor.
+
+http://www.bzip.org/
+@@
+

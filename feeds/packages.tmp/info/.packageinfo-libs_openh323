@@ -1,0 +1,16 @@
+Source-Makefile: feeds/packages/libs/openh323/Makefile
+Package: libopenh323
+Version: cvs-20051230-1
+Depends: 
+Provides: 
+Build-Depends: pwlib
+Section: libs
+Category: Libraries
+Title: OpenH323 library
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	OpenH323 library
+
+http://openh323.sourceforge.net/
+@@
+

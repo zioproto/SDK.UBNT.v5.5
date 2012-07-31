@@ -1,0 +1,17 @@
+Source-Makefile: feeds/packages/net/transmission/Makefile
+Package: transmission
+Submenu: BitTorrent
+Version: 1.34-1
+Depends: +libcurl +libopenssl +libpthread
+Provides: 
+Build-Depends: libtool
+Section: net
+Category: Network
+Title: A free, lightweight BitTorrent client
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	A free, lightweight BitTorrent client
+
+http://www.transmissionbt.com
+@@
+

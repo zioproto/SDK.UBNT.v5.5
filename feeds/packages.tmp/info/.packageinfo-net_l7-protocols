@@ -1,0 +1,35 @@
+Source-Makefile: feeds/packages/net/l7-protocols/Makefile
+Package: l7-protocols
+Submenu: layer7
+Version: 2008-04-23-1
+Depends: iptables-mod-filter
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: Protocols for layer7 filtering
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description:        l7-filter classifies packets based on patterns in application
+       layer data. This allows correct classification of P2P traffic that
+       uses unpredictable ports as well as standard protocols running on
+       non-standard ports.
+
+http://l7-filter.sourceforge.net/
+@@
+Package: l7-protocols-testing
+Submenu: layer7
+Version: 2008-04-23-1
+Depends: iptables-mod-filter l7-protocols +uclibcxx
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: testing utilities for layer7
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	testing utilities for layer 7 patterns
+
+http://l7-filter.sourceforge.net/
+@@
+

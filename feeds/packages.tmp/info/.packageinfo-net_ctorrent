@@ -1,0 +1,38 @@
+Source-Makefile: feeds/packages/net/ctorrent/Makefile
+Package: ctorrent
+Submenu: BitTorrent
+Version: dnh3.3.2-1
+Depends: +uclibcxx
+Provides: 
+Build-Depends: libtool
+Section: net
+Category: Network
+Title: console-based BitTorrent client (with builtin SHA-1 support)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	CTorrent is a BitTorrent client written in the C programming language,
+	known to be a very robust and mature programming language, which produces
+	fast and optimized application.
+ This package is built with builtin (Steve Reid's public-domain) SHA-1 support
+
+http://www.rahul.net/dholmes/ctorrent/
+@@
+Package: ctorrent-openssl
+Submenu: BitTorrent
+Version: dnh3.3.2-1
+Depends: +uclibcxx +libopenssl
+Provides: 
+Build-Depends: libtool
+Section: net
+Category: Network
+Title: console-based BitTorrent client (with OpenSSL support)
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: 	CTorrent is a BitTorrent client written in the C programming language,
+	known to be a very robust and mature programming language, which produces
+	fast and optimized application.
+ This package is built with OpenSSL support.
+
+http://www.rahul.net/dholmes/ctorrent/
+@@
+

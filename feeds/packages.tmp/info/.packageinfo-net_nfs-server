@@ -1,0 +1,14 @@
+Source-Makefile: feeds/packages/net/nfs-server/Makefile
+Package: nfs-server
+Version: 2.2beta47-1
+Depends: +portmap
+Provides: 
+Build-Depends: 
+Section: net
+Category: Network
+Title: User Space NFS server
+Maintainer: OpenWrt Developers Team <openwrt-devel@openwrt.org>
+Type: ipkg
+Description: User Space NFS server
+@@
+
