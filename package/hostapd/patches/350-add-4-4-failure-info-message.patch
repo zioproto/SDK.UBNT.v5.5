@@ -1,0 +1,209 @@
+--- a/hostapd/wpa.c
++++ b/hostapd/wpa.c
+@@ -717,58 +717,24 @@ void wpa_receive(struct wpa_authenticato
+ 			wpa_auth_logger(wpa_auth, sm->addr, LOGGER_WARNING,
+ 					"received EAPOL-Key request with "
+ 					"replayed counter");
+ 			return;
+ 		}
+ 	}
+ 
+-	if (!(key_info & WPA_KEY_INFO_REQUEST) &&
+-	    !wpa_replay_counter_valid(sm, key->replay_counter)) {
+-		int i;
+-		wpa_auth_vlogger(wpa_auth, sm->addr, LOGGER_INFO,
+-				 "received EAPOL-Key %s with unexpected "
+-				 "replay counter", msgtxt);
+-		for (i = 0; i < RSNA_MAX_EAPOL_RETRIES; i++) {
+-			if (!sm->key_replay[i].valid)
+-				break;
+-			wpa_hexdump(MSG_DEBUG, "pending replay counter",
+-				    sm->key_replay[i].counter,
+-				    WPA_REPLAY_COUNTER_LEN);
+-		}
+-		wpa_hexdump(MSG_DEBUG, "received replay counter",
+-			    key->replay_counter, WPA_REPLAY_COUNTER_LEN);
+-		return;
+-	}
+-
+ 	switch (msg) {
+ 	case PAIRWISE_2:
+ 		if (sm->wpa_ptk_state != WPA_PTK_PTKSTART &&
+ 		    sm->wpa_ptk_state != WPA_PTK_PTKCALCNEGOTIATING) {
+ 			wpa_auth_vlogger(wpa_auth, sm->addr, LOGGER_INFO,
+ 					 "received EAPOL-Key msg 2/4 in "
+ 					 "invalid state (%d) - dropped",
+ 					 sm->wpa_ptk_state);
+ 			return;
+ 		}
+-		if (sm->wpa_ie == NULL ||
+-		    sm->wpa_ie_len != key_data_length ||
+-		    os_memcmp(sm->wpa_ie, key + 1, key_data_length) != 0) {
+-			wpa_auth_logger(wpa_auth, sm->addr, LOGGER_INFO,
+-					"WPA IE from (Re)AssocReq did not "
+-					"match with msg 2/4");
+-			if (sm->wpa_ie) {
+-				wpa_hexdump(MSG_DEBUG, "WPA IE in AssocReq",
+-					    sm->wpa_ie, sm->wpa_ie_len);
+-			}
+-			wpa_hexdump(MSG_DEBUG, "WPA IE in msg 2/4",
+-				    (u8 *) (key + 1), key_data_length);
+-			/* MLME-DEAUTHENTICATE.request */
+-			wpa_sta_disconnect(wpa_auth, sm->addr);
+-			return;
+-		}
+ 		break;
+ 	case PAIRWISE_4:
+ 		if (sm->wpa_ptk_state != WPA_PTK_PTKINITNEGOTIATING ||
+ 		    !sm->PTK_valid) {
+ 			wpa_auth_vlogger(wpa_auth, sm->addr, LOGGER_INFO,
+ 					 "received EAPOL-Key msg 4/4 in "
+ 					 "invalid state (%d) - dropped",
+@@ -808,14 +774,62 @@ void wpa_receive(struct wpa_authenticato
+ 	case SMK_ERROR:
+ 		return; /* STSL disabled - ignore SMK messages */
+ #endif /* CONFIG_PEERKEY */
+ 	case REQUEST:
+ 		break;
+ 	}
+ 
++	if (!(key_info & WPA_KEY_INFO_REQUEST) &&
++	    !wpa_replay_counter_valid(sm, key->replay_counter)) {
++		int i;
++		int j;
++		char dump[256] = "";
++#define SPRINTF(__buf, __fmt, ...) \
++	snprintf((__buf) + strlen(__buf), sizeof(__buf) - strlen(__buf), __fmt, ##__VA_ARGS__)
++		for (j = 0; j < WPA_REPLAY_COUNTER_LEN; j++)
++			SPRINTF(dump, "%02X", key->replay_counter[j]);
++		SPRINTF(dump, " - expecting");
++		for (i = 0; i < RSNA_MAX_EAPOL_RETRIES; i++) {
++			if (!sm->key_replay[i].valid)
++				break;
++			SPRINTF(dump, " %d:", i);
++			for (j = 0; j < WPA_REPLAY_COUNTER_LEN; j++)
++				SPRINTF(dump, "%02X", sm->key_replay[i].counter[j]);
++		}
++		if (i == 0)
++		{
++			SPRINTF(dump, " N/A");
++		}
++		wpa_auth_vlogger(wpa_auth, sm->addr, LOGGER_INFO,
++				 "received EAPOL-Key %s with unexpected "
++				 "replay counter: %s", msgtxt, dump);
++		return;
++#undef SPRINTF
++	}
++
++	if (msg == PAIRWISE_2)
++	{
++		if (sm->wpa_ie == NULL ||
++		    sm->wpa_ie_len != key_data_length ||
++		    os_memcmp(sm->wpa_ie, key + 1, key_data_length) != 0) {
++			wpa_auth_logger(wpa_auth, sm->addr, LOGGER_INFO,
++					"WPA IE from (Re)AssocReq did not "
++					"match with msg 2/4");
++			if (sm->wpa_ie) {
++				wpa_hexdump(MSG_DEBUG, "WPA IE in AssocReq",
++					    sm->wpa_ie, sm->wpa_ie_len);
++			}
++			wpa_hexdump(MSG_DEBUG, "WPA IE in msg 2/4",
++				    (u8 *) (key + 1), key_data_length);
++			/* MLME-DEAUTHENTICATE.request */
++			wpa_sta_disconnect(wpa_auth, sm->addr);
++			return;
++		}
++	}
++
+ 	wpa_auth_vlogger(wpa_auth, sm->addr, LOGGER_DEBUG,
+ 			 "received EAPOL-Key frame (%s)", msgtxt);
+ 
+ 	if (key_info & WPA_KEY_INFO_ACK) {
+ 		wpa_auth_logger(wpa_auth, sm->addr, LOGGER_INFO,
+ 				"received invalid EAPOL-Key: Key Ack set");
+ 		return;
+@@ -1655,14 +1669,16 @@ SM_STATE(WPA_PTK, PTKINITDONE)
+ 			klen = 32;
+ 		} else {
+ 			alg = "CCMP";
+ 			klen = 16;
+ 		}
+ 		if (wpa_auth_set_key(sm->wpa_auth, 0, alg, sm->addr, 0,
+ 				     sm->PTK.tk1, klen)) {
++            wpa_auth_logger(sm->wpa_auth, sm->addr, LOGGER_INFO,
++            	"PTK: Failed to set keys.");
+ 			wpa_sta_disconnect(sm->wpa_auth, sm->addr);
+ 			return;
+ 		}
+ 		/* FIX: MLME-SetProtection.Request(TA, Tx_Rx) */
+ 		sm->pairwise_set = TRUE;
+ 
+ 		if (sm->wpa_auth->conf.wpa_ptk_rekey) {
+@@ -1744,14 +1760,16 @@ SM_STEP(WPA_PTK)
+ 		break;
+ 	case WPA_PTK_INITPMK:
+ 		if (wpa_auth_get_eapol(sm->wpa_auth, sm->addr,
+ 				       WPA_EAPOL_keyAvailable) > 0)
+ 			SM_ENTER(WPA_PTK, PTKSTART);
+ 		else {
+ 			wpa_auth->dot11RSNA4WayHandshakeFailures++;
++			wpa_auth_logger(sm->wpa_auth, sm->addr, LOGGER_INFO,
++					"PTK: No key available.");
+ 			SM_ENTER(WPA_PTK, DISCONNECT);
+ 		}
+ 		break;
+ 	case WPA_PTK_INITPSK:
+ 		if (wpa_auth_get_psk(sm->wpa_auth, sm->addr, NULL))
+ 			SM_ENTER(WPA_PTK, PTKSTART);
+ 		else {
+@@ -1764,14 +1782,16 @@ SM_STEP(WPA_PTK)
+ 	case WPA_PTK_PTKSTART:
+ 		if (sm->EAPOLKeyReceived && !sm->EAPOLKeyRequest &&
+ 		    sm->EAPOLKeyPairwise)
+ 			SM_ENTER(WPA_PTK, PTKCALCNEGOTIATING);
+ 		else if (sm->TimeoutCtr >
+ 			 (int) dot11RSNAConfigPairwiseUpdateCount) {
+ 			wpa_auth->dot11RSNA4WayHandshakeFailures++;
++			wpa_auth_logger(sm->wpa_auth, sm->addr, LOGGER_INFO,
++					 "PTK: Failed to receive EAPOL-Key msg 2/4 response, all tries exhausted.");
+ 			SM_ENTER(WPA_PTK, DISCONNECT);
+ 		} else if (sm->TimeoutEvt)
+ 			SM_ENTER(WPA_PTK, PTKSTART);
+ 		break;
+ 	case WPA_PTK_PTKCALCNEGOTIATING:
+ 		if (sm->MICVerified)
+ 			SM_ENTER(WPA_PTK, PTKCALCNEGOTIATING2);
+@@ -1787,14 +1807,16 @@ SM_STEP(WPA_PTK)
+ 	case WPA_PTK_PTKINITNEGOTIATING:
+ 		if (sm->EAPOLKeyReceived && !sm->EAPOLKeyRequest &&
+ 		    sm->EAPOLKeyPairwise && sm->MICVerified)
+ 			SM_ENTER(WPA_PTK, PTKINITDONE);
+ 		else if (sm->TimeoutCtr >
+ 			 (int) dot11RSNAConfigPairwiseUpdateCount) {
+ 			wpa_auth->dot11RSNA4WayHandshakeFailures++;
++			wpa_auth_logger(sm->wpa_auth, sm->addr, LOGGER_INFO,
++					 "PTK: Failed to receive EAPOL-Key msg 4/4 response, all tries exhausted.");
+ 			SM_ENTER(WPA_PTK, DISCONNECT);
+ 		} else if (sm->TimeoutEvt)
+ 			SM_ENTER(WPA_PTK, PTKINITNEGOTIATING);
+ 		break;
+ 	case WPA_PTK_PTKINITDONE:
+ 		break;
+ 	}
+@@ -1885,14 +1907,16 @@ SM_STATE(WPA_PTK_GROUP, REKEYESTABLISHED
+ 
+ SM_STATE(WPA_PTK_GROUP, KEYERROR)
+ {
+ 	SM_ENTRY_MA(WPA_PTK_GROUP, KEYERROR, wpa_ptk_group);
+ 	if (sm->GUpdateStationKeys)
+ 		sm->group->GKeyDoneStations--;
+ 	sm->GUpdateStationKeys = FALSE;
++	wpa_auth_logger(sm->wpa_auth, sm->addr, LOGGER_INFO,
++			"GTK: Failed to receive EAPOL-Key msg 2/2 response, all tries exhausted.");
+ 	sm->Disconnect = TRUE;
+ }
+ 
+ 
+ SM_STEP(WPA_PTK_GROUP)
+ {
+ 	if (sm->Init || sm->PtkGroupInit) {

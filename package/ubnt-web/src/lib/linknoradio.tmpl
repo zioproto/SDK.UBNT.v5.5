@@ -1,0 +1,25 @@
+<? include("lib/link_head.tmpl"); >
+
+ <tr>
+    <td colspan="2" class="centr">
+    <?if (cfg_is_modified($cfg_file)) { include("lib/modified.tmpl"); }
+      if ($netwarning == "1") { include("lib/warn-net.tmpl"); }
+      if (fileinode($emerg_file) != -1) { include("lib/warn-emerg.tmpl"); }
+      include("lib/error.tmpl");>
+    <br>
+    </td>
+  </tr>
+  <tr> 
+   <td colspan="2">
+      <table cellpadding="0" align="center" cellspacing="0" width="100%">
+      <tr>
+	<td height="10" class="footlogo"><img src="/glogo.cgi" border="0"></td>
+	<td height="10" class="foottext"><? echo dict_translate($oem_copyright); ></td>
+      </tr>
+      </table>
+   </td>
+  </tr>
+</table>
+
+</body>
+</html>

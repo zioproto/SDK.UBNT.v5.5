@@ -1,0 +1,50 @@
+--- a/arch/mips/ar7240/wdt.c
++++ b/arch/mips/ar7240/wdt.c
+@@ -18,7 +18,7 @@
+ #include <asm/mach-ar7240/ar7240.h>
+ #include <asm/delay.h>
+ 
+-#define AR7240_DEFAULT_WD_TMO	(20ul * USEC_PER_SEC)
++#define AR7240_DEFAULT_WD_TMO	(21ul * USEC_PER_SEC)
+ 
+ #define FACTORY_RESET		0x89ABCDEF
+ 
+@@ -155,7 +155,7 @@ ar7240wdt_open(struct inode *inode, stru
+ 	init_waitqueue_head(&wdt->wq);
+ 
+ 	ar7240_set_wd_timer(wdt->tmo);
+-	ar7240_set_wd_timer_action(AR7240_WD_ACT_NONE);
++	ar7240_set_wd_timer_action(AR7240_WD_ACT_RESET);
+ 
+ 	return nonseekable_open(inode, file);
+ }
+@@ -169,7 +169,7 @@ ar7240wdt_close(struct inode *inode, str
+ 		return -ENODEV;
+ 	}
+ 
+-	if (!wdt->can_close) {
++	if (wdt->can_close) {
+ 		wddbg("%s: clearing action\n", __func__);
+ 		ar7240_set_wd_timer_action(AR7240_WD_ACT_NONE);
+ 	} else {
+--- a/include/asm-mips/mach-ar7240/ar7240.h
++++ b/include/asm-mips/mach-ar7240/ar7240.h
+@@ -492,6 +492,18 @@ static inline void ar7240_spi_flash_cs0_
+   ar7240_spi_disable_cs();
+ }
+ 
++
++#define AR7240_WD_ACT_MASK      3u
++#define AR7240_WD_ACT_NONE      0u /* No Action */
++#define AR7240_WD_ACT_GP_INTR   1u /* General purpose intr */
++#define AR7240_WD_ACT_NMI       2u /* NMI */
++#define AR7240_WD_ACT_RESET     3u /* Full Chip Reset */
++
++#define AR7240_WD_LAST_SHIFT    31
++#define AR7240_WD_LAST_MASK     ((uint32_t)(1 << AR7240_WD_LAST_SHIFT))
++
++
++
+ /*
+  * Reset block
+  */

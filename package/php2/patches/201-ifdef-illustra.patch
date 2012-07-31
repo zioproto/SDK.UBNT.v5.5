@@ -1,0 +1,437 @@
+--- a/src/illustra.c
++++ b/src/illustra.c
+@@ -89,21 +89,21 @@ int 	    _miDelConn(int cIndex);
+ mi_integer  _miAddResult(int cIndex);
+ mi_integer  _miGetRow(int cIndex, int resIndex);
+ int 	    _miFieldNumber(int cIndex, int rIndex, char *name);
+ char *      _miFieldName(int cIndex, int rIndex, int num);
+ 
+ #endif /* ILLUSTRA							    */
+ 
++#ifdef ILLUSTRA
+ /******************************************************************************
+  * Status   : Public
+  * Function : Connect to an Illustra database
+  *****************************************************************************/
+ void MIconnect(void)
+     {
+-#ifdef ILLUSTRA
+ 
+     Stack		    *s;
+     MI_CONNECTION	    *conn;
+     char		    *dbname=NULL;
+     char		    *uname=NULL;
+     char		    *passwd=NULL;
+     char		    *temp;
+@@ -181,31 +181,22 @@ void MIconnect(void)
+ 	sprintf(temp, "%d", j);			
+ 	}
+ 	
+ 	
+     /* Return success (or otherwise)					*/
+     /*==================================================================*/
+     Push(temp, LNUMBER);
+-    
+-#else
+-    Pop();
+-    Pop();
+-    Pop();
+-    Error("No illustra support in this PHP module");
+-#endif
+     }
+ 
+-
+ /******************************************************************************
+  * Status   : Public
+  * Function : Return the database name for a passed connection
+  *****************************************************************************/
+ void MIdbname(void)
+     {
+-#ifdef ILLUSTRA
+     Stack		*s;		    /* PHP Stack system		*/
+     int			cIndex;		    /* Passed connection	*/
+     char		*tmp;		    /* Return buffer		*/
+ 
+     /* Recover the passed connection index				*/
+     /*==================================================================*/
+     s = Pop();
+@@ -235,28 +226,22 @@ void MIdbname(void)
+ 	{
+ 	Error("(Illustra) Out of memory in mi_dbName");
+ 	Push("-1", LNUMBER);
+ 	return;
+ 	}
+ 
+     Push(tmp, STRING);
+-
+-#else
+-    Pop();
+-    Error("No illustra support in this PHP module");
+-#endif
+     }
+ 
+ /******************************************************************************
+  * Status   : Public
+  * Function : Close an active connection
+  *****************************************************************************/
+ void MIclose(void)
+     {
+-#ifdef ILLUSTRA
+     Stack		*s;		    /* PHP Stack system		*/
+     int			cIndex;		    /* Passed connection	*/
+     MI_CONNECTION	*conn;		    /* The connection to close	*/
+ 
+     /* Recover the passed connection index				*/
+     /*==================================================================*/
+     s = Pop();
+@@ -269,29 +254,22 @@ void MIclose(void)
+ 	cIndex = s->intval;
+     else
+ 	cIndex = 0;
+ 
+     /* Delete the connection						*/
+     /*==================================================================*/
+     _miDelConn(cIndex);
+-    
+-#else
+-	Pop();
+-	Error("No illustra support in this PHP module");
+-#endif
+ }
+ 
+- 
+ /******************************************************************************
+  * Status   : Public
+  * Function : Execute SQL statements in the database
+  *****************************************************************************/
+ void MIexec(void)
+     {
+-#ifdef ILLUSTRA
+     Stack		*s;		    /* PHP Stack system		*/
+     int			cIndex;		    /* Connection id		*/
+     MI_CONNECTION	*currConn=NULL;	    /* Connection itself	*/
+     char		*query;		    /* The SQL to send		*/
+     char		temp[16];	    /* Return string		*/
+     int			j;		    /* Return value		*/
+     int			result;		    /* Result of SQL query	*/
+@@ -361,30 +339,22 @@ void MIexec(void)
+ 	/* Retrieve the results from the database query			*/
+ 	/*==============================================================*/
+ 	j = _miAddResult(cIndex);
+ 	}
+ 
+     sprintf(temp, "%d", j);
+     Push(temp,LNUMBER);
+-#else
+-    Pop();
+-    Pop();
+-    Push("0", LNUMBER);
+-    Error("No illustra support in this PHP module");
+-#endif
+ }
+-
+  
+ /******************************************************************************
+  * Status   : Public
+  * Function : Retrieve a result inside PHP
+  *****************************************************************************/
+ void MIresult(void)
+     {
+-#ifdef ILLUSTRA
+     Stack		*s;		    /* PHP stack structure	*/ 
+     char		*colName =NULL;	    /* The name of the column	*/
+     int			colIdx =-1;	    /* The column index		*/
+     int			rIndex =0;	    /* The index of the result	*/
+     int			cIndex =0;	    /* The connection index	*/
+     int			rowIdx =0;	    /* The index of the row	*/
+     miRow		*row;	    	    /* The result store area	*/
+@@ -500,31 +470,22 @@ void MIresult(void)
+     /*==================================================================*/
+     if (row->row[colIdx] == NULL)
+ 	retVal = estrdup(1, "[NULL]");
+     else
+         retVal = estrdup(1, row->row[colIdx]);
+     
+     Push(retVal, STRING);
+-
+-#else
+-	Pop();
+-	Pop();
+-	Pop();
+-	Push("-1", LNUMBER);
+-	Error("No Illustra support in this PHP module");
+-#endif
+     }
+  
+ /******************************************************************************
+  * Status   : Public
+  * Function : Return the number of rows in a query
+  *****************************************************************************/
+ void MInumRows(void)
+     {
+-#ifdef ILLUSTRA
+     Stack		*s;		    /* PHP manipulation stack	    */
+     int     	    	cIndex;    	    /* passed-in index of connection*/
+     int			rIndex;	    	    /* Passed-in index of result    */
+     char		temp[16];	    /* Passed-out number	    */
+     miResult		*result;	    /* Result structure	    	    */
+     
+     /* Retrieve the result argument					    */
+@@ -569,27 +530,22 @@ void MInumRows(void)
+ 	Error("(Illustra) Bad result index in mi_numRows");
+ 	Push("-1", LNUMBER);
+ 	return;
+ 	}
+ 
+     sprintf(temp, "%d", _list.conn[cIndex]->result[rIndex]->numR);
+     Push(temp, LNUMBER);
+-#else
+-    Pop();
+-    Error("No illustra support in this PHP module");
+-#endif
+     }
+  
+ /******************************************************************************
+  * Status   : Public
+  * Function : Return the number of the passed field name
+  *****************************************************************************/
+ void MIfieldNum(void)
+     {
+-#ifdef ILLUSTRA
+     Stack		*s;		    /* PHP Stack system		*/
+     int			cIndex;		    /* Passed connection	*/
+     int			rIndex;		    /* Passed result	    	*/
+     int			fNum;		    /* The field number		*/
+     char		*fName;		    /* The field name		*/
+     char		number[128];	    /* Temporary result ptr	*/
+     
+@@ -661,29 +617,22 @@ void MIfieldNum(void)
+     	Push("-1", LNUMBER);
+     	}
+     else
+     	{
+     	sprintf(number, "%d", fNum);
+     	Push(number, LNUMBER);
+     	}
+-    	
+-#else
+-    Pop();
+-    Pop();
+-    Error("No illustra support in this PHP module");
+-#endif
+     }
+  
+ /******************************************************************************
+  * Status   : Public
+  * Function : Return the name of the passed field number
+  *****************************************************************************/
+ void MIfieldName(void)
+     {
+-#ifdef ILLUSTRA
+     Stack		*s;		    /* PHP Stack system		*/
+     int			cIndex;		    /* Passed connection	*/
+     int			fNum;		    /* The field number		*/
+     int			rIndex;		    /* The result number	*/
+     char		*fName;		    /* The field name		*/
+     char    	    	*tmp;	    	    /* Temporary pointer    	*/
+     
+@@ -772,30 +721,22 @@ void MIfieldName(void)
+ 	{
+ 	Error("(Illustra) Out of memory in mi_fieldName");
+ 	Push("-1", LNUMBER);
+ 	return;
+ 	}
+ 
+     Push(fName, STRING);
+-
+-#else
+-    Pop();
+-    Pop();
+-    Error("No illustra support in this PHP module");
+-#endif
+     }    
+-
+  
+ /******************************************************************************
+  * Status   : Public
+  * Function : Return the number of fields
+  *****************************************************************************/
+ void MInumFields(void)
+     {
+-#ifdef ILLUSTRA
+     Stack		*s;		    /* PHP manipulation stack	    */
+     int			rIndex;	    	    /* Passed-in index of result    */
+     int			cIndex;		    /* Passed connection	    */
+     int     	    	numFields;  	    /* Number of fields     	    */
+     char		temp[16];	    /* Passed-out number	    */
+     
+     /* Retrieve the result argument					    */
+@@ -845,26 +786,20 @@ void MInumFields(void)
+     
+     /* Get the number of columns   					    */
+     /*======================================================================*/
+     numFields = _list.conn[cIndex]->result[rIndex]->numC;
+  
+     sprintf(temp, "%d", numFields);
+ 	Push(temp, LNUMBER);
+-#else
+-	Pop();
+-	Push("-1", LNUMBER);
+-	Error("No illustra support in this PHP module");
+-#endif    
+     }
+ 
+ /******************************************************************************
+  * Status   : Private 
+  * Function : Maintain a list of active connections
+  *****************************************************************************/
+-#ifdef ILLUSTRA
+ int _miAddConn(MI_CONNECTION *newConn, char *dbase)
+     {
+     miConn *conn = NULL;
+     
+     /* Check to see if there is space for more connections		*/
+     if (_list.numC == _list.maxC)
+ 	{
+--- a/src/lex.c
++++ b/src/lex.c
+@@ -251,15 +251,17 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "openlog", INTFUNC3,OpenLog },
+ #if PHP_SNMP_SUPPORT
+ 	  { "snmpget", INTFUNC3,phpsnmpget },
+ #endif
+ #if HAVE_FILEPRO
+ 	  { "filepro", INTFUNC1,filePro},
+ #endif
++#ifdef ILLUSTRA
+ 	  { "mi_exec", INTFUNC2,MIexec },
++#endif
+ #if HAVE_ODBC	
+ 	  { "sqlfree", INTFUNC1,ODBCfree },
+ #endif	
+ 	  { NULL,0,NULL } },
+ 
+ 	{ { "endwhile",ENDWHILE,NULL }, /* 8 */
+ 	  { "function",FUNCTION,NULL },
+@@ -282,15 +284,17 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "ora_open",INTFUNC1,Ora_Open },
+ 	  { "ora_exec",INTFUNC1,Ora_Exec },
+ 	  { "ora_bind",INTFUNC4,Ora_Bind },
+ #if PHP_SNMP_SUPPORT
+ 	  { "snmpwalk", INTFUNC3,phpsnmpwalk },
+ #endif
+ 	  { "filetype", FILETYPE,NULL },
++#ifdef ILLUSTRA
+ 	  { "mi_close",INTFUNC1,MIclose },
++#endif
+ #if HAVE_LIBADABAS
+ 	  { "ada_exec", INTFUNC2,Ada_exec },
+ #endif
+ #ifdef HAVE_ODBC
+ 	  { "sqlfetch", INTFUNC1,ODBCfetch },
+ #endif	  	 
+ 	  { NULL,0,NULL } },
+@@ -326,16 +330,18 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "setcookie", SETCOOKIE,NULL },
+ 	  { "parse_str", PARSESTR,NULL },
+ 	  { "ora_logon", INTFUNC2,Ora_Logon },
+ 	  { "ora_close", INTFUNC1,Ora_Close },
+ 	  { "ora_parse", ORA_PARSE,NULL },
+ 	  { "ora_fetch", INTFUNC1,Ora_Fetch },
+ 	  { "checkdate", INTFUNC3,CheckDate },
++#ifdef ILLUSTRA
+ 	  { "mi_result", INTFUNC4,MIresult },
+ 	  { "mi_dbname", INTFUNC1,MIdbname },
++#endif
+ 	  { "fpassthru", INTFUNC1,FPassThru },
+ #if HAVE_LIBADABAS
+ 	  { "ada_close", INTFUNC1,Ada_close },
+ #endif
+ 	  { NULL,0,NULL } },
+ 
+ 	{ { "clearstack", INTFUNC0,ClearStack }, /* 10 */
+@@ -356,16 +362,18 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "phpversion", INTFUNC0,PHPVersion },
+ 	  { "addslashes", INTFUNC1,_AddSlashes },
+ 	  { "msql_close", INTFUNC0,MsqlClose },
+ 	  { "solid_exec", INTFUNC2,Solid_exec },
+ 	  { "initsyslog", INTFUNC0,php_init_syslog },
+ 	  { "ora_logoff", INTFUNC1,Ora_Logoff },
+ 	  { "ora_commit", INTFUNC1,Ora_Commit },
++#ifdef ILLUSTRA
+ 	  { "mi_connect", INTFUNC3,MIconnect },
+ 	  { "mi_numrows", INTFUNC2,MInumRows },
++#endif
+ #if HAVE_LIBADABAS
+ 	  { "ada_result", INTFUNC2,Ada_result },
+ #endif
+ #ifdef HAVE_ODBC
+ 	  { "sqlgetdata", INTFUNC3,ODBCgetdata },
+ 	  { "sqlconnect", INTFUNC3,ODBCconnect },
+ #endif	  
+@@ -382,15 +390,17 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "msql_dbname", INTFUNC2,MsqlDBName },
+ 	  { "msql_dropdb", INTFUNC1,MsqlDropDB },
+ 	  { "pg_fieldnum", INTFUNC2,PGfieldNum },
+ 	  { "mysql_close", INTFUNC0,MYsqlClose },
+ 	  { "solid_close", INTFUNC1,Solid_close },
+ 	  { "sybsql_seek",INTFUNC1,SybsqlSeek},
+ 	  { "sybsql_exit",INTFUNC0,SybsqlExit},
++#ifdef ILLUSTRA
+ 	  { "mi_fieldnum", INTFUNC3,MIfieldNum },
++#endif
+ 	  { "phpshowpool",INTFUNC0,ShowPool },
+ #if HAVE_LIBADABAS
+ 	  { "ada_numrows", INTFUNC1,Ada_numRows },
+ 	  { "ada_connect", INTFUNC3,Ada_connect },
+ #endif
+ #ifdef HAVE_ODBC
+ 	  { "sqlrowcount",INTFUNC1,ODBCrowcount },
+@@ -416,16 +426,18 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "solid_result", INTFUNC2,Solid_result },
+ 	  { "sybsql_dbuse", INTFUNC1,SybsqlDbuse },
+ 	  { "sybsql_query", INTFUNC1,SybsqlQuery },
+ 	  { "sybsql_isrow", INTFUNC0,SybsqlIsRow }, 
+ 	  { "getimagesize", INTFUNC1,GetImageSize },
+ 	  { "ora_commiton", INTFUNC1,Ora_CommitOn },
+ 	  { "ora_rollback", INTFUNC1,Ora_Rollback },
++#ifdef ILLUSTRA
+ 	  { "mi_fieldname", INTFUNC3,MIfieldName },
+ 	  { "mi_numfields", INTFUNC2,MInumFields },
++#endif
+ #if HAVE_LIBADABAS
+ 	  { "ada_fieldnum", INTFUNC2,Ada_fieldNum },
+ 	  { "ada_fetchrow", ADA_FETCHROW,NULL },
+ 	  { "ada_fieldlen", ADA_FIELDLEN,NULL },
+ #endif
+ 	  { NULL,0,NULL } }, 
+ 
+--- a/src/php.h
++++ b/src/php.h
+@@ -1315,23 +1315,26 @@ void filePro_rowcount(void);
+ void filePro_fieldcount(void);
+ void filePro_fieldtype(void);
+ void filePro_fieldname(void);
+ void filePro_fieldwidth(void);
+ void filePro_retrieve(void);
+ 
+ /* illustra.c */
++#ifdef ILLUSTRA
+ void MIconnect(void);
+ void MIdbname(void);
+ void MIclose(void);
+ void MIexec(void);
+ void MIresult(void);
+ void MInumRows(void);
+ void MIfieldName(void);
+ void MIfieldNum(void);
+ void MInumFields(void);
++#else
++#endif
+ 
+ /* odbc.c */
+ void ODBCfetch(void);
+ void ODBCexecdirect(void);
+ void ODBCgetdata(void);
+ void ODBCfree(void);
+ void ODBCconnect(void);

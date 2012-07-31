@@ -1,0 +1,34 @@
+--- a/src/connections.c
++++ b/src/connections.c
+@@ -1244,14 +1244,15 @@ static handler_t connection_handle_fdeve
+ 					"connection closed: poll() -> ???", revents);
+ 		}
+ 	}
+ 
+ 	if (con->state == CON_STATE_READ ||
+ 	    con->state == CON_STATE_READ_POST) {
+ 		connection_handle_read_state(srv, con);
++		if (con->is_readable) joblist_append(srv, con);
+ 	}
+ 
+ 	if (con->state == CON_STATE_WRITE &&
+ 	    !chunkqueue_is_empty(con->write_queue) &&
+ 	    con->is_writable) {
+ 
+ 		if (-1 == connection_handle_write(srv, con)) {
+@@ -1649,14 +1650,15 @@ int connection_state_machine(server *srv
+ 		case CON_STATE_READ:
+ 			if (srv->srvconf.log_state_handling) {
+ 				log_error_write(srv, __FILE__, __LINE__, "sds",
+ 						"state for fd", con->fd, connection_get_state(con->state));
+ 			}
+ 
+ 			connection_handle_read_state(srv, con);
++			if (con->is_readable) joblist_append(srv, con);
+ 			break;
+ 		case CON_STATE_WRITE:
+ 			if (srv->srvconf.log_state_handling) {
+ 				log_error_write(srv, __FILE__, __LINE__, "sds",
+ 						"state for fd", con->fd, connection_get_state(con->state));
+ 			}
+ 

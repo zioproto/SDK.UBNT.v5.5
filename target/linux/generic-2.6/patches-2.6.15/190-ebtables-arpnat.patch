@@ -1,0 +1,1211 @@
+--- a/include/linux/netfilter_bridge/ebt_nat.h
++++ b/include/linux/netfilter_bridge/ebt_nat.h
+@@ -5,9 +5,10 @@ struct ebt_nat_info
+ {
+ 	unsigned char mac[ETH_ALEN];
+ 	/* EBT_ACCEPT, EBT_DROP, EBT_CONTINUE or EBT_RETURN */
+ 	int target;
+ };
+ #define EBT_SNAT_TARGET "snat"
+ #define EBT_DNAT_TARGET "dnat"
++#define EBT_ARPNAT_TARGET "arpnat"
+ 
+ #endif
+--- a/net/bridge/br_fdb.c
++++ b/net/bridge/br_fdb.c
+@@ -200,14 +200,16 @@ struct net_bridge_fdb_entry *br_fdb_get(
+ 	fdb = __br_fdb_get(br, addr);
+ 	if (fdb) 
+ 		atomic_inc(&fdb->use_count);
+ 	rcu_read_unlock();
+ 	return fdb;
+ }
+ 
++EXPORT_SYMBOL(br_fdb_get);
++
+ static void fdb_rcu_free(struct rcu_head *head)
+ {
+ 	struct net_bridge_fdb_entry *ent
+ 		= container_of(head, struct net_bridge_fdb_entry, rcu);
+ 	kmem_cache_free(br_fdb_cache, ent);
+         BR_DECR_ENTRIES();
+ }
+--- a/net/bridge/netfilter/Kconfig
++++ b/net/bridge/netfilter/Kconfig
+@@ -204,8 +204,18 @@ config BRIDGE_EBT_ULOG
+ 	  logging daemon using netlink multicast sockets. This differs
+ 	  from the log watcher in the sense that the complete packet is
+ 	  sent to userspace instead of a descriptive text and that
+ 	  netlink multicast sockets are used instead of the syslog.
+ 
+ 	  To compile it as a module, choose M here.  If unsure, say N.
+ 
++config BRIDGE_EBT_ARPNAT
++	tristate "ebt: arpnat target support"
++	depends on BRIDGE_NF_EBTABLES
++	help
++	  This option adds the combination of ARP/MAC SNAT/DMAC target, which allows altering the ARP/MAC
++	  source/destination address of frames. Aka MAC/IP connection tracking. Usefull for
++          Wireless Station Bridge implementation.
++
++	  To compile it as a module, choose M here.  If unsure, say N.
++
+ endmenu
+--- a/net/bridge/netfilter/Makefile
++++ b/net/bridge/netfilter/Makefile
+@@ -22,11 +22,12 @@ obj-$(CONFIG_BRIDGE_EBT_VLAN) += ebt_vla
+ 
+ # targets
+ obj-$(CONFIG_BRIDGE_EBT_ARPREPLY) += ebt_arpreply.o
+ obj-$(CONFIG_BRIDGE_EBT_MARK_T) += ebt_mark.o
+ obj-$(CONFIG_BRIDGE_EBT_DNAT) += ebt_dnat.o
+ obj-$(CONFIG_BRIDGE_EBT_REDIRECT) += ebt_redirect.o
+ obj-$(CONFIG_BRIDGE_EBT_SNAT) += ebt_snat.o
++obj-$(CONFIG_BRIDGE_EBT_ARPNAT) += ebt_arpnat.o
+ 
+ # watchers
+ obj-$(CONFIG_BRIDGE_EBT_LOG) += ebt_log.o
+ obj-$(CONFIG_BRIDGE_EBT_LOG) += ebt_ulog.o
+--- /dev/null
++++ b/net/bridge/netfilter/ebt_arpnat.c
+@@ -0,0 +1,1126 @@
++/*
++ *  ebt_arpnat
++ *
++ *	Authors:
++ *      Kestutis Barkauskas <gpl@wilibox.com>
++ *
++ *  November, 2005
++ *
++ *	Rewritten by:
++ *      Kestutis Barkauskas and Kestutis Kupciunas <gpl@ubnt.com>
++ *
++ *  November, 2006
++ *
++ *      spin_lock_irqsave/restore() changed to spin_lock_bh()/spin_unlock_bh()
++ *	Thanks Zilvinas Valinskas <gpl@wilibox.com>
++ *
++ *  August, 2007
++ *
++ *  	adapted for 2.6.22 by Kestutis Kupciunas <gpl@ubnt.com>
++ *
++ *  October, 2007
++ *      VLAN (802.1Q) support added.
++ *	Note: PPPOE is not supported with VLAN yet.
++ *      Kestutis Barkauskas <gpl@ubnt.com>
++ *
++ *  November, 2007
++ *      IP conflict issue on ethernet side clients after device reboot fix.
++ *	Thanks Zilvinas Valinskas <gpl@wilibox.com>
++ *
++ *  December, 2008
++ *	PPPOE handling optimization, session expiration fix.
++ *	Some changes to make code LE/BE neautral.
++ *	Kestutis Barkauskas <gpl@ubnt.com>
++ *
++ *  June-July, 2009
++ *	support multiple IP per single MAC entry
++ *	UDP packet checksum fix for DHCP over VLAN
++ *	honor DHCP broadcast flag when retransmitting DHCP packets
++ *	Kestutis Kupciunas <gpl@ubnt.com>
++ *
++ *  August, 2010
++ *	Hack with Relay-Session-Id TAG for PPPoE NAT removed.
++ *	PPPOE PADT handling fix.
++ *	PPPOE PPP_LCP_TERM handling added.
++ *	Debug per feature(protocol) added.
++ *	Jiffies overwrap fix.
++ *	Note: PPPOE multisession was/is not supported.
++ *	Kestutis Barkauskas <gpl@ubnt.com>
++ *
++ *  December, 2010
++ *	Fix crach on PPPoE packets without Session ID
++ *	Fix expiration update on IP packets
++ *	Kestutis Barkauskas <gpl@ubnt.com>
++ */
++
++#include <linux/version.h>
++
++#include <linux/netfilter_bridge/ebtables.h>
++#include <linux/netfilter_bridge/ebt_nat.h>
++#include <linux/module.h>
++#include <linux/if_arp.h>
++#include <linux/if_ether.h>
++#include <linux/if_pppox.h>
++#include <linux/if_vlan.h>
++#include <linux/ppp_defs.h>
++#include <linux/rtnetlink.h>
++#include <linux/list.h>
++#include <linux/spinlock.h>
++#include <linux/proc_fs.h>
++#include <linux/inetdevice.h>
++#include <net/arp.h>
++#include <net/ip.h>
++#include <linux/ip.h>
++#include <linux/udp.h>
++#include <linux/in.h>
++#include <net/checksum.h>
++#include <linux/crc16.h>
++
++#include "../br_private.h"
++
++#define STRMAC "%02x:%02x:%02x:%02x:%02x:%02x"
++#define STRIP "%d.%d.%d.%d"
++#define MAC2STR(x) (x)[0],(x)[1],(x)[2],(x)[3],(x)[4],(x)[5]
++#define IP2STR(x) (x)>>24&0xff,(x)>>16&0xff,(x)>>8&0xff,(x)&0xff
++
++#define FLUSHTIMEOUT 600 /* 5 minutes to expire */
++#define GIADDR_OFFSET (24)
++#define FLAGS_OFFSET (10)
++#define ENABLE_ADD_PTT_HOST_UNIQ
++/* DHCP workaround modes */
++#define BOOTP_RELAY 2
++#define BOOTP_BCAST 1
++
++/* PPPoE Handling flags */
++#define PPPOE_ADD 0x0
++#define PPPOE_REMOVE 0x1
++#define PPPOE_ADD_TMP 0x2
++
++#ifdef DEBUG
++	#define __STATIC
++static uint8_t debug = 0xff;
++#else
++	#define __STATIC static
++static uint8_t debug = 0;
++#endif
++
++#define ARPNAT_DEBUG_ARP 0x1
++#define ARPNAT_DEBUG_BOOTP 0x2
++#define ARPNAT_DEBUG_PPPOE 0x4
++#define ARPNAT_DEBUG_VLAN 0x8
++#define ARPNAT_DEBUG_IP 0x10
++#define ARPNAT_DEBUG_OTHER 0x20
++
++#define ARPNAT_DEBUG(flag,format,...) if (flag & debug) {\
++    printk("Arpnat: "format"\n",##__VA_ARGS__); \
++}
++
++#ifndef __packed
++	#define __packed __attribute__((__packed__))
++#endif
++
++
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
++#include <linux/skbuff.h>
++
++static inline struct arphdr*
++arp_hdr(const struct sk_buff *skb)
++{
++	return skb->nh.arph;
++}
++
++static inline struct iphdr*
++ip_hdr(const struct sk_buff *skb)
++{
++	return skb->nh.iph;
++}
++
++static inline struct pppoe_hdr*
++pppoe_hdr(const struct sk_buff *skb)
++{
++	return (struct pppoe_hdr*)skb->nh.raw;
++}
++#endif
++
++
++struct mac2ip
++{
++	struct hlist_node node;
++	uint8_t mac[ETH_ALEN];
++	struct hlist_head data;
++};
++
++struct arpnat_data
++{
++	struct hlist_node node;
++	struct mac2ip* parent;
++	uint32_t ip;
++	uint16_t pppoe_id;
++	unsigned long expires;
++};
++
++static HLIST_HEAD(arpnat_table);
++static spinlock_t arpnat_lock = SPIN_LOCK_UNLOCKED;
++static uint8_t bootpnat = 1;
++static uint8_t pppoenat = 1;
++static uint32_t expires = FLUSHTIMEOUT;
++
++__STATIC int mac2ip_cleanup(struct mac2ip* item, unsigned long expiration)
++{
++	struct arpnat_data* tpos;
++	struct hlist_node* pos;
++	struct hlist_node* n;
++	int count, deleted;
++	count = deleted = 0;
++	hlist_for_each_entry_safe(tpos, pos, n, &item->data, node)
++	{
++		count++;
++		if (time_after(expiration, tpos->expires)) {
++			deleted++;
++			hlist_del(pos);
++			kfree(tpos);
++		}
++	}
++	return count == deleted;
++}
++
++__STATIC void mac2ip_free(struct mac2ip* item) {
++	struct arpnat_data* tpos;
++	struct hlist_node* pos;
++	struct hlist_node* n;
++	hlist_for_each_entry_safe(tpos, pos, n, &item->data, node)
++	{
++		hlist_del(pos);
++		kfree(tpos);
++	}
++	kfree(item);
++}
++
++__STATIC struct mac2ip* find_mac_nat(struct hlist_head* head, const uint8_t* mac)
++{
++	struct mac2ip* tpos;
++	struct mac2ip* result = NULL;
++	struct hlist_node* pos;
++	struct hlist_node* n;
++	hlist_for_each_entry_safe(tpos, pos, n, head, node)
++	{
++		if (memcmp(tpos->mac, mac, ETH_ALEN) == 0)
++		{
++			result = tpos;
++			break;
++		}
++		if (mac2ip_cleanup(tpos, jiffies))
++		{
++			hlist_del(pos);
++			kfree(tpos);
++		}
++	}
++	return result;
++}
++
++__STATIC struct arpnat_data* mac2ip_find_ip(struct mac2ip* entry, uint32_t ip)
++{
++	struct arpnat_data* tpos;
++	struct hlist_node* pos;
++	struct hlist_node* n;
++
++	if (!ip)
++		return NULL;
++
++	hlist_for_each_entry_safe(tpos, pos, n, &entry->data, node)
++	{
++		if (tpos->ip == ip)
++			return tpos;
++	}
++	return NULL;
++}
++
++__STATIC struct mac2ip* find_ip_nat(struct hlist_head* head, uint32_t ip)
++{
++	struct mac2ip* tpos;
++	struct mac2ip* result = NULL;
++	struct hlist_node* pos;
++	struct hlist_node* n;
++
++	hlist_for_each_entry_safe(tpos, pos, n, head, node)
++	{
++		struct arpnat_data* data = mac2ip_find_ip(tpos, ip);
++		if (data != NULL)
++		{
++			result = tpos;
++			break;
++		}
++		if (mac2ip_cleanup(tpos, jiffies))
++		{
++			hlist_del(pos);
++			mac2ip_free(tpos);
++		}
++	}
++	return result;
++}
++
++__STATIC struct arpnat_data* mac2ip_find_pppoeid(struct mac2ip* entry, uint16_t id)
++{
++	struct arpnat_data* tpos;
++	struct hlist_node* pos;
++	struct hlist_node* n;
++
++	if (!id)
++		return NULL;
++
++	hlist_for_each_entry_safe(tpos, pos, n, &entry->data, node)
++	{
++		if (tpos->pppoe_id == id)
++			return tpos;
++	}
++	return NULL;
++}
++
++__STATIC struct mac2ip* find_pppoe_nat(struct hlist_head* head, uint16_t id)
++{
++	struct mac2ip* tpos;
++	struct mac2ip* result = NULL;
++	struct hlist_node* pos;
++	struct hlist_node* n;
++
++	hlist_for_each_entry_safe(tpos, pos, n, head, node)
++	{
++		struct arpnat_data* data = mac2ip_find_pppoeid(tpos, id);
++		if (data != NULL)
++		{
++			result = tpos;
++			break;
++		}
++		if (mac2ip_cleanup(tpos, jiffies))
++		{
++			hlist_del(pos);
++			mac2ip_free(tpos);
++		}
++	}
++	return result;
++}
++
++__STATIC void free_arp_nat(struct hlist_head* head)
++{
++	struct mac2ip* tpos;
++	struct hlist_node* pos;
++	struct hlist_node* n;
++	hlist_for_each_entry_safe(tpos, pos, n, head, node)
++	{
++		hlist_del(pos);
++		mac2ip_free(tpos);
++	}
++}
++
++__STATIC struct mac2ip* update_nat(struct hlist_head* head, const uint8_t* mac, uint32_t ip, uint16_t pppoe_id)
++{
++	struct mac2ip* entry;
++	struct arpnat_data* data;
++
++	if (!ip && !pppoe_id)
++		return NULL;
++
++	entry = find_mac_nat(head, mac);
++	if (entry)
++		goto check;
++
++	entry = kmalloc(sizeof(*entry), GFP_ATOMIC);
++	if (!entry)
++		return NULL;
++	memcpy(entry->mac, mac, ETH_ALEN);
++	INIT_HLIST_HEAD(&entry->data);
++	INIT_HLIST_NODE(&entry->node);
++	hlist_add_head(&entry->node, head);
++check:
++	if (ip)
++		data = mac2ip_find_ip(entry, ip);
++	else if (pppoe_id)
++		data = mac2ip_find_pppoeid(entry, pppoe_id);
++	else
++		return NULL;
++
++	if (data)
++		goto done;
++	data = kmalloc(sizeof(*data), GFP_ATOMIC);
++	if (!data)
++		return NULL;
++
++	data->pppoe_id = pppoe_id;
++	data->ip = ip;
++	INIT_HLIST_NODE(&data->node);
++	hlist_add_head(&data->node, &entry->data);
++
++done:
++	data->expires = jiffies + expires * HZ;
++
++	return entry;
++}
++
++__STATIC inline struct mac2ip* update_arp_nat(struct hlist_head* head, const uint8_t* mac, uint32_t ip)
++{
++	return update_nat(head, mac, ip, 0);
++}
++
++__STATIC inline struct mac2ip* update_pppoe_nat(struct hlist_head* head, const uint8_t* mac, uint16_t id, u_int8_t flags)
++{
++    	struct mac2ip* entry = update_nat(head, mac, 0, id);
++
++	if (!entry)
++	    entry = find_pppoe_nat(&arpnat_table, id);
++
++	if (!entry)
++            return entry;
++
++        mac = entry->mac;
++	ARPNAT_DEBUG(ARPNAT_DEBUG_PPPOE, "%s%s MAC["STRMAC"] SesID 0x%x",
++		     flags & PPPOE_REMOVE ? "Remove" : (flags & PPPOE_ADD_TMP ? "Add temporary" : "Update"), entry ? "" : "(?)", MAC2STR(mac), id);
++	if (entry && flags) {
++	    struct arpnat_data* data = mac2ip_find_pppoeid(entry, id);
++	    if (data != NULL)
++		data->expires = jiffies + ((flags & PPPOE_REMOVE) ? 1 : 5) * HZ;
++ 	}
++	return entry;
++}
++
++#ifdef CONFIG_PROC_FS
++__STATIC int arpnat_cache_stat_get_info(char *buffer, char **start, off_t offset, int length)
++{
++	int len = 0;
++	struct mac2ip* tpos;
++	struct hlist_node* pos;
++	struct hlist_node* n;
++	uint32_t exp;
++
++	spin_lock_bh(&arpnat_lock);
++	hlist_for_each_entry_safe(tpos, pos, n, &arpnat_table, node)
++	{
++		struct arpnat_data* tpos2;
++		struct hlist_node* pos2;
++		struct hlist_node* n2;
++		if (mac2ip_cleanup(tpos, jiffies))
++		{
++			hlist_del(pos);
++			mac2ip_free(tpos);
++			continue;
++		}
++		len += sprintf(buffer + len, STRMAC"\n", MAC2STR(tpos->mac));
++		hlist_for_each_entry_safe(tpos2, pos2, n2, &tpos->data, node)
++		{
++			exp = tpos2->expires - jiffies;
++			len += sprintf(buffer + len, "\t%8u.%02u "STRIP" %x\n",
++					   exp / HZ, exp % HZ, IP2STR(tpos2->ip), tpos2->pppoe_id);
++		}
++	}
++	spin_unlock_bh(&arpnat_lock);
++	len -= offset;
++	if (len > length)
++		len = length;
++	if (len < 0)
++		len = 0;
++	*start = buffer + offset;
++	return len;
++}
++
++__STATIC int arpnat_write(struct file *file, const char *buffer,
++						  unsigned long count, void *data)
++{
++	/** arpnat entry expiration time in seconds
++	 *  debug disabled[0]/enabled[1-arp|2-bootp|4-pppoe|8-vlan|16-ip|32-other]
++	 *  bootpnat disabled[0]/enable[1]/releay[2]
++	 *  pppoenat enabled/disabled
++	 **/
++	char buf[80];
++	int d, b, p;
++
++	if (copy_from_user(buf, buffer, count < sizeof(buf) ? count : sizeof(buf)))
++		return -EFAULT;
++	if (sscanf(buf, "%u %d %d %d", &expires, &d, &b, &p) != 4)
++		return -EINVAL;
++	debug = d;
++	bootpnat = b;
++	pppoenat = p;
++
++	return count;
++}
++
++__STATIC int arpnat_get_info(char *buffer, char **start, off_t offset, int length)
++{
++	int len = 0;
++	len += sprintf(buffer + len, "ARPNAT Expiration: %u\nDebug: %d\nBOOTPNAT: %d\nPPPOE: %d\n", expires, debug, bootpnat, pppoenat);
++	len -= offset;
++	if (len > length)
++		len = length;
++	if (len < 0)
++		len = 0;
++	*start = buffer + offset;
++	return len;
++}
++#endif
++
++/**
++ * Do ARP NAT on input chain
++ **/
++__STATIC int do_arp_in(struct sk_buff **pskb, const struct net_device *in, int *target, int vlan)
++{
++	struct arphdr *ah = arp_hdr(*pskb);
++	uint8_t* eth_dmac = eth_hdr(*pskb)->h_dest;
++	uint32_t* arp_sip, arp_saddr;
++	uint32_t* arp_dip, arp_daddr;
++	uint8_t* arp_dmac;
++	uint8_t _mac[ETH_ALEN];
++	struct mac2ip* entry;
++
++
++    ah = (struct arphdr*)((uint8_t*)ah + vlan);
++
++
++	if (ah->ar_hln == ETH_ALEN && ah->ar_pro == htons(ETH_P_IP) &&
++		ah->ar_pln == 4)
++	{
++		arp_sip = skb_header_pointer(*pskb, sizeof(struct arphdr) + ah->ar_hln + vlan,
++					     sizeof(arp_saddr), &arp_saddr);
++		arp_dip = skb_header_pointer(*pskb, sizeof(struct arphdr) + 2*ah->ar_hln+sizeof(arp_saddr) + vlan,
++					     sizeof(arp_daddr), &arp_daddr);
++		arp_dmac = skb_header_pointer(*pskb, sizeof(struct arphdr) + ah->ar_hln + ah->ar_pln + vlan,
++                                                sizeof(_mac), &_mac);
++	}
++	else
++		return 1;
++
++	spin_lock_bh(&arpnat_lock);
++	entry = find_ip_nat(&arpnat_table, *arp_dip);
++	switch (ah->ar_op)
++	{
++	case __constant_htons(ARPOP_REPLY):
++	case __constant_htons(ARPOP_REQUEST):
++		if (entry)
++		{
++			uint32_t dip = *arp_dip;
++			uint32_t sip = inet_select_addr(in->br_port->br->dev, dip, RT_SCOPE_LINK);
++			if (! (eth_dmac[0] & 1))
++			{
++       				ARPNAT_DEBUG(ARPNAT_DEBUG_ARP, "IN ARPNAT: "STRMAC" -> "STRMAC, MAC2STR(eth_dmac), MAC2STR(entry->mac));
++				memcpy(arp_dmac, entry->mac, ETH_ALEN);
++				memcpy(eth_dmac, entry->mac, ETH_ALEN);
++				(*pskb)->pkt_type = (dip != sip) ? PACKET_OTHERHOST : (*pskb)->pkt_type;
++			}
++			spin_unlock_bh(&arpnat_lock);
++			/*if (dip != sip)
++			 {
++			 ARPNAT_DEBUG(ARPNAT_DEBUG_ARP, "SEND ARP REQUEST: "STRIP" -> "STRIP, IP2STR(sip), IP2STR(dip));
++			 arp_send(ARPOP_REQUEST, ETH_P_ARP, dip, &in->br_port->br->dev, sip, NULL, in->br_port->br->dev->dev_addr, NULL);
++			 }*/
++			return 0;
++		}
++		else
++		{
++			if (arp_sip == arp_dip)
++				*target = EBT_DROP;
++		}
++
++		break;
++	}
++	spin_unlock_bh(&arpnat_lock);
++	return 1;
++}
++
++/**
++ * Send arp request to all bridge ports, except the specified one.
++ */
++__STATIC int forge_arp(const struct net_device *in, uint32_t sip, uint32_t dip, uint8_t *smac)
++{
++	struct net_bridge_port *p;
++
++	list_for_each_entry(p, &in->br_port->br->port_list, list) {
++		if (p != in->br_port)
++		{
++			ARPNAT_DEBUG(ARPNAT_DEBUG_ARP, "SEND ARP REQUEST on PORT %d: "STRIP"["STRMAC"] -> "STRIP,
++						p->port_no, IP2STR(sip), MAC2STR(smac), IP2STR(dip));
++			arp_send(ARPOP_REQUEST, ETH_P_ARP, dip, p->dev, sip, NULL, smac, NULL);
++		}
++	}
++
++	return 0;
++}
++
++/**
++ * Do IP NAT on input chain
++ **/
++__STATIC int do_ip_in(struct sk_buff **pskb, const struct net_device *in, int *target, int vlan)
++{
++	uint8_t* eth_dmac = eth_hdr(*pskb)->h_dest;
++	struct mac2ip* entry;
++	struct iphdr *iph = ip_hdr(*pskb);
++	struct udphdr *uh;
++
++    iph = (struct iphdr *)((uint8_t*)iph + vlan);
++
++	if ((*pskb)->len < sizeof(struct ethhdr) + sizeof(struct iphdr))
++		return 0;
++
++	if (bootpnat && iph->protocol == htons(IPPROTO_UDP) && !(iph->frag_off & htons(IP_OFFSET)))
++	{
++		uh = (struct udphdr*)((u_int32_t *)iph + iph->ihl);
++		if (uh->source == htons(67))
++		{
++			//do something illegal for BOOTP
++			uint32_t* giaddrp = (uint32_t*)(((uint8_t*)uh) + sizeof(*uh) + GIADDR_OFFSET);
++			uint8_t* flagp = (uint8_t*)(((uint8_t*)uh) + sizeof(*uh) + FLAGS_OFFSET);
++			uint8_t* mac = (uint8_t*)(giaddrp + 1);
++			uint32_t ihl = iph->ihl << 2;
++			uint32_t size = (*pskb)->len - ihl - vlan;
++			uint32_t orig_daddr = iph->daddr;
++
++			iph->daddr = 0xffffffff;
++			ARPNAT_DEBUG(ARPNAT_DEBUG_BOOTP, "IN BOOTPRELAY: "STRMAC"["STRIP"] -> "STRMAC"["STRIP"]",
++					   MAC2STR(eth_dmac), IP2STR(orig_daddr), MAC2STR(mac), IP2STR(iph->daddr));
++			/* XXX: investigate if (!(*flagp & 0x80)) */
++				memcpy(eth_dmac, mac, ETH_ALEN);
++			*giaddrp = 0;
++			uh->dest = htons(68);
++			iph->check = 0;
++			uh->check = 0;
++			iph->check = ip_fast_csum((uint8_t*)iph, iph->ihl);
++			(*pskb)->csum = csum_partial((uint8_t*)iph + ihl, size, 0);
++			uh->check = csum_tcpudp_magic(iph->saddr, iph->daddr,
++										  size, iph->protocol,
++										  (*pskb)->csum);
++			if (uh->check == 0)
++				uh->check = 0xFFFF;
++			return 0;
++		}
++		else
++			goto HANDLE_IP_PKT;
++	}
++	else
++	{
++		HANDLE_IP_PKT:
++		spin_lock_bh(&arpnat_lock);
++		entry = find_ip_nat(&arpnat_table, iph->daddr);
++		if (entry)
++		{
++			//to me
++			if (inet_confirm_addr(in->br_port->br->dev, 0, iph->daddr, RT_SCOPE_HOST))
++			{
++				ARPNAT_DEBUG(ARPNAT_DEBUG_IP, "IP PKT TO ME: "STRMAC"["STRIP"] -> "STRMAC"[type: %d]",
++						   MAC2STR(eth_dmac), IP2STR(iph->daddr), MAC2STR(in->br_port->br->dev->dev_addr), (*pskb)->pkt_type);
++				memcpy(eth_dmac, in->br_port->br->dev->dev_addr, ETH_ALEN);
++			}
++			else
++			{
++				ARPNAT_DEBUG(ARPNAT_DEBUG_IP, "IP PKT TO OTHER: "STRMAC"["STRIP"] -> "STRMAC"[type: %d]",
++						   MAC2STR(eth_dmac), IP2STR(iph->daddr), MAC2STR(entry->mac), (*pskb)->pkt_type);
++				memcpy(eth_dmac, entry->mac, ETH_ALEN);
++				(*pskb)->pkt_type = PACKET_OTHERHOST;
++			}
++			spin_unlock_bh(&arpnat_lock);
++			return 0;
++		}
++		spin_unlock_bh(&arpnat_lock);
++
++		if (!entry && !(iph->frag_off & htons(IP_OFFSET)) && !(eth_dmac[0] & 1) &&
++		    !inet_confirm_addr(in->br_port->br->dev, 0, iph->daddr, RT_SCOPE_HOST))
++		{
++			uint32_t dip = iph->daddr;
++			uint32_t sip = iph->saddr;
++			if (sip && sip != dip && dip != 0xffffffff)
++			{
++				uint8_t* eth_smac = eth_hdr(*pskb)->h_source;
++				struct net_bridge_fdb_entry* fdb_entry = br_fdb_get(in->br_port->br, eth_smac);
++				if (!fdb_entry)
++					forge_arp(in, sip, dip, eth_smac);
++				/* FIXME:
++				* if entry is not found we should attempt to find our
++				* own gateway hwaddr and use it as destination MAC.
++				* if gateway hwaddr is not present, ARP for it and
++				* broadcast the packet, which is not a good idea, but is
++				* probably better than discarding it into the void. Hmm, maybe
++				* some TCP retry emulation could be done here?
++			    */
++			}
++		}
++	}
++	return 1;
++}
++
++/**
++ * Do PPPOE DISCOVERY NAT on input chain
++ **/
++__STATIC int do_pppoed_in(struct sk_buff **pskb, const struct net_device *in, int *target, int vlan)
++{
++	uint8_t* eth_dmac = eth_hdr(*pskb)->h_dest;
++	struct pppoe_hdr* pppoe = pppoe_hdr(*pskb);
++	struct pppoe_tag* tag = (struct pppoe_tag*)(pppoe + 1);
++	struct mac2ip* entry = 0;
++	int nat = 1;
++        uint16_t new_sid = 0, tmp_sid;
++
++	ARPNAT_DEBUG(ARPNAT_DEBUG_PPPOE, "IN PPPoED: "STRMAC" <- "STRMAC" Code: 0x%x SesID: 0x%x Len: %d",
++		     MAC2STR(eth_dmac), MAC2STR(eth_hdr(*pskb)->h_source), pppoe->code, pppoe->sid, ntohs(pppoe->length));
++	//update sid for mac
++	if (pppoe->sid)
++	{
++	    spin_lock_bh(&arpnat_lock);
++	    entry = find_pppoe_nat(&arpnat_table, pppoe->sid);
++	    if (entry) {
++		memcpy(eth_dmac, entry->mac, ETH_ALEN);
++		nat = 0;
++	    } else new_sid = pppoe->sid;
++	    spin_unlock_bh(&arpnat_lock);
++	}
++	while (tag && ntohs(tag->tag_type) != PTT_EOL && (uint8_t*)tag < (uint8_t*)pppoe + sizeof(*pppoe) + ntohs(pppoe->length))
++	{
++	    ARPNAT_DEBUG(ARPNAT_DEBUG_PPPOE, "IN PPPoED: Tag: 0x%x == 0x%x",
++			 ntohs(tag->tag_type), PTT_HOST_UNIQ);
++		if (ntohs(tag->tag_type) == PTT_HOST_UNIQ)
++		{
++#ifdef ARPNAT_STRIP_PPPOE_PTT_HOST_UNIQ
++			int16_t size;
++#endif
++                        tmp_sid = crc16(0, tag->tag_data, htons(tag->tag_len));
++			//Get something usefull from PTT_HOST_UNIQ
++			spin_lock_bh(&arpnat_lock);
++			entry = find_pppoe_nat(&arpnat_table, tmp_sid);
++			if (new_sid) {
++			    if (entry) {
++				memcpy(eth_dmac, entry->mac, ETH_ALEN);
++				nat = 0;
++				update_pppoe_nat(&arpnat_table, eth_dmac, tmp_sid, PPPOE_REMOVE); //Remove CRC16 based session entry
++			    } else {
++                                spin_unlock_bh(&arpnat_lock);
++				ARPNAT_DEBUG(ARPNAT_DEBUG_PPPOE, "IN PPPoED: I'm lost. Can not replace SesID: 0x%x to 0x%x", tmp_sid, new_sid);
++                                return 1; //last chance
++			    }
++			} else {
++			    if (!pppoe->sid) {
++				if (!entry) {
++					spin_unlock_bh(&arpnat_lock);
++					ARPNAT_DEBUG(ARPNAT_DEBUG_PPPOE, "IN PPPoED: I'm lost. Can not replace TMP SesID: 0x%x", tmp_sid);
++					return 1; //last chance
++				}
++                               new_sid = tmp_sid;
++				memcpy(eth_dmac, entry->mac, ETH_ALEN);
++				nat = 0;
++			    }
++			    else
++				new_sid = pppoe->sid;
++			}
++			update_pppoe_nat(&arpnat_table, eth_dmac, new_sid, pppoe->code == PADT_CODE ? PPPOE_REMOVE : PPPOE_ADD_TMP); //Update with new session entry
++			spin_unlock_bh(&arpnat_lock);
++
++#ifdef ARPNAT_STRIP_PPPOE_PTT_HOST_UNIQ
++			//move rest tags
++                        size = ntohs(pppoe->length) - ((uint8_t*)(tag->tag_data + ETH_ALEN) - (uint8_t*)(pppoe + 1));
++                        if (size > 0) memmove(tag, tag->tag_data + ETH_ALEN, size);
++			pppoe->length = htons(ntohs(pppoe->length) - sizeof(*tag) - ETH_ALEN); //drop PTT_HOST_UNIQ
++#endif
++			return nat;
++		}
++		tag = (struct pppoe_tag*)(tag->tag_data + htons(tag->tag_len));
++	}
++	if (!new_sid)
++	    update_pppoe_nat(&arpnat_table, eth_dmac, pppoe->sid, pppoe->code == PADT_CODE ? PPPOE_REMOVE : PPPOE_ADD); //Update with new session entry
++	return nat; //last chance
++}
++
++/**
++ * Do PPPOE SESSION NAT on input chain
++ **/
++__STATIC int do_pppoes_in(struct sk_buff **pskb, const struct net_device *in, int *target, int vlan)
++{
++	struct pppoe_hdr* pppoe = pppoe_hdr(*pskb);
++	uint8_t* eth_dmac = eth_hdr(*pskb)->h_dest;
++	struct mac2ip* entry;
++
++	spin_lock_bh(&arpnat_lock);
++	entry = find_pppoe_nat(&arpnat_table, pppoe->sid);
++	if (entry)
++		memcpy(eth_dmac, entry->mac, ETH_ALEN);
++	else
++		memcpy(eth_dmac, in->br_port->br->dev->dev_addr, ETH_ALEN);
++	spin_unlock_bh(&arpnat_lock);
++	return 0;
++}
++
++__STATIC int do_in(struct sk_buff **pskb, const struct net_device *in, int target)
++{
++	int nat = 1;
++	uint16_t proto = eth_hdr(*pskb)->h_proto;
++	uint8_t* eth_dmac;
++	int vlan = 0;
++
++	*pskb = skb_unshare(*pskb, GFP_ATOMIC);
++	eth_dmac = eth_hdr(*pskb)->h_dest;
++
++	if (proto == __constant_htons(ETH_P_8021Q))
++	{
++	    	struct vlan_ethhdr *hdr = vlan_eth_hdr(*pskb);
++            proto = hdr->h_vlan_encapsulated_proto;
++            vlan = 4;
++	}
++
++	switch (proto)
++	{
++	case __constant_htons(ETH_P_ARP):
++		nat = do_arp_in(pskb, in, &target, vlan);
++		break;
++	case __constant_htons(ETH_P_IP):
++		nat = do_ip_in(pskb, in, &target, vlan);
++		break;
++	case __constant_htons(ETH_P_PPP_DISC):
++		if (pppoenat)
++			nat = do_pppoed_in(pskb, in, &target, vlan);
++		break;
++	case __constant_htons(ETH_P_PPP_SES):
++		if (pppoenat)
++			nat = do_pppoes_in(pskb, in, &target, vlan);
++		break;
++	}
++	if (nat && ! (eth_dmac[0] & 1))
++	{
++#ifdef DROP_PACKETS_NOT_FOR_ME
++		if (memcmp(in->br_port->br->dev->dev_addr, eth_dmac, ETH_ALEN) &&
++			memcmp(in->dev_addr, eth_dmac, ETH_ALEN))
++			return EBT_DROP;
++#endif
++		ARPNAT_DEBUG(ARPNAT_DEBUG_OTHER, "DMAC["STRMAC"]->BRMAC["STRMAC"]",
++			       MAC2STR(eth_dmac), MAC2STR(in->br_port->br->dev->dev_addr));
++       	memcpy(eth_dmac, in->br_port->br->dev->dev_addr, ETH_ALEN);
++	}
++	return target;
++}
++
++
++/**
++ * Do ARP NAT on output chain
++ **/
++__STATIC int do_arp_out(struct sk_buff **pskb, const struct net_device *out, int *target, int vlan)
++{
++	struct arphdr *ah = arp_hdr(*pskb);
++	uint32_t* arp_sip, arp_saddr;
++	uint32_t* arp_dip, arp_daddr;
++	uint8_t* arp_smac;
++	uint8_t _mac[ETH_ALEN];
++
++	ah = (struct arphdr*)((uint8_t*)ah + vlan);
++	if (ah->ar_hln == ETH_ALEN && ah->ar_pro == htons(ETH_P_IP) &&
++		ah->ar_pln == 4)
++	{
++		arp_sip = skb_header_pointer(*pskb, sizeof(struct arphdr) + ah->ar_hln + vlan,
++					     sizeof(arp_saddr), &arp_saddr);
++		arp_dip = skb_header_pointer(*pskb, sizeof(struct arphdr) + 2*ah->ar_hln+sizeof(arp_saddr) + vlan,
++					     sizeof(arp_daddr), &arp_daddr);
++		arp_smac = skb_header_pointer(*pskb, sizeof(struct arphdr) + vlan,
++                                                sizeof(_mac), &_mac);
++	}
++	else
++		//Not IP ARP just NAT it
++		return 1;
++
++	switch (ah->ar_op)
++	{
++	case __constant_htons(ARPOP_REQUEST):
++	case __constant_htons(ARPOP_REPLY):
++		spin_lock_bh(&arpnat_lock);
++		update_arp_nat(&arpnat_table, arp_smac, *arp_sip);
++		spin_unlock_bh(&arpnat_lock);
++		/* do BR ip lookup */
++		if (inet_confirm_addr(out->br_port->br->dev, 0, *arp_dip, RT_SCOPE_HOST))
++			//It is to us do not NAT
++			return 0;
++
++		ARPNAT_DEBUG(ARPNAT_DEBUG_ARP, "OUT ARPNAT: "STRMAC" -> "STRMAC, MAC2STR(eth_hdr(*pskb)->h_source), MAC2STR(out->dev_addr));
++		arp_smac = skb_header_pointer(*pskb, sizeof(struct arphdr) + vlan,
++                                                sizeof(_mac), &_mac);
++		memcpy(arp_smac, out->dev_addr, ETH_ALEN);
++		break;
++	}
++	return 1;
++}
++
++/**
++* Do IP NAT update on output chain
++**/
++__STATIC int do_ip_out(struct sk_buff **pskb, const struct net_device *out, int *target, int vlan)
++{
++        struct iphdr *iph = ip_hdr(*pskb);
++        struct udphdr *uh = (struct udphdr*)((u_int32_t *)iph + iph->ihl);
++        uint32_t ihl;
++        uint32_t size;
++
++        iph = (struct iphdr *)((uint8_t*)iph + vlan);
++
++        if (iph->frag_off & htons(IP_OFFSET))
++                //fragment then just NAT
++                return 1;
++
++        spin_lock_bh(&arpnat_lock);
++        update_arp_nat(&arpnat_table, eth_hdr(*pskb)->h_source, iph->saddr);
++        spin_unlock_bh(&arpnat_lock);
++
++	return 1;
++}
++
++/**
++ * Do BOOTP NAT on output chain
++ **/
++__STATIC int do_bootp_out(struct sk_buff **pskb, const struct net_device *out, int *target, int vlan)
++{
++	struct iphdr *iph = ip_hdr(*pskb);
++	struct udphdr *uh = (struct udphdr*)((u_int32_t *)iph + iph->ihl);
++	uint32_t ihl;
++	uint32_t size;
++
++	iph = (struct iphdr *)((uint8_t*)iph + vlan);
++	uh = (struct udphdr *)((uint8_t*)uh + vlan);
++
++	if (!memcmp(out->br_port->br->dev->dev_addr, eth_hdr(*pskb)->h_source, ETH_ALEN) ||
++		iph->protocol != htons(IPPROTO_UDP) ||
++		(iph->frag_off & htons(IP_OFFSET)))
++		//to us or not UDP or fragment then just NAT
++		return 1;
++
++	if (uh->dest != htons(67))
++		//not bootp then just NAT
++		return 1;
++
++	if (bootpnat == BOOTP_RELAY)
++	{
++		//do something illegal for BOOTP
++		uint32_t giaddr = inet_select_addr(out->br_port->br->dev, iph->daddr, RT_SCOPE_LINK);
++		uint32_t* giaddrp = (uint32_t*)(((uint8_t*)uh) + sizeof(*uh) + GIADDR_OFFSET);
++		ARPNAT_DEBUG(ARPNAT_DEBUG_BOOTP, "OUT BOOTPRELAY: "STRIP" -> "STRIP,
++				   IP2STR(*giaddrp), IP2STR(giaddr));
++		*giaddrp = giaddr;
++	}
++	else
++	{
++		uint8_t* flagp = (uint8_t*)(((uint8_t*)uh) + sizeof(*uh) + FLAGS_OFFSET);
++		*flagp |= 0x80;
++	}
++
++	ihl = iph->ihl << 2;
++	size = (*pskb)->len - ihl - vlan;
++	uh->check = 0;
++	(*pskb)->csum = csum_partial((uint8_t*)iph + ihl, size, 0);
++	uh->check = csum_tcpudp_magic(iph->saddr, iph->daddr,
++								  size, iph->protocol,
++								  (*pskb)->csum);
++	if (uh->check == 0)
++		uh->check = 0xFFFF;
++
++	return 1;
++}
++
++/**
++ * Do PPPOE NAT on output chain for DISCOVERY
++ **/
++__STATIC int do_pppoed_out(struct sk_buff **pskb, const struct net_device *out, int *target, int vlan)
++{
++	struct pppoe_hdr* pppoe = pppoe_hdr(*pskb);
++	struct pppoe_tag* tag = (struct pppoe_tag*)(pppoe + 1);
++        uint8_t *eth_smac = eth_hdr(*pskb)->h_source;
++
++	ARPNAT_DEBUG(ARPNAT_DEBUG_PPPOE, "OUT PPPoE: "STRMAC" -> "STRMAC" Code: 0x%x SesID: 0x%x Len: %d",
++		     MAC2STR(eth_smac), MAC2STR(eth_hdr(*pskb)->h_dest), pppoe->code, pppoe->sid, ntohs(pppoe->length));
++	//update relay_sid for mac
++	if (pppoe->sid)
++	{
++	    spin_lock_bh(&arpnat_lock);
++	    update_pppoe_nat(&arpnat_table, eth_smac, pppoe->sid, pppoe->code == PADT_CODE ? PPPOE_REMOVE : PPPOE_ADD);
++	    spin_unlock_bh(&arpnat_lock);
++            return 1;
++	}
++
++	while (tag && ntohs(tag->tag_type) != PTT_EOL && (uint8_t*)tag < (uint8_t*)pppoe + sizeof(*pppoe) + ntohs(pppoe->length) )
++	{
++	    ARPNAT_DEBUG(ARPNAT_DEBUG_PPPOE, "OUT PPPoE: Tag: 0x%x == 0x%x",
++			 ntohs(tag->tag_type), PTT_HOST_UNIQ);
++	    if (ntohs(tag->tag_type) == PTT_HOST_UNIQ) {
++		spin_lock_bh(&arpnat_lock);
++		update_pppoe_nat(&arpnat_table, eth_smac, crc16(0, tag->tag_data, htons(tag->tag_len)), pppoe->code == PADT_CODE ? PPPOE_REMOVE : PPPOE_ADD_TMP);
++		spin_unlock_bh(&arpnat_lock);
++		return 1;
++	    }
++	    tag = (struct pppoe_tag*)(tag->tag_data + ntohs(tag->tag_len));
++	}
++#ifdef ENABLE_ADD_PTT_HOST_UNIQ
++	if (tag)
++	{
++		int8_t has_ptt_eol = (ntohs(tag->tag_type) == PTT_EOL);
++		if ((*pskb)->len <= 1484)
++			//make some room for PTT_HOST_UNIQ
++			skb_put(*pskb, sizeof(*tag) + ETH_ALEN);
++		//else XXX: set Generic Error to packet and send it back
++
++		//add PTT_HOST_UNIQ to the packet
++		tag->tag_type = htons(PTT_HOST_UNIQ);
++		tag->tag_len = htons(ETH_ALEN);
++		memcpy(tag->tag_data, eth_smac, ETH_ALEN);
++		spin_lock_bh(&arpnat_lock);
++		update_pppoe_nat(&arpnat_table, eth_smac, crc16(0, tag->tag_data, htons(tag->tag_len)), pppoe->code == PADT_CODE ? PPPOE_REMOVE : PPPOE_ADD_TMP);
++		spin_unlock_bh(&arpnat_lock);
++		tag = (struct pppoe_tag*)(tag->tag_data + ETH_ALEN);
++                if (has_ptt_eol)
++		    //Set PTTL_EOL tag
++		    memset(tag, 0, sizeof(struct pppoe_tag));
++		pppoe->length = htons(ntohs(pppoe->length) + sizeof(*tag) + ETH_ALEN);
++	}
++#endif //ENABLE_ADD_PTT_HOST_UNIQ
++	return 1;
++}
++
++/**
++ * Do PPPOE NAT on output chain for SESSION
++ **/
++__STATIC int do_pppoes_out(struct sk_buff **pskb, const struct net_device *out, int *target, int vlan)
++{
++	struct pppoe_hdr* pppoe = pppoe_hdr(*pskb);
++	uint16_t ppp_proto  = *((uint16_t *)(pppoe + 1));
++        uint8_t *eth_smac = eth_hdr(*pskb)->h_source;
++
++	//update sid for mac
++	if (pppoe->sid) {
++		int flag = 0;
++		if (ntohs(ppp_proto) == PPP_LCP)
++		{
++	            uint8_t lcp_code = *(((uint8_t *)(pppoe + 1)) + sizeof(ppp_proto));
++		    ARPNAT_DEBUG(ARPNAT_DEBUG_PPPOE, "OUT PPPoES: "STRMAC" -> "STRMAC" LCP Code: 0x%x SesID: 0x%x Len: %d",
++				 MAC2STR(eth_smac), MAC2STR(eth_hdr(*pskb)->h_dest), lcp_code, pppoe->sid, ntohs(pppoe->length));
++#define PPP_LCP_TERM 0x05
++		    if (lcp_code == PPP_LCP_TERM)
++			flag = PPPOE_REMOVE;
++		}
++		spin_lock_bh(&arpnat_lock);
++                update_pppoe_nat(&arpnat_table, eth_smac, pppoe->sid, flag);
++                spin_unlock_bh(&arpnat_lock);
++	}
++	return 1;
++}
++
++/**
++ * Handle packets on output chain
++ **/
++__STATIC int do_out(struct sk_buff **pskb, const struct net_device *out, int target)
++{
++	int nat = 1;
++	uint16_t proto = eth_hdr(*pskb)->h_proto;
++	int vlan = 0;
++
++	*pskb = skb_unshare(*pskb, GFP_ATOMIC);
++
++	if (proto == __constant_htons(ETH_P_8021Q))
++	{
++			struct vlan_ethhdr *hdr = vlan_eth_hdr(*pskb);
++                proto = hdr->h_vlan_encapsulated_proto;
++                vlan = 4;
++	}
++
++	switch (proto)
++	{
++	case __constant_htons(ETH_P_ARP):
++		nat = do_arp_out(pskb, out, &target, vlan);
++		break;
++	case __constant_htons(ETH_P_IP):
++		nat = do_ip_out(pskb, out, &target, vlan);
++		if (bootpnat)
++			nat = do_bootp_out(pskb, out, &target, vlan);
++		break;
++	case __constant_htons(ETH_P_PPP_SES):
++		if (pppoenat)
++			nat = do_pppoes_out(pskb, out, &target, vlan);
++		break;
++	case __constant_htons(ETH_P_PPP_DISC):
++		if (pppoenat)
++			nat = do_pppoed_out(pskb, out, &target, vlan);
++		break;
++	}
++	if (nat)
++		memcpy(eth_hdr(*pskb)->h_source, out->dev_addr, ETH_ALEN);
++	return target;
++}
++
++/**
++ * Handle ARPNAT
++ **/
++__STATIC int ebt_target_arpnat(struct sk_buff **pskb, unsigned int hooknr,
++							   const struct net_device *in, const struct net_device *out,
++							   const void *data, unsigned int datalen)
++{
++	int target = ((struct ebt_nat_info *)data)->target;
++
++	if (in)
++		return do_in(pskb, in, target);
++	else if (out)
++	{
++#ifdef NOT_IN_THIS_RELEASE_HAVE_SET_MAC_ADDR
++		uint8_t* smac = eth_hdr(*pskb)->h_source;
++		uint8_t* mac = ((struct ebt_nat_info *)data)->mac;
++		if (mac[0] == 0xff && !(smac[0] & 1))
++		{
++			memcpy(mac, smac, ETH_ALEN);
++			ARPNAT_DEBUG(ARPNAT_DEBUG_OTHER, "CLONE TO FIRST MAC["STRMAC"]", MAC2STR(mac));
++			//It hangs with kernel bug there
++			out->stop((struct net_device *)out);
++			out->set_mac_address((struct net_device *)out, mac);
++			out->open((struct net_device *)out);
++		}
++#endif
++		return do_out(pskb, out, target);
++	}
++	return target;
++}
++
++
++static int ebt_target_nat_arpcheck(const char *tablename, unsigned int hookmask,
++								   const struct ebt_entry *e, void *data, unsigned int datalen)
++{
++	struct ebt_nat_info *info = (struct ebt_nat_info *) data;
++
++	if (datalen != EBT_ALIGN(sizeof(struct ebt_nat_info)))
++		return -EINVAL;
++	if (BASE_CHAIN && info->target == EBT_RETURN)
++		return -EINVAL;
++	CLEAR_BASE_CHAIN_BIT;
++	if (strcmp(tablename, "nat"))
++		return -EINVAL;
++	if (hookmask & ~(1 << NF_BR_PRE_ROUTING) &&
++		hookmask & ~(1 << NF_BR_POST_ROUTING))
++		return -EINVAL;
++	if (INVALID_TARGET)
++		return -EINVAL;
++	return 0;
++}
++
++static struct ebt_target arpnat =
++{
++	{NULL, NULL}, EBT_ARPNAT_TARGET, ebt_target_arpnat, ebt_target_nat_arpcheck,
++	NULL, THIS_MODULE
++};
++
++static int __init init(void)
++{
++#ifdef CONFIG_PROC_FS
++	struct proc_dir_entry *proc_arpnat = proc_net_create("arpnat", 0, arpnat_get_info);
++	if (proc_arpnat)
++		proc_arpnat->write_proc = arpnat_write;
++	proc_net_create("arpnat_cache", 0, arpnat_cache_stat_get_info);
++#endif
++	return ebt_register_target(&arpnat);
++}
++
++static void __exit fini(void)
++{
++	ebt_unregister_target(&arpnat);
++#ifdef CONFIG_PROC_FS
++	proc_net_remove("arpnat");
++	proc_net_remove("arpnat_cache");
++#endif
++	free_arp_nat(&arpnat_table);
++}
++
++module_init(init);
++module_exit(fini);
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
++EXPORT_NO_SYMBOLS;
++#endif
+--- a/net/ipv4/devinet.c
++++ b/net/ipv4/devinet.c
+@@ -1543,10 +1543,11 @@ void __init devinet_init(void)
+ 	devinet_sysctl_register(NULL, &ipv4_devconf_dflt);
+ #endif
+ }
+ 
+ EXPORT_SYMBOL(devinet_ioctl);
+ EXPORT_SYMBOL(in_dev_finish_destroy);
+ EXPORT_SYMBOL(inet_select_addr);
++EXPORT_SYMBOL(inet_confirm_addr);
+ EXPORT_SYMBOL(inetdev_by_index);
+ EXPORT_SYMBOL(register_inetaddr_notifier);
+ EXPORT_SYMBOL(unregister_inetaddr_notifier);

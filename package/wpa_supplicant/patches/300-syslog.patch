@@ -1,0 +1,126 @@
+--- a/src/utils/wpa_debug.c
++++ b/src/utils/wpa_debug.c
+@@ -11,14 +11,17 @@
+  *
+  * See README and COPYING for more details.
+  */
+ 
+ #include "includes.h"
+ 
+ #include "common.h"
++#ifndef CONFIG_NATIVE_WINDOWS
++#include <syslog.h>
++#endif /* CONFIG_NATIVE_WINDOWS */
+ 
+ 
+ #ifdef CONFIG_DEBUG_FILE
+ static FILE *out_file = NULL;
+ #endif /* CONFIG_DEBUG_FILE */
+ int wpa_debug_level = MSG_INFO;
+ int wpa_debug_show_keys = 0;
+@@ -262,14 +265,49 @@ void wpa_debug_close_file(void)
+ static wpa_msg_cb_func wpa_msg_cb = NULL;
+ 
+ void wpa_msg_register_cb(wpa_msg_cb_func func)
+ {
+ 	wpa_msg_cb = func;
+ }
+ 
++void wpa_msg_syslog_init() {
++#ifndef CONFIG_NATIVE_WINDOWS
++	openlog("wpa-supplicant", 0, LOG_DAEMON);
++#endif
++}
++
++void wpa_msg_syslog(void *ctx, int level, const char *txt, size_t len)
++{
++#ifndef CONFIG_NATIVE_WINDOWS
++	if (level >= wpa_debug_level) {
++		int priority;
++		switch (level) {
++		case HOSTAPD_LEVEL_DEBUG_VERBOSE:
++		case HOSTAPD_LEVEL_DEBUG:
++			priority = LOG_DEBUG;
++			break;
++		case HOSTAPD_LEVEL_INFO:
++			priority = LOG_INFO;
++			break;
++		case HOSTAPD_LEVEL_NOTICE:
++			priority = LOG_NOTICE;
++			break;
++		case HOSTAPD_LEVEL_WARNING:
++			priority = LOG_WARNING;
++			break;
++		default:
++			priority = LOG_INFO;
++			break;
++		}
++		syslog(priority, txt);
++	}
++#endif /* CONFIG_NATIVE_WINDOWS */
++}
++
++
+ 
+ void wpa_msg(void *ctx, int level, const char *fmt, ...)
+ {
+ 	va_list ap;
+ 	char *buf;
+ 	const int buflen = 2048;
+ 	int len;
+--- a/src/utils/wpa_debug.h
++++ b/src/utils/wpa_debug.h
+@@ -139,14 +139,16 @@ void wpa_hexdump_ascii_key(int level, co
+ #endif /* CONFIG_NO_STDOUT_DEBUG */
+ 
+ 
+ #ifdef CONFIG_NO_WPA_MSG
+ #define wpa_msg(args...) do { } while (0)
+ #define wpa_msg_ctrl(args...) do { } while (0)
+ #define wpa_msg_register_cb(f) do { } while (0)
++#define wpa_msg_syslog_init() do { } while (0)
++#define wpa_msg_syslog(...)
+ #else /* CONFIG_NO_WPA_MSG */
+ /**
+  * wpa_msg - Conditional printf for default target and ctrl_iface monitors
+  * @ctx: Pointer to context data; this is the ctx variable registered
+  *	with struct wpa_driver_ops::init()
+  * @level: priority level (MSG_*) of the message
+  * @fmt: printf format string, followed by optional arguments
+@@ -179,14 +181,17 @@ typedef void (*wpa_msg_cb_func)(void *ct
+ 				size_t len);
+ 
+ /**
+  * wpa_msg_register_cb - Register callback function for wpa_msg() messages
+  * @func: Callback function (%NULL to unregister)
+  */
+ void wpa_msg_register_cb(wpa_msg_cb_func func);
++
++void wpa_msg_syslog(void *ctx, int level, const char *txt, size_t len);
++void wpa_msg_syslog_init();
+ #endif /* CONFIG_NO_WPA_MSG */
+ 
+ 
+ #ifdef CONFIG_NO_HOSTAPD_LOGGER
+ #define hostapd_logger(args...) do { } while (0)
+ #define hostapd_logger_register_cb(f) do { } while (0)
+ #else /* CONFIG_NO_HOSTAPD_LOGGER */
+--- a/wpa_supplicant/wpa_supplicant.c
++++ b/wpa_supplicant/wpa_supplicant.c
+@@ -2101,14 +2101,16 @@ struct wpa_global * wpa_supplicant_init(
+ 	struct wpa_global *global;
+ 	int ret, i;
+ 
+ 	if (params == NULL)
+ 		return NULL;
+ 
+ 	wpa_debug_open_file(params->wpa_debug_file_path);
++	wpa_msg_syslog_init();
++	wpa_msg_register_cb(wpa_msg_syslog);
+ 
+ 	ret = eap_peer_register_methods();
+ 	if (ret) {
+ 		wpa_printf(MSG_ERROR, "Failed to register EAP methods");
+ 		if (ret == -2)
+ 			wpa_printf(MSG_ERROR, "Two or more EAP methods used "
+ 				   "the same EAP type.");

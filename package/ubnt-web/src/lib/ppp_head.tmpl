@@ -1,0 +1,32 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/DTD/loose.dtd">
+<html>
+<head>
+<title><? echo get_title($cfg, dict_translate("PPPoE Information")); ></title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Pragma" content="no-cache">
+<link rel="shortcut icon" href="FULL_VERSION_LINK/favicon.ico" >
+<link href="FULL_VERSION_LINK/style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" language="javascript" src="jsl10n.cgi"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.js"></script>
+<script type="text/javascript" language="javascript" src="FULL_VERSION_LINK/sorttable.js"></script>
+</head>
+
+<body class="popup">
+<script type="text/javascript" language="javascript">
+//<!--
+function refresh(url) {
+	if (typeof refreshContent == 'function') {
+		refreshContent(url);
+	} else {
+		window.location.href = url;
+	}
+}
+//-->
+</script>
+<br>
+<form enctype="multipart/form-data" action="<? echo $PHP_SELF; ?>" method="POST">
+<table cellspacing="0" cellpadding="0" align="center">
+<tr><td>
+<table cellspacing="0" cellpadding="0" class="listhead" id="pppinfo">
+  <tr><th colspan="2"><? echo dict_translate("PPPoE Information"); ></th></tr>

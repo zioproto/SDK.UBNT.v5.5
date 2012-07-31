@@ -1,0 +1,233 @@
+Index: linux-2.6.32.29/drivers/net/Kconfig
+===================================================================
+--- linux-2.6.32.29.orig/drivers/net/Kconfig	2011-04-08 15:54:49.073981593 +0300
++++ linux-2.6.32.29/drivers/net/Kconfig	2011-04-11 16:16:24.763420567 +0300
+@@ -3258,6 +3258,12 @@
+ 	  compile it as a module. To compile this driver as a module, choose M
+ 	  here. The module will be called ppp_generic.
+ 
++config PPP_PACKET_INFO
++	bool "PPP packet info in sk_buff"
++	depends on PPP
++	help
++	  If unsure, say N.
++
+ config PPP_MULTILINK
+ 	bool "PPP multilink support (EXPERIMENTAL)"
+ 	depends on PPP && EXPERIMENTAL
+Index: linux-2.6.32.29/drivers/net/ppp_generic.c
+===================================================================
+--- linux-2.6.32.29.orig/drivers/net/ppp_generic.c	2011-04-11 16:13:26.803742170 +0300
++++ linux-2.6.32.29/drivers/net/ppp_generic.c	2011-04-11 16:16:24.763420567 +0300
+@@ -1109,6 +1109,9 @@
+ 				   new_skb->data, skb->len + 2,
+ 				   compressor_skb_size);
+ 	if (len > 0 && (ppp->flags & SC_CCP_UP)) {
++#ifdef CONFIG_PPP_PACKET_INFO
++		memcpy(&new_skb->ppp_info, &skb->ppp_info, sizeof(skb->ppp_info));
++#endif
+ 		kfree_skb(skb);
+ 		skb = new_skb;
+ 		skb_put(skb, len);
+@@ -1135,6 +1138,93 @@
+ 	return new_skb;
+ }
+ 
++#ifdef CONFIG_PPP_PACKET_INFO
++
++#define _PPP_PROTO_HEADER_LEN	2
++/** Field offset positions for IP, UDP and TCP */
++
++#define _IP_BYTE_POSITION_VHL			0
++#define _IP_BYTE_POSITION_TOS			(_IP_BYTE_POSITION_VHL + 1)
++#define _IP_WORD_POSITION_TOTLEN		(_IP_BYTE_POSITION_TOS + 1)
++#define _IP_WORD_POSITION_ID			(_IP_WORD_POSITION_TOTLEN + 2)
++#define _IP_WORD_POSITION_FLAGSFRAG		(_IP_WORD_POSITION_ID + 2)
++#define _IP_BYTE_POSITION_TTL			(_IP_WORD_POSITION_FLAGSFRAG + 2)
++#define _IP_BYTE_POSITION_PROTOCOL		(_IP_BYTE_POSITION_TTL + 1)
++#define _IP_WORD_POSITION_CHKSUM		(_IP_BYTE_POSITION_PROTOCOL + 1)
++#define _IP_DWORD_POSITION_SRCADDR		(_IP_WORD_POSITION_CHKSUM + 2)
++#define _IP_DWORD_POSITION_DSTADDR		(_IP_DWORD_POSITION_SRCADDR + 4)
++#define _IP_POSITION_OPTIONS			(_IP_DWORD_POSITION_DSTADDR + 4)
++
++#define _IP_PROTO_UDP				17
++#define _IP_PROTO_TCP				6
++#define _IP_PROTO_ICMP				1
++
++#define	_UDP_WORD_POSITION_SRC_PORT	0
++#define	_UDP_WORD_POSITION_DST_PORT	(_UDP_WORD_POSITION_SRC_PORT + 2)
++#define	_UDP_WORD_POSITION_UDP_LENGTH	(_UDP_WORD_POSITION_DST_PORT + 2)
++#define	_UDP_WORD_POSITION_UDP_CHKSUM	(_UDP_WORD_POSITION_UDP_LENGTH + 2)
++#define _UDP_POSITION_DATA		(_UDP_WORD_POSITION_UDP_CHKSUM + 2)
++
++#define	_TCP_WORD_POSITION_SRC_PORT		0
++#define	_TCP_WORD_POSITION_DST_PORT		(_TCP_WORD_POSITION_SRC_PORT + 2)
++#define	_TCP_DWORD_POSITION_SEQ_NUMBER		(_TCP_WORD_POSITION_DST_PORT + 2)
++#define	_TCP_DWORD_POSITION_ACK_NUMBER		(_TCP_DWORD_POSITION_SEQ_NUMBER + 4)
++#define _TCP_DWORD_POSITION_DATA_OFFSET_FIELD	(_TCP_DWORD_POSITION_ACK_NUMBER + 4)
++
++#define _IP_HEADER_GET_LENGTH(version_header_len) (version_header_len & 0x0F)
++
++#define _ICMP_TYPE_ECHO_REPLY		0
++#define _ICMP_TYPE_ECHO_REQUEST		8
++
++#define _READ_BE16(_dest, _src) {\
++	__u16 __val;\
++	memcpy(&__val, (_src), sizeof(__u16));\
++	(_dest) = be16_to_cpu(__val);\
++}
++
++
++static void mark_ppp_packet_info(int proto, struct sk_buff *skb)
++{
++	struct skb_ppp_info* pppi;
++	__u8* data;
++
++	pppi = &skb->ppp_info;
++
++	pppi->magic	= SKB_PPP_INFO_MAGIC;
++	pppi->ts_ppp_in = jiffies;
++	pppi->ppp_proto	= proto;
++
++	data = skb->data + _PPP_PROTO_HEADER_LEN;
++
++	if(pppi->ppp_proto == PPP_IP) {
++
++		int hdr_len;
++
++		hdr_len = _IP_HEADER_GET_LENGTH(data[_IP_BYTE_POSITION_VHL]);
++
++		pppi->ip_proto       = data[_IP_BYTE_POSITION_PROTOCOL];
++		pppi->ip_tos_diffsrv = data[_IP_BYTE_POSITION_TOS];
++
++		memcpy(pppi->ip_src_addr, &data[_IP_DWORD_POSITION_SRCADDR], 4);
++		memcpy(pppi->ip_dst_addr, &data[_IP_DWORD_POSITION_DSTADDR], 4);
++
++		data += (hdr_len << 2);
++
++		if(pppi->ip_proto == _IP_PROTO_ICMP) {
++			pppi->proto_data.icmp.type = data[0];
++		} else if(pppi->ip_proto == _IP_PROTO_TCP) {
++			_READ_BE16(pppi->proto_data.tcp.dst_port, &data[_TCP_WORD_POSITION_DST_PORT]);
++			_READ_BE16(pppi->proto_data.tcp.src_port, &data[_TCP_WORD_POSITION_SRC_PORT]);
++		} else if(pppi->ip_proto == _IP_PROTO_UDP) {
++			_READ_BE16(pppi->proto_data.udp.dst_port, &data[_UDP_WORD_POSITION_DST_PORT]);
++			_READ_BE16(pppi->proto_data.udp.src_port, &data[_UDP_WORD_POSITION_SRC_PORT]);
++		}
++
++	}
++}
++
++#endif /* CONFIG_PPP_PACKET_INFO */
++
+ /*
+  * Compress and send a frame.
+  * The caller should have locked the xmit path,
+@@ -1148,6 +1238,10 @@
+ 	int len;
+ 	unsigned char *cp;
+ 
++#ifdef CONFIG_PPP_PACKET_INFO
++	mark_ppp_packet_info(proto, skb);
++#endif /* CONFIG_PPP_PACKET_INFO */
++
+ 	if (proto < 0x8000) {
+ #ifdef CONFIG_PPP_FILTER
+ 		/* check if we should pass this packet */
+@@ -1204,6 +1298,9 @@
+ 				proto = PPP_VJC_UNCOMP;
+ 				cp[0] = skb->data[2];
+ 			}
++#ifdef CONFIG_PPP_PACKET_INFO
++			memcpy(&new_skb->ppp_info, &skb->ppp_info, sizeof(skb->ppp_info));
++#endif
+ 			kfree_skb(skb);
+ 			skb = new_skb;
+ 			cp = skb_put(skb, len + 2);
+Index: linux-2.6.32.29/drivers/net/pppoe.c
+===================================================================
+--- linux-2.6.32.29.orig/drivers/net/pppoe.c	2011-04-08 11:43:30.000000000 +0300
++++ linux-2.6.32.29/drivers/net/pppoe.c	2011-04-11 16:51:33.653668350 +0300
+@@ -935,6 +935,10 @@
+ 	if (skb_cow_head(skb, sizeof(*ph) + dev->hard_header_len))
+ 		goto abort;
+ 
++#ifdef CONFIG_PPP_PACKET_INFO
++	skb->ppp_info.ts_pppoe_in = jiffies;
++#endif
++
+ 	__skb_push(skb, sizeof(*ph));
+ 	skb_reset_network_header(skb);
+ 
+Index: linux-2.6.32.29/include/linux/skbuff.h
+===================================================================
+--- linux-2.6.32.29.orig/include/linux/skbuff.h	2011-04-08 15:54:49.084080603 +0300
++++ linux-2.6.32.29/include/linux/skbuff.h	2011-04-11 16:16:24.783410947 +0300
+@@ -267,6 +267,42 @@
+ typedef unsigned char *sk_buff_data_t;
+ #endif
+ 
++#ifdef CONFIG_PPP_PACKET_INFO
++
++#define SKB_PPP_INFO_MAGIC 0xFFEEDDCC
++
++struct skb_ppp_info {
++
++	__u32	magic;
++	__u32	ppp_proto;
++
++	__u8	ip_proto;
++	__u8	ip_tos_diffsrv;
++	__u8	ip_dst_addr[4];
++	__u8	ip_src_addr[4];
++
++	unsigned long	ts_ppp_in;
++	unsigned long	ts_pppoe_in;
++
++	union {
++		struct {
++			__u8	type;
++		}icmp;
++
++		struct {
++			__u16	dst_port;
++			__u16	src_port;
++		}tcp;
++
++		struct {
++			__u16	dst_port;
++			__u16	src_port;
++		}udp;
++
++	}proto_data;
++};
++#endif
++
+ /** 
+  *	struct sk_buff - socket buffer
+  *	@next: Next buffer in list
+@@ -346,6 +382,10 @@
+ 	void			*cb_next;
+ #endif
+ 
++#ifdef CONFIG_PPP_PACKET_INFO
++	struct skb_ppp_info	ppp_info;
++#endif
++
+ 	unsigned int		len,
+ 				data_len;
+ 	__u16			mac_len,
+Index: linux-2.6.32.29/net/core/skbuff.c
+===================================================================
+--- linux-2.6.32.29.orig/net/core/skbuff.c	2011-04-08 15:54:49.000000000 +0300
++++ linux-2.6.32.29/net/core/skbuff.c	2011-04-11 17:07:36.592108370 +0300
+@@ -796,6 +796,9 @@
+ 	new->sp			= secpath_get(old->sp);
+ #endif
+ 	memcpy(new->cb, old->cb, sizeof(old->cb));
++#ifdef CONFIG_PPP_PACKET_INFO
++	memcpy(&new->ppp_info, &old->ppp_info, sizeof(old->ppp_info));
++#endif
+ #if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
+ 	skb_copy_stored_cb(new, old);
+ #endif

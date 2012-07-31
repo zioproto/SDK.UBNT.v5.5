@@ -1,0 +1,23 @@
+<div id="message">
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.utils.js"></script>
+<div id="updatedMsgDiv" class="msg info-msg round-corner">
+	<table class="msg">
+		<tr>
+			<td id="msg_body"><? echo dict_translate("Uploaded Firmware Version:"); > <?echo $newfwversion>
+			<? if($firmware_third_party_warning) { echo "<br><span style=\"font-weight: bold\">" + $firmware_third_party_warning + "</span>"; } ?>
+			</td>
+			<td style="white-space: nowrap; text-align: right; width: 80px;">
+				<form id="sys_update_form" enctype="multipart/form-data" action="fwflash.cgi" method="POST">
+					<input type="submit" id="btn_fwupdate" name="update" value="<? echo dict_translate("Update"); >">
+				</form>
+			</td>
+			<td style="white-space: nowrap; text-align: right; width: 5%; padding-left: 0;">
+				<form id="sys_update__discard_form" enctype="multipart/form-data" action="system.cgi" method="POST">
+					<input type="submit" id="discard" name="update_discard" value="<? echo dict_translate("Discard"); >">
+				</form>
+			</td>
+		</tr>
+	</table>
+</div>
+
+</div>

@@ -1,0 +1,14 @@
+--- matrixssl-1-8-3-open/src/matrixssl_helper.c	2008-06-17 10:54:31.000000000 +0300
++++ matrixssl-ubnt/src/matrixssl_helper.c	2008-06-09 16:55:50.000000000 +0300
+@@ -386,6 +386,11 @@
+ int SSL_write(SSL *ssl, const void *buf, int len)
+ {
+ 	int rc;
++	if (len > SSL_MAX_PLAINTEXT_LEN)
++	{
++		/* Use smaller chunks */
++		len = SSL_MAX_PLAINTEXT_LEN;
++	}
+ 	while ((rc = _ssl_write(ssl, buf, len)) == 0
+ 			&& ssl->status != SSL_SOCKET_EOF) 
+ 	; /* Nothing to do inside loop */

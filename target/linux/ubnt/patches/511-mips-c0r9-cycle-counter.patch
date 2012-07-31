@@ -1,0 +1,12 @@
+diff -Naupr a/arch/mips/include/asm/timex.h b/arch/mips/include/asm/timex.h
+--- a/arch/mips/include/asm/timex.h	2011-09-27 06:55:59.211726601 -0700
++++ b/arch/mips/include/asm/timex.h	2011-09-27 06:57:46.134080523 -0700
+@@ -35,7 +35,7 @@ typedef unsigned int cycles_t;
+ 
+ static inline cycles_t get_cycles(void)
+ {
+-	return 0;
++	return read_c0_count();
+ }
+ 
+ #endif /* __KERNEL__ */

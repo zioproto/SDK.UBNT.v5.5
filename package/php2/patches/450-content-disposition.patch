@@ -1,0 +1,64 @@
+--- a/src/head.c
++++ b/src/head.c
+@@ -31,20 +31,22 @@
+ #include "http_protocol.h"
+ #endif
+ 
+ static int HeaderPrinted=0;
+ static int PrintHeader=1;
+ static CookieList *top = NULL;
+ static char *cont_type = NULL;
++static char *cont_disp = NULL;
+ 
+ void php_init_head(void) {
+ 	HeaderPrinted=0;
+ 	PrintHeader=1;
+ 	top = NULL;
+ 	cont_type = NULL;
++	cont_disp = NULL;
+ }
+ 
+ void NoHeader(void) {
+ 	PrintHeader=0;
+ 	SetHeaderCalled();
+ }
+ 
+@@ -127,15 +129,17 @@ void Header(void) {
+ 		php_rqst->status_line = estrdup(0,&((s->strval)[9]));
+ 	}	
+ #else
+ 	r = strchr(s->strval,':');
+ 	if(r) {
+ 		*r='\0';
+ 		if(!strcasecmp(s->strval,"content-type")) {
+-			cont_type = estrdup(0,r+1);;
++			cont_type = estrdup(0,r+1);
++		} else if (!strcasecmp(s->strval,"content-disposition")) {
++			cont_disp = estrdup(0,r+1);
+ 		} else {
+ 			*r=':';
+ 			ParseEscapes(s->strval);
+ 			PUTS(s->strval);
+ 			PUTS("\015\012");
+ 		}
+ 	} else {
+@@ -268,14 +272,19 @@ void php_header(int type,char *str) {
+ 			fputs("\015\012\015\012",stdout);
+ 		} else {
+ 			if(!cont_type) {
+ 	        	fputs("Content-type: text/html\015\012\015\012",stdout); 
+ 			} else {
+ 				fputs("Content-type:",stdout);
+ 				fputs(cont_type,stdout);
++				if (cont_disp) {
++					fputs("\015\012",stdout);
++					fputs("Content-Disposition: ",stdout);
++					fputs(cont_disp,stdout);
++				}
+ 				fputs("\015\012\015\012",stdout);
+ 			}
+ 		}
+         HeaderPrinted = 1;
+ 		SetHeaderCalled();
+     }
+ #endif

@@ -1,0 +1,50 @@
+Index: linux-2.6.32.29/net/sched/Kconfig
+===================================================================
+--- linux-2.6.32.29.orig/net/sched/Kconfig	2011-04-05 16:28:57.000000000 +0300
++++ linux-2.6.32.29/net/sched/Kconfig	2011-04-06 09:32:21.674029286 +0300
+@@ -115,6 +115,25 @@
+ 	  To compile this code as a module, choose M here: the
+ 	  module will be called sch_multiq.
+ 
++config NET_SCH_WRR
++	tristate "WRR packet scheduler"
++	depends on NET_SCHED && ( NF_CONNTRACK || !NF_CONNTRACK )
++	help
++	  The weighted robin-robin scheduling algorithm directs network
++	  connections to different real servers based on server weights
++	  in a round-robin manner. Servers with higher weights receive
++	  new connections first than those with less weights, and servers
++	  with higher weights get more connections than those with less
++	  weights and servers with equal weights get equal connections.
++
++	  If you want masquerading (the "masq" option to the tc userspace
++	  program) you need to enable connection tracking (IP_NF_CONNTRACK)
++	  in the netfilter options.
++
++	  If you want to compile it in kernel, say Y. If you want to compile
++	  it as a module, say M here and read Documentation/modules.txt. The
++	  module will be called sch_wrr. If unsure, say N.
++
+ config NET_SCH_RED
+ 	tristate "Random Early Detection (RED)"
+ 	---help---
+Index: linux-2.6.32.29/net/sched/Makefile
+===================================================================
+--- linux-2.6.32.29.orig/net/sched/Makefile	2011-04-05 16:28:57.000000000 +0300
++++ linux-2.6.32.29/net/sched/Makefile	2011-04-06 09:33:44.964041862 +0300
+@@ -3,6 +3,7 @@
+ #
+ 
+ obj-y	:= sch_generic.o sch_mq.o
++sch_wrr-objs = wrr.o
+ 
+ obj-$(CONFIG_NET_SCHED)		+= sch_api.o sch_blackhole.o
+ obj-$(CONFIG_NET_CLS)		+= cls_api.o
+@@ -25,6 +26,7 @@
+ obj-$(CONFIG_NET_SCH_INGRESS)	+= sch_ingress.o 
+ obj-$(CONFIG_NET_SCH_DSMARK)	+= sch_dsmark.o
+ obj-$(CONFIG_NET_SCH_SFQ)	+= sch_sfq.o
++obj-$(CONFIG_NET_SCH_WRR)	+= sch_wrr.o
+ obj-$(CONFIG_NET_SCH_ESFQ)	+= sch_esfq.o
+ obj-$(CONFIG_NET_SCH_TBF)	+= sch_tbf.o
+ obj-$(CONFIG_NET_SCH_TEQL)	+= sch_teql.o

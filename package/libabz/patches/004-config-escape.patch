@@ -1,0 +1,55 @@
+--- libabz-0.6.2.orig/src/sanitize.c	2003-10-01 22:18:22.000000000 +0300
++++ libabz-0.6.2.new/src/sanitize.c	2010-09-02 23:07:49.445330888 +0300
+@@ -39,7 +39,7 @@
+ 
+    do
+ 	 {
+-		if (*s == '"')
++		if (*s == '"' && (s == __s || *(s - 1) != '\\'))
+ 		  str = !str;
+ 		else if (!str && *s == '#')
+ 		  *s = '\0';
+--- libabz-0.6.2.orig/src/tokens.c	2003-10-01 22:19:26.000000000 +0300
++++ libabz-0.6.2.new/src/tokens.c	2010-09-02 23:05:45.425331486 +0300
+@@ -84,13 +84,23 @@
+ 		  }
+ 		else
+ 		  {
+-			 char *s = tokens->argv[tokens->argc],*d = s + 1;
++			 char *s, *d;
++			 s = d = tokens->argv[tokens->argc];
++			 if (!gotstr)
++				 ++d;
+ 
+-			 do *s++ = *d; while (*d++ != '\0');
+-			 s = tokens->argv[tokens->argc];
+-			 while (*s != '"' && *s != '\0') s++;
++			 while (*d != '\0' && *d != '"')
++			   {
++				  if (*d == '\\')
++				    {
++					    ++d;
++					    if (*d == '\0')
++						    break;
++				    }
++				  *s++ = *d++;
++			   }
+ 
+-			 if (*s == '\0')
++			 if (*d == '\0')
+ 			   {
+ 				  abz_set_error ("missing \" at end of string");
+ 				  tokens->argc++;
+@@ -99,10 +109,10 @@
+ 			   }
+ 
+ 			 *s++ = '\0';
+-			 prev = *s != '\0' ? s : NULL;
++			 ++d;
++			 prev = *d != '\0' ? d : NULL;
+ 			 gotstr = 0;
+ 		  }
+-
+ 		tokens->argc++;
+ 	 } while (prev != NULL);
+ 

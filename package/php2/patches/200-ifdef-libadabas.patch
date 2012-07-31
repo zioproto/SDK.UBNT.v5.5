@@ -1,0 +1,227 @@
+--- a/src/adabasd.c
++++ b/src/adabasd.c
+@@ -292,17 +292,17 @@ void ada_sql_error(HDBC conn, HSTMT stmt
+ 		Error("SQL error: %s, SQL state %s", errormsg, state);
+ }
+ 
+ #endif /* HAVE_LIBADABAS */
+ 
+ /* PHP house keeping function */
+ 
++#ifdef HAVE_LIBADABAS
+ void Ada_closeAll(void)
+ {
+-#ifdef HAVE_LIBADABAS
+ 	AdaResultList *lnew, *lnext;
+ 	AdaConnList   *cnew, *cnext;
+ 
+ 	lnew = ada_result_top; 
+ 	while(lnew){
+ 		lnext = lnew->next;
+ 		SQLFreeStmt(lnew->result->stmt, SQL_DROP);
+@@ -316,16 +316,16 @@ void Ada_closeAll(void)
+ 		if(cnew->conn){
+ 			SQLDisconnect(cnew->conn);
+ 			SQLFreeConnect(cnew->conn);
+ 		}
+ 		cnew=cnext;
+ 	}
+ 	ada_conn_top = NULL;
+-#endif
+ }
++#endif
+ 
+ /* Main User Functions */
+ 
+ void Ada_exec(void)
+ {
+ #ifdef HAVE_LIBADABAS
+ 	Stack       *s;
+@@ -477,17 +477,17 @@ void Ada_exec(void)
+ 	Pop();
+ 	Pop();
+ 	Push("0", LNUMBER);
+ 	Error("No Adabas support");
+ #endif
+ }
+ 
++#ifdef HAVE_LIBADABAS
+ void Ada_fetchRow(int mode)
+ {
+-#ifdef HAVE_LIBADABAS
+ 	Stack       *s;
+ 	int         res_ind;
+ 	SDWORD      rownum = 1;
+ 	AdaResult   *result;
+ 	RETCODE     rc;
+ 	UDWORD	    crow;
+ 	UWORD	    RowStatus[1];
+@@ -541,21 +541,16 @@ void Ada_fetchRow(int mode)
+ 	if(mode) 
+ 		result->fetched = rownum;
+ 	else 
+ 		result->fetched++;
+ 	
+ 	Push("1", LNUMBER);
+ 	return;
+-
+-#else
+-	Pop();
+-	Push("", STRING);
+-	Error("No Adabas support");
+-#endif
+ }
++#endif
+ 
+ void Ada_result(void)
+ {
+ #ifdef HAVE_LIBADABAS
+ 	Stack       *s;
+ 	char        *field;
+ 	int         res_ind;
+@@ -697,17 +692,17 @@ void Ada_result(void)
+ 	Pop();
+ 	Pop();
+ 	Push("", STRING);
+ 	Error("No Adabas support");
+ #endif
+ }
+ 
++#ifdef HAVE_LIBADABAS
+ void Ada_resultAll(int mode)
+ {
+-#ifdef HAVE_LIBADABAS
+ 	Stack       *s;
+ 	char        tmp[256];
+ 	int         res_ind;
+ 	AdaResult   *result;
+ 	int         i;
+ 	RETCODE     rc;
+ 	UDWORD	    crow;
+@@ -790,45 +785,36 @@ void Ada_resultAll(int mode)
+ 		Echo("</tr>\n",0);
+ 		rc = SQLExtendedFetch(result->stmt,SQL_FETCH_NEXT,1,&crow,RowStatus);
+ 	}
+ 	Echo("</table>\n",0);
+   	sprintf(tmp,"%d",result->fetched);
+   	Push(tmp,LNUMBER);
+   	return;
+-
+-#else
+-	Pop();
+-	Pop();
+-	Push("", STRING);
+-	Error("No Adabas support");
+-#endif
+ }
++#endif
+ 
++#ifdef HAVE_LIBADABAS
+ void Ada_freeResult(void)
+ {
+-#ifdef HAVE_LIBADABAS
+ 	Stack	*s;
+ 
+ 	s = Pop();
+ 	if(!s){
+ 		Error("Stack error in ada_freeresult");
+ 		return;
+ 	}
+ 	if(s->strval){
+ 		ada_del_result(s->intval);
+ 	} 
+ 	else{
+ 		Error("Invalid result index in ada_freeresult");
+ 		return;
+ 	}
+-#else
+-	Pop();
+-	Error("No Adabas support");
+-#endif
+ }
++#endif
+ 
+ void Ada_connect(void)
+ {
+ #ifdef HAVE_LIBADABAS
+ 	Stack   *s;
+ 	HDBC    new_conn;
+ 	char    *db=NULL;
+@@ -1023,17 +1009,17 @@ void Ada_numFields(void)
+ 	Push(temp, LNUMBER);
+ #else
+ 	Pop();
+ 	Error("No Adabas support");
+ #endif
+ }
+ 
++#ifdef HAVE_LIBADABAS
+ void Ada_Field(int mode)
+ {
+-#ifdef HAVE_LIBADABAS
+ 	Stack	*s;
+ 	int	res_ind;
+ 	int	field_ind;
+ 	AdaResult	*result;
+ 	char	tmp[32];
+ 	SWORD	tmplen;
+ 	SDWORD	len;
+@@ -1096,20 +1082,16 @@ void Ada_Field(int mode)
+ 			break;
+ 	}
+ 
+ if(mode == 3)
+ 		Push(tmp,LNUMBER);
+ 	else
+ 		Push(tmp, STRING);
+-#else
+-	Pop();
+-	Pop();
+-	Error("No Adabas support");
+-#endif
+ }
++#endif
+ 
+ void Ada_fieldNum(void)
+ {
+ #ifdef HAVE_LIBADABAS
+ 	Stack       *s;
+ 	int         res_ind;
+ 	int         field_ind;
+--- a/src/php.h
++++ b/src/php.h
+@@ -1237,27 +1237,34 @@ void MYsqlDBName(void);
+ void MYsqlDropDB(void);
+ void MYsqlCreateDB(void);
+ void MYsqlInsertId(void);
+ void MYsqlAffectedRows(void);
+ void mysqlSetCurrent();
+ 
+ /* adabasd.c */
++#ifdef HAVE_LIBADABAS
+ void Ada_exec(void);
+ void Ada_close(void);
+ void Ada_result(void);
+ void Ada_resultAll(int);
+ void Ada_numRows(void);
+ void Ada_connect(void);
+ void Ada_fieldNum(void);
+ void Ada_fetchRow(int);
+ void Ada_numFields(void);
+ void Ada_Field(int);
+ void Ada_freeResult(void);
+ void Ada_closeAll(void);
+ void php_init_adabas(char *,char *,char *);
++#else
++#define Ada_fetchRow(a)
++#define Ada_resultAll(a)
++#define Ada_Field(a)
++#define Ada_closeAll()
++#endif
+ 
+ /* solid.c */
+ void Solid_exec(void);
+ void Solid_close(void);
+ void Solid_result(void);
+ void Solid_numRows(void);
+ void Solid_connect(void);

@@ -1,0 +1,45 @@
+Index: linux-2.6.32.49/net/bridge/br_input.c
+===================================================================
+--- linux-2.6.32.49.orig/net/bridge/br_input.c
++++ linux-2.6.32.49/net/bridge/br_input.c
+@@ -43,14 +43,15 @@ int br_handle_frame_finish(struct sk_buf
+ 	struct net_bridge_fdb_entry *dst;
+ 	struct sk_buff *skb2;
+ 
+-	if (!p || p->state == BR_STATE_DISABLED)
++	if (!p || (p->state == BR_STATE_DISABLED && skb->protocol != htons(ETH_P_PAE)))
+ 		goto drop;
+ 
+ 	/* insert into forwarding database after filtering to avoid spoofing */
+ 	br = p->br;
+-	br_fdb_update(br, p, eth_hdr(skb)->h_source);
++	if (likely(p->state == BR_STATE_LEARNING || p->state == BR_STATE_FORWARDING))
++		br_fdb_update(br, p, eth_hdr(skb)->h_source);
+ 
+-	if (p->state == BR_STATE_LEARNING)
++	if (unlikely(p->state != BR_STATE_FORWARDING && skb->protocol != htons(ETH_P_PAE)))
+ 		goto drop;
+ 
+ 	/* The packet skb2 goes to the local host (NULL to skip). */
+@@ -125,6 +126,7 @@ struct sk_buff *br_handle_frame(struct n
+ {
+ 	const unsigned char *dest = eth_hdr(skb)->h_dest;
+ 	int (*rhook)(struct sk_buff *skb);
++	u8 state;
+ 
+ 	if (!is_valid_ether_addr(eth_hdr(skb)->h_source))
+ 		goto drop;
+@@ -150,7 +152,12 @@ struct sk_buff *br_handle_frame(struct n
+ 	}
+ 
+ forward:
+-	switch (p->state) {
++	if (likely(skb->protocol != htons(ETH_P_PAE)))
++		state = p->state;
++	else
++		state = BR_STATE_FORWARDING;
++
++	switch (state) {
+ 	case BR_STATE_FORWARDING:
+ 		rhook = rcu_dereference(br_should_route_hook);
+ 		if (rhook != NULL) {

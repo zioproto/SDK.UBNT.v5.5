@@ -1,0 +1,47 @@
+--- a/iwlist.c
++++ b/iwlist.c
+@@ -793,30 +793,40 @@ print_scanning_info(int		skfd,
+ 
+ 	  /* Try to read the results */
+ 	  wrq.u.data.pointer = buffer;
+ 	  wrq.u.data.flags = 0;
+ 	  wrq.u.data.length = buflen;
+ 	  if(iw_get_ext(skfd, ifname, SIOCGIWSCAN, &wrq) < 0)
+ 	    {
+-	      /* Check if buffer was too small (WE-17 only) */
+-	      if((errno == E2BIG) && (range.we_version_compiled > 16))
++	      /* Check if buffer was too small */
++	      if(errno == E2BIG)
+ 		{
+ 		  /* Some driver may return very large scan results, either
+ 		   * because there are many cells, or because they have many
+ 		   * large elements in cells (like IWEVCUSTOM). Most will
+ 		   * only need the regular sized buffer. We now use a dynamic
+ 		   * allocation of the buffer to satisfy everybody. Of course,
+ 		   * as we don't know in advance the size of the array, we try
+ 		   * various increasing sizes. Jean II */
+ 
+ 		  /* Check if the driver gave us any hints. */
+ 		  if(wrq.u.data.length > buflen)
+ 		    buflen = wrq.u.data.length;
+-		  else
+-		    buflen *= 2;
++		else {
++			if(buflen > 60000) {
++				if(buffer)
++					free(buffer);
++				fprintf(stderr, "%s: buffer too large(%d) for realocating\n", __FUNCTION__, buflen);
++				return(-1);
++			}
++			if(buflen > 30000)
++				buflen = 0xffff;
++			else
++			buflen *= 2;
++		}
+ 
+ 		  /* Try again */
+ 		  goto realloc;
+ 		}
+ 
+ 	      /* Check if results not available yet */
+ 	      if(errno == EAGAIN)

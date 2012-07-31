@@ -1,0 +1,42 @@
+--- a/src/utils/eloop.c
++++ b/src/utils/eloop.c
+@@ -13,14 +13,17 @@
+  */
+ 
+ #include "includes.h"
+ 
+ #include "common.h"
+ #include "eloop.h"
+ 
++/* validate very old and forgot timeouts
++ * default value is 24hours */
++#define	WPA_SUPPLICANT_MAX_TIMEOUT	24*60*60
+ 
+ struct eloop_sock {
+ 	int sock;
+ 	void *eloop_data;
+ 	void *user_data;
+ 	eloop_sock_handler handler;
+ };
+@@ -487,18 +490,21 @@ void eloop_run(void)
+ 
+ 		/* check if some registered timeouts have occurred */
+ 		if (eloop.timeout) {
+ 			struct eloop_timeout *tmp;
+ 
+ 			os_get_time(&now);
+ 			if (!os_time_before(&now, &eloop.timeout->time)) {
++				os_time_sub(&now, &eloop.timeout->time, &tv);
+ 				tmp = eloop.timeout;
+ 				eloop.timeout = eloop.timeout->next;
++				if (tv.sec < WPA_SUPPLICANT_MAX_TIMEOUT) {
+ 				tmp->handler(tmp->eloop_data,
+ 					     tmp->user_data);
++				}
+ 				os_free(tmp);
+ 			}
+ 
+ 		}
+ 
+ 		if (res <= 0)
+ 			continue;

@@ -1,0 +1,69 @@
+--- linux-2.6.15-5.2/mm/mempolicy.c
++++ linux-2.6.15.7/mm/mempolicy.c
+@@ -524,6 +524,8 @@
+ 	nodes_clear(*nodes);
+ 	if (maxnode == 0 || !nmask)
+ 		return 0;
++	if (maxnode > PAGE_SIZE*BITS_PER_BYTE)
++		return -EINVAL;
+ 
+ 	nlongs = BITS_TO_LONGS(maxnode);
+ 	if ((maxnode % BITS_PER_LONG) == 0)
+--- linux-2.6.15-5.2/mm/slab.c
++++ linux-2.6.15.7/mm/slab.c
+@@ -2923,23 +2923,17 @@
+  */
+ void *__kmalloc(size_t size, gfp_t flags)
+ {
+-        kmem_cache_t *cachep;
+-        void *a;
+-        struct cache_sizes *csizep = malloc_sizes;
+-
+-        /* If you want to save a few bytes .text space: replace
+-         * __ with kmem_.
+-         * Then kmalloc uses the uninlined functions instead of the inline
+-         * functions.
+-         */
+-        cachep = __find_general_cachep(size, flags);
+-        if (unlikely(cachep == NULL))
+-                return NULL;
+-        a = __cache_alloc(cachep, flags);
+-
+-        kmalloc_account(a, csizep->cs_size, size);
+-        return a;
+-
++	kmem_cache_t *cachep;
++
++	/* If you want to save a few bytes .text space: replace
++	 * __ with kmem_.
++	 * Then kmalloc uses the uninlined functions instead of the inline
++	 * functions.
++	 */
++	cachep = __find_general_cachep(size, flags);
++	if (unlikely(cachep == NULL))
++		return NULL;
++	return __cache_alloc(cachep, flags);
+ }
+ EXPORT_SYMBOL(__kmalloc);
+ 
+@@ -3038,7 +3032,7 @@
+ {
+ 	kmem_cache_t *c;
+ 	unsigned long flags;
+-        kfree_account(objp, ksize(objp));
++
+ 	if (unlikely(!objp))
+ 		return;
+ 	local_irq_save(flags);
+--- linux-2.6.15-5.2/mm/truncate.c
++++ linux-2.6.15.7/mm/truncate.c
+@@ -219,7 +219,7 @@
+ 				break;
+ 		}
+ 		pagevec_release(&pvec);
+-		/* cond_resched(); */
++		cond_resched();
+ 	}
+ 	return ret;
+ }
+

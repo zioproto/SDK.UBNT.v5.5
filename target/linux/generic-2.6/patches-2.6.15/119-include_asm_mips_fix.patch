@@ -1,0 +1,158 @@
+--- linux-2.6.15-5.2/include/asm-mips/atomic.h
++++ linux-2.6.15.7/include/asm-mips/atomic.h
+@@ -24,8 +24,9 @@
+ #define _ASM_ATOMIC_H
+ 
+ #include <asm/cpu-features.h>
+-#include <asm/interrupt.h>
+ #include <asm/war.h>
++
++extern spinlock_t atomic_lock;
+ 
+ typedef struct { volatile int counter; } atomic_t;
+ 
+@@ -84,9 +85,9 @@
+ 	} else {
+ 		unsigned long flags;
+ 
+-		local_irq_save(flags);
++		spin_lock_irqsave(&atomic_lock, flags);
+ 		v->counter += i;
+-		local_irq_restore(flags);
++		spin_unlock_irqrestore(&atomic_lock, flags);
+ 	}
+ }
+ 
+@@ -126,9 +127,9 @@
+ 	} else {
+ 		unsigned long flags;
+ 
+-		local_irq_save(flags);
++		spin_lock_irqsave(&atomic_lock, flags);
+ 		v->counter -= i;
+-		local_irq_restore(flags);
++		spin_unlock_irqrestore(&atomic_lock, flags);
+ 	}
+ }
+ 
+@@ -172,11 +173,11 @@
+ 	} else {
+ 		unsigned long flags;
+ 
+-		local_irq_save(flags);
++		spin_lock_irqsave(&atomic_lock, flags);
+ 		result = v->counter;
+ 		result += i;
+ 		v->counter = result;
+-		local_irq_restore(flags);
++		spin_unlock_irqrestore(&atomic_lock, flags);
+ 	}
+ 
+ 	return result;
+@@ -219,11 +220,11 @@
+ 	} else {
+ 		unsigned long flags;
+ 
+-		local_irq_save(flags);
++		spin_lock_irqsave(&atomic_lock, flags);
+ 		result = v->counter;
+ 		result -= i;
+ 		v->counter = result;
+-		local_irq_restore(flags);
++		spin_unlock_irqrestore(&atomic_lock, flags);
+ 	}
+ 
+ 	return result;
+@@ -276,12 +277,12 @@
+ 	} else {
+ 		unsigned long flags;
+ 
+-		local_irq_save(flags);
++		spin_lock_irqsave(&atomic_lock, flags);
+ 		result = v->counter;
+ 		result -= i;
+ 		if (result >= 0)
+ 			v->counter = result;
+-		local_irq_restore(flags);
++		spin_unlock_irqrestore(&atomic_lock, flags);
+ 	}
+ 
+ 	return result;
+@@ -431,9 +432,9 @@
+ 	} else {
+ 		unsigned long flags;
+ 
+-		local_irq_save(flags);
++		spin_lock_irqsave(&atomic_lock, flags);
+ 		v->counter += i;
+-		local_irq_restore(flags);
++		spin_unlock_irqrestore(&atomic_lock, flags);
+ 	}
+ }
+ 
+@@ -473,9 +474,9 @@
+ 	} else {
+ 		unsigned long flags;
+ 
+-		local_irq_save(flags);
++		spin_lock_irqsave(&atomic_lock, flags);
+ 		v->counter -= i;
+-		local_irq_restore(flags);
++		spin_unlock_irqrestore(&atomic_lock, flags);
+ 	}
+ }
+ 
+@@ -519,11 +520,11 @@
+ 	} else {
+ 		unsigned long flags;
+ 
+-		local_irq_save(flags);
++		spin_lock_irqsave(&atomic_lock, flags);
+ 		result = v->counter;
+ 		result += i;
+ 		v->counter = result;
+-		local_irq_restore(flags);
++		spin_unlock_irqrestore(&atomic_lock, flags);
+ 	}
+ 
+ 	return result;
+@@ -566,11 +567,11 @@
+ 	} else {
+ 		unsigned long flags;
+ 
+-		local_irq_save(flags);
++		spin_lock_irqsave(&atomic_lock, flags);
+ 		result = v->counter;
+ 		result -= i;
+ 		v->counter = result;
+-		local_irq_restore(flags);
++		spin_unlock_irqrestore(&atomic_lock, flags);
+ 	}
+ 
+ 	return result;
+@@ -623,12 +624,12 @@
+ 	} else {
+ 		unsigned long flags;
+ 
+-		local_irq_save(flags);
++		spin_lock_irqsave(&atomic_lock, flags);
+ 		result = v->counter;
+ 		result -= i;
+ 		if (result >= 0)
+ 			v->counter = result;
+-		local_irq_restore(flags);
++		spin_unlock_irqrestore(&atomic_lock, flags);
+ 	}
+ 
+ 	return result;
+--- linux-2.6.15-5.2/include/asm-mips/processor.h
++++ linux-2.6.15.7/include/asm-mips/processor.h
+@@ -103,6 +103,7 @@
+ struct mips_dsp_state {
+ 	dspreg_t        dspr[NUM_DSP_REGS];
+ 	unsigned int    dspcontrol;
++	unsigned short	used_dsp;
+ };
+ 
+ #define INIT_DSP {{0,},}
+

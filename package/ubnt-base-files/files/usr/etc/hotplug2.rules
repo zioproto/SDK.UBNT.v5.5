@@ -1,0 +1,66 @@
+
+DEVICENAME ~~ (null|full|ptmx|tty|zero) {
+	nothrottle
+	makedev /dev/%DEVICENAME% 0666
+	next
+}
+
+DEVICENAME ~~ (tun|tap[0-9]) {
+	nothrottle
+	makedev /dev/net/%DEVICENAME% 0644
+	next
+}
+
+DEVICENAME ~~ (ppp) {
+	nothrottle
+	makedev /dev/%DEVICENAME% 0600
+	next
+}
+
+DEVPATH is set {
+	nothrottle
+	makedev /dev/%DEVICENAME% 0644
+}
+
+DEVICENAME ~~ (sd[a-z][0-9]), ACTION == add {
+	nothrottle
+	exec mkdir -p /tmp/mnt/%DEVICENAME% ;
+	exec mount /dev/%DEVICENAME% /tmp/mnt/%DEVICENAME% ;
+	next
+}
+
+DEVICENAME ~~ (sd[a-z][0-9]), ACTION == remove {
+	nothrottle
+	exec umount /dev/%DEVICENAME% ;
+	exec rmdir /tmp/mnt/%DEVICENAME% ;
+	next
+}
+
+FIRMWARE is set {
+	nothrottle
+	exec /sbin/hotplug-call firmware;
+	next
+}
+
+SUBSYSTEM ~~ button {
+	exec kill -USR1 1 ;
+}
+
+DEVICENAME ~~ (wusb[0-9]), ACTION == add {
+	nothrottle
+	exec /sbin/ubntconf -i /etc/default.cfg ;
+	exec touch /tmp/.wifi_%DEVICENAME% ;
+	next
+}
+
+DEVICENAME ~~ (wusb[0-9]), ACTION == remove {
+	nothrottle
+	exec /sbin/ubntconf -i /etc/default.cfg ;
+	exec rm -f /tmp/.wifi_%DEVICENAME% ;
+	next
+}
+
+SUBSYSTEM ~~ (net|button|usb|platform|ieee1394|block|atm) {
+	exec /sbin/hotplug-call %SUBSYSTEM% ;
+}
+

@@ -1,0 +1,1901 @@
+--- a/src/Makefile.in
++++ b/src/Makefile.in
+@@ -129,15 +129,16 @@ install: all 
+ 
+ OBJS= parse.o lex.o main.o error.o date.o stack.o calc.o var.o \
+ 	  echo.o cond.o switch.o db.o while.o string.o msql.o sybsql.o\
+ 	  reg.o exec.o file.o crypt.o head.o info.o post.o \
+ 	  type.o conf.o acc.o local.o dns.o log.o sort.o dir.o rand.o \
+ 	  gd.o mime.o fsock.o microtime.o pg95.o pool.o \
+ 	  uniqid.o soundex.o syslog.o mysql.o solid.o mail.o image.o md5.o \
+-	  snmp.o oracle.o filepro.o illustra.o odbc.o adabasd.o
++	  snmp.o oracle.o filepro.o illustra.o odbc.o adabasd.o \
++	  utils.o buffer.o uploadbuffer.o
+ 
+ all: $(PHP_PROGS) @MODULE_TARGET@
+ 
+ regex/libregex.a:
+ 	cd regex; make lib CC=$(CC) AUX_CFLAGS='$(CFLAGS)' RANLIB=$(RANLIB)
+ 
+ .c.o:
+--- /dev/null
++++ b/src/buffer.c
+@@ -0,0 +1,392 @@
++#include <unistd.h>
++#include <stdlib.h>
++#include <stdio.h>
++#include <string.h>
++#include <errno.h>
++#include <stdarg.h>
++#include "buffer.h"
++
++
++int buffer_empty(struct buffer* buffer)
++{
++	return buffer->size == 0;
++}
++
++/**
++ * Checks if there are unread data in bd.
++ * @param bd buffer data chunk to check
++ * @return return 0, false, 1 - true.
++ */
++static int buffer_data_empty(struct buffer_data* bd)
++{
++	return bd->nread == bd->size ||
++	       bd->nread == bd->capacity;
++}
++
++/**
++ * Checks if there are space left to write data.
++ * @param bd buffer data chunk to check
++ * @return 0, if there is space left, 1 - if full.
++ */
++static int buffer_data_full(struct buffer_data* bd)
++{
++	return bd->size == bd->capacity;
++}
++
++/**
++ * @param bd
++ * @return next data_buffer chunk.
++ */
++static struct buffer_data* buffer_data_next(struct buffer_data* bd)
++{
++	return list_entry(bd->list.next, struct buffer_data, list);
++}
++
++/**
++ * @param b buffer
++ * @return first data buffer chunk in buffer.
++ */
++static struct buffer_data* buffer_data_head(struct buffer* b)
++{
++	return list_entry(b->bd.next, struct buffer_data, list);
++}
++
++/**
++ * Creates buffer chunk of n bytes 'size'.
++ * @param size
++ * @return  buffer chunk pointer, or NULL on failure.
++ */
++static struct buffer_data* buffer_data_create(size_t size)
++{
++	struct buffer_data* bd;
++
++	bd = malloc(sizeof(*bd));
++	if (!bd) return 0;
++	memset(bd, 0, sizeof (*bd));
++	INIT_LIST_HEAD(&bd->list);
++
++	bd->data = malloc(size);
++	if (!bd->data)
++	{
++		free(bd);
++		return 0;
++	}
++	bd->size = 0;
++	bd->nread = 0;
++	bd->capacity = size;
++
++	return bd;
++}
++
++/**
++ * Frees memory taken by bd.
++ *
++ * @param bd buffer data chunk.
++ * @return 0 on success. (never fails though).
++ */
++static int buffer_data_destroy(struct buffer_data* bd)
++{
++	if (!bd) return 0;
++
++	list_del(&bd->list);
++	free(bd->data);
++	free(bd);
++
++	return 0;
++}
++
++/**
++ * Expands b by size bytes. 'size' is must be at least
++ * Size should be multiple of BUFFER_CHUNK_SIZE, if not
++ * it is adjusted automatically.
++ *
++ * @param b buffer
++ * @param size bytes count to expand buffer by.
++ * @return 0 on success, otherwise failure.
++ */
++static int buffer_grow(struct buffer* b, size_t size)
++{
++	int grow = size + b->size - b->capacity;
++
++	if (grow > 0) {
++		struct buffer_data* bd;
++		size_t expand = 0;
++
++		expand  = (grow / BUFFER_CHUNK_SIZE);
++		expand ++;
++		expand *= BUFFER_CHUNK_SIZE;
++
++		bd = buffer_data_create(expand);
++		if (!bd) return -1;
++		list_add_tail(&bd->list, &b->bd);
++
++		b->capacity += expand;
++	}
++
++	return 0;
++}
++
++/**
++ * Initialize buffer.
++ * @todo make chunk size a parameter too.
++ *
++ * @return 0 on success, otherwise failure.
++ */
++int buffer_init(struct buffer* b)
++{
++	if (b == 0) return -1;
++
++	memset(b, 0, sizeof(*b));
++	INIT_LIST_HEAD(&b->bd);
++
++	if (buffer_grow(b, BUFFER_INITIAL_CHUNK_SIZE)) {
++		return -1;
++	}
++
++	b->rbd = buffer_data_head(b);
++	b->wbd = buffer_data_head(b);
++
++	return 0;
++}
++
++
++int buffer_create(struct buffer** buffer)
++{
++	struct buffer* b;
++
++	b = malloc(sizeof(*b));
++	if (!b) return -1;
++
++	if (buffer_init(b)) {
++		buffer_free(b);
++		return -1;
++	}
++
++	*buffer = b;
++	return 0;
++}
++
++int buffer_delete(struct buffer* buffer)
++{
++	if (buffer == 0) return 0;
++
++	buffer_free(buffer);
++	free(buffer);
++
++	return 0;
++}
++
++/**
++ * Frees unused chunks as data is read. Chunks are freed and not
++ * reused when all data is already read.
++ *
++ * @param b buffer to scan for a unused chunks.
++ * @return 0 on sucess, otherwise - failure.
++ */
++static int buffer_shrink(struct buffer* b)
++{
++	struct list_head *safe, *pos;
++	struct buffer_data* bd;
++
++	list_for_each_safe(pos,safe, &b->bd) {
++		bd = list_entry(pos, struct buffer_data, list);
++
++		if (buffer_data_empty(bd)) {
++			b->capacity -= bd->size;
++			buffer_data_destroy(bd);
++		} else {
++			b->rbd = bd;
++			break;
++		}
++	}
++
++	return 0;
++}
++
++/**
++ * Store data in buffer.
++ *
++ * @param data to store in buffer
++ * @param size data length.
++ * @return int, bytes written to buffer, or negative on error.
++ *    0 bytes written returns zero.
++ */
++int buffer_write(struct buffer* b, const void* data, size_t size)
++{
++	struct buffer_data* chunk;
++	size_t nwritten = 0;
++
++	if (buffer_grow(b, size)) {
++		return -1;
++	}
++
++	chunk = b->wbd;
++	while(size > nwritten) {
++		int left_capacity, left_data, left;
++		if (buffer_data_full(chunk)) {
++			chunk = buffer_data_next(chunk);
++			b->wbd = chunk;
++		}
++
++		/* sanity check */
++		if (&chunk->list == &b->bd) {
++			DBG_WARN( "buffer_write: wbd is HEAD!\n");
++			return -1;
++		}
++
++		left_capacity =  chunk->capacity - chunk->size;
++		left_data = size - nwritten;
++		left = left_data > left_capacity ? left_capacity : left_data;
++
++		memcpy(chunk->data+chunk->size, data + nwritten, left);
++		b->size   += left;
++		chunk->size += left;
++		nwritten  += left;
++	}
++
++	return nwritten;
++}
++
++int buffer_printf(struct buffer* b, const char* fmt, ...)
++{
++    va_list ap;
++    char* buff = NULL;
++    size_t size = 256; /* initial size */
++    int n;
++
++    while(1)
++    {
++        char* tmp = realloc(buff, size);
++        if (0 == tmp)
++        {
++            free(buff);
++            return -1;
++        }
++        buff = tmp;
++
++        va_start(ap, fmt);
++        n = vsnprintf (buff, size, fmt, ap);
++        va_end(ap);
++
++        if (n > -1 && n < size)
++        {
++            break; /* ok */
++        }
++        if (n > -1) /* exact size */
++        {
++            size = n + 1;
++        }
++        else /* twice old */
++        {
++            size *= 2;
++        }
++    }
++    n = buffer_write(b, buff, n);
++    free(buff);
++    return n;
++}
++
++int buffer_writestr(struct buffer* buffer, const char* str)
++{
++	return buffer_write(buffer, str, strlen(str));
++}
++
++/**
++ * Retrieves data from buffer.
++ *
++ * @param b buffer that holds data.
++ * @param data copy will be made to.
++ * @param size up N bytes.
++ *
++ * @return >0, bytes copied, negative on error.
++ *   O returned when b is emtpy.
++ */
++int buffer_read(struct buffer* b, void* data, size_t size)
++{
++	struct buffer_data* rbd;
++	int nread = 0;	/* bytes already read */
++	int ndata;	/* bytes to read from buffer */
++
++	ndata = size > b->size ? b->size : size;
++
++	rbd = b->rbd;
++	while (ndata > nread) {
++		size_t left_data, left_capacity, left;
++		if (&rbd->list == &b->bd) {
++			DBG_WARN("buffer_read: rbd is HEAD!\n");
++			return -1;
++		}
++
++		if (rbd->nread == rbd->capacity) {
++			rbd = buffer_data_next(rbd);
++			b->rbd = rbd;
++		}
++
++		left_data = rbd->size - rbd->nread;
++		left_capacity = ndata-nread;
++		left = left_data > left_capacity ? left_capacity : left_data;
++
++		memcpy(data+nread, rbd->data+rbd->nread, left);
++		b->size -= left;
++		rbd->nread += left;
++		nread += left;
++	}
++
++	if (buffer_shrink(b)) {
++		return -1;
++	}
++
++	return nread;
++}
++
++/**
++ * Frees memory taken by buffer. Note, if b was allocated dynamically,
++ * programmer must call free(3) on b himself. 'buffer_free' frees only
++ * buffer data chunks. In order to reuse b, call buffer_init() again.
++ *
++ * @param b buffer to free.
++ * @return 0 on success, otherwise failure.
++ */
++int buffer_free(struct buffer* b)
++{
++	struct list_head *safe, *pos;
++	struct buffer_data* bd;
++
++	if (b == 0) return 0;
++
++	list_for_each_safe(pos,safe, &b->bd) {
++		bd = list_entry(pos, struct buffer_data, list);
++		buffer_data_destroy(bd);
++	}
++
++	return 0;
++}
++
++int buffer_seek(struct buffer* buffer, size_t offset, int seek)
++{
++	return 0;
++}
++int buffer_peek(struct buffer* buffer, void* data, size_t size, size_t offset)
++{
++	return 0;
++}
++
++int buffer_copy(struct buffer* dst, struct buffer* src)
++{
++	char   buff[4096];
++	size_t total = 0;
++	int    nread, nwrote;
++
++	nread = buffer_read(src, buff, sizeof(buff));
++	while (nread > 0) {
++		nwrote = buffer_write(dst, buff, nread);
++		if (nwrote != nread)
++			return -1;
++
++		total += nread;
++		nread = buffer_read(src, buff, sizeof(buff));
++	}
++
++	return total;
++}
++
+--- /dev/null
++++ b/src/buffer.h
+@@ -0,0 +1,63 @@
++#ifndef __BUFFER_H__
++#define __BUFFER_H__
++
++#include <sys/types.h>
++#include "list.h"
++
++/* If you need to get some real output - redefine like this: */
++/* #define DBG_ERROR(...) fprintf (stderr, __VA_ARGS__) */
++#define DBG_ERROR(...)
++#define DBG_WARN(...)
++
++#define BUFFER_CHUNK_SIZE 		512
++#define BUFFER_INITIAL_CHUNK_SIZE 	(BUFFER_CHUNK_SIZE*4)
++
++struct http_request;
++struct buffer_data {
++	struct list_head list;
++	char  *data;
++	size_t size;		/* actual data */
++	size_t nread;		/* already read bytes in this bd */
++	size_t capacity;	/* buffer capacity */
++};
++
++struct buffer
++{
++	size_t  capacity;		/* total buffer capacity. */
++	size_t  size;			/* actual amount of data */
++	struct  list_head bd;		/* list of struct buffer_data */
++
++	struct  buffer_data* rbd;	/* current 'read' buffer data chunk */
++	struct  buffer_data* wbd;	/* current 'write' buffer data chunk */
++};
++
++int buffer_init(struct buffer* buffer);
++
++int buffer_create(struct buffer** buffer);
++/**
++ * frees buffer_data chunks in buffer and buffer it self.
++ * use only with a dynamically created buffers via buffer_create().
++ */
++int buffer_delete(struct buffer* buffer);
++
++int buffer_write(struct buffer* buffer, const void* data, size_t size);
++int buffer_writestr(struct buffer* buffer, const char* str);
++int buffer_printf(struct buffer* b, const char* fmt, ...)
++    __attribute__((format(printf, 2, 3)));
++int buffer_read(struct buffer* buffer, void* data, size_t size);
++int buffer_empty(struct buffer* buffer);
++int buffer_free(struct buffer* buffer);
++int buffer_send(struct buffer* buffer, struct http_request* rq);
++int buffer_copy(struct buffer* dst, struct buffer* src);
++
++/*
++ * @todo: do we really need this ?
++ * int buffer_recv(struct buffer* buffer, struct http_request* rq);
++ * int buffer_printf(struct buffer* buffer, const char* format, ...);
++ * int buffer_scanf(struct buffer* buffer, const char* format, ...);
++ * int buffer_readline(struct buffer* buffer, char* line, size_t size);
++ * int buffer_seek(struct buffer* buffer, size_t offset, int seek);
++ * int buffer_peek(struct buffer* buffer, void* data, size_t size, size_t offset);
++ */
++
++#endif //__BUFFER_H__
+--- /dev/null
++++ b/src/list.h
+@@ -0,0 +1,231 @@
++#ifndef _LINUX_LIST_H
++#define _LINUX_LIST_H
++
++/*
++ * Simple doubly linked list implementation.
++ *
++ * Some of the internal functions ("__xxx") are useful when
++ * manipulating whole lists rather than single entries, as
++ * sometimes we already know the next/prev entries and we can
++ * generate better code by using them directly rather than
++ * using the generic single-entry routines.
++ */
++struct list_head {
++	struct list_head *next, *prev;
++};
++
++#define LIST_HEAD_INIT(name) { &(name), &(name) }
++
++#define LIST_HEAD(name) \
++	struct list_head name = LIST_HEAD_INIT(name)
++
++#define INIT_LIST_HEAD(ptr) do { \
++	(ptr)->next = (ptr); (ptr)->prev = (ptr); \
++} while (0)
++
++/*
++ * Insert a new entry between two known consecutive entries.
++ *
++ * This is only for internal list manipulation where we know
++ * the prev/next entries already!
++ */
++static inline void __list_add(struct list_head *new,
++			      struct list_head *prev,
++			      struct list_head *next)
++{
++	next->prev = new;
++	new->next = next;
++	new->prev = prev;
++	prev->next = new;
++}
++
++/**
++ * list_add - add a new entry
++ * @new: new entry to be added
++ * @head: list head to add it after
++ *
++ * Insert a new entry after the specified head.
++ * This is good for implementing stacks.
++ */
++static inline void list_add(struct list_head *new, struct list_head *head)
++{
++	__list_add(new, head, head->next);
++}
++
++/**
++ * list_add_tail - add a new entry
++ * @new: new entry to be added
++ * @head: list head to add it before
++ *
++ * Insert a new entry before the specified head.
++ * This is useful for implementing queues.
++ */
++static inline void list_add_tail(struct list_head *new, struct list_head *head)
++{
++	__list_add(new, head->prev, head);
++}
++
++/*
++ * Delete a list entry by making the prev/next entries
++ * point to each other.
++ *
++ * This is only for internal list manipulation where we know
++ * the prev/next entries already!
++ */
++static inline void __list_del(struct list_head *prev, struct list_head *next)
++{
++	next->prev = prev;
++	prev->next = next;
++}
++
++/**
++ * list_del - deletes entry from list.
++ * @entry: the element to delete from the list.
++ * Note: list_empty on entry does not return true after this, the entry is in an undefined state.
++ */
++static inline void list_del(struct list_head *entry)
++{
++	__list_del(entry->prev, entry->next);
++	entry->next = (void *) 0;
++	entry->prev = (void *) 0;
++}
++
++/**
++ * list_del_init - deletes entry from list and reinitialize it.
++ * @entry: the element to delete from the list.
++ */
++static inline void list_del_init(struct list_head *entry)
++{
++	__list_del(entry->prev, entry->next);
++	INIT_LIST_HEAD(entry);
++}
++
++/**
++ * list_move - delete from one list and add as another's head
++ * @list: the entry to move
++ * @head: the head that will precede our entry
++ */
++static inline void list_move(struct list_head *list, struct list_head *head)
++{
++        __list_del(list->prev, list->next);
++        list_add(list, head);
++}
++
++/**
++ * list_move_tail - delete from one list and add as another's tail
++ * @list: the entry to move
++ * @head: the head that will follow our entry
++ */
++static inline void list_move_tail(struct list_head *list,
++				  struct list_head *head)
++{
++        __list_del(list->prev, list->next);
++        list_add_tail(list, head);
++}
++
++/**
++ * list_empty - tests whether a list is empty
++ * @head: the list to test.
++ */
++static inline int list_empty(struct list_head *head)
++{
++	return head->next == head;
++}
++
++static inline void __list_splice(struct list_head *list,
++				 struct list_head *head)
++{
++	struct list_head *first = list->next;
++	struct list_head *last = list->prev;
++	struct list_head *at = head->next;
++
++	first->prev = head;
++	head->next = first;
++
++	last->next = at;
++	at->prev = last;
++}
++
++/**
++ * list_splice - join two lists
++ * @list: the new list to add.
++ * @head: the place to add it in the first list.
++ */
++static inline void list_splice(struct list_head *list, struct list_head *head)
++{
++	if (!list_empty(list))
++		__list_splice(list, head);
++}
++
++/**
++ * list_splice_init - join two lists and reinitialise the emptied list.
++ * @list: the new list to add.
++ * @head: the place to add it in the first list.
++ *
++ * The list at @list is reinitialised
++ */
++static inline void list_splice_init(struct list_head *list,
++				    struct list_head *head)
++{
++	if (!list_empty(list)) {
++		__list_splice(list, head);
++		INIT_LIST_HEAD(list);
++	}
++}
++
++/**
++ * list_entry - get the struct for this entry
++ * @ptr:	the &struct list_head pointer.
++ * @type:	the type of the struct this is embedded in.
++ * @member:	the name of the list_struct within the struct.
++ */
++#define list_entry(ptr, type, member) \
++	((type *)((char *)(ptr)-(unsigned long)(&((type *)0)->member)))
++
++/**
++ * list_for_each	-	iterate over a list
++ * @pos:	the &struct list_head to use as a loop counter.
++ * @head:	the head for your list.
++ */
++#define list_for_each(pos, head) \
++	for (pos = (head)->next, prefetch(pos->next); pos != (head); \
++        	pos = pos->next, prefetch(pos->next))
++/**
++ * list_for_each_prev	-	iterate over a list backwards
++ * @pos:	the &struct list_head to use as a loop counter.
++ * @head:	the head for your list.
++ */
++#define list_for_each_prev(pos, head) \
++	for (pos = (head)->prev, prefetch(pos->prev); pos != (head); \
++        	pos = pos->prev, prefetch(pos->prev))
++
++/**
++ * list_for_each_safe	-	iterate over a list safe against removal of list entry
++ * @pos:	the &struct list_head to use as a loop counter.
++ * @n:		another &struct list_head to use as temporary storage
++ * @head:	the head for your list.
++ */
++#define list_for_each_safe(pos, n, head) \
++	for (pos = (head)->next, n = pos->next; pos != (head); \
++		pos = n, n = pos->next)
++
++/**
++ * list_for_each_entry	-	iterate over list of given type
++ * @pos:	the type * to use as a loop counter.
++ * @head:	the head for your list.
++ * @member:	the name of the list_struct within the struct.
++ */
++#define list_for_each_entry(pos, head, member)				\
++	for (pos = list_entry((head)->next, typeof(*pos), member),	\
++		     prefetch(pos->member.next);			\
++	     &pos->member != (head); 					\
++	     pos = list_entry(pos->member.next, typeof(*pos), member),	\
++		     prefetch(pos->member.next))
++
++static inline void prefetch(const void *x) {;}
++static inline void prefetchw(const void *x) {;}
++#define spin_lock_prefetch(x) prefetchw(x)
++
++#endif
++
++
+--- a/src/post.c
++++ b/src/post.c
+@@ -22,14 +22,22 @@
+ /* $Id: post.c,v 1.30 1997/05/21 13:14:18 rasmus Exp $ */
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+ #include <ctype.h>
+ #include "php.h"
+ #include "parse.h"
++#include "uploadbuffer.h"
++
++#include <sys/mman.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++#include <unistd.h>
++
+ #if APACHE
+ #include "http_protocol.h"
+ #include "http_core.h"
+ #include "http_config.h"
+ #include "http_main.h"
+ #endif
+ 
+@@ -62,22 +70,75 @@ void parse_url(char *data) {
+         } else *dest = *data;
+         data++;
+         dest++;
+     }
+     *dest = '\0';
+ }
+ 
++static int
++consume_file(int fd, size_t bytes) {
++	char* file;
++	struct stat stats;
++	off_t size;
++
++	/* is there anything to consume? */
++	if (bytes == 0)
++		return 0;
++
++	/* find out the exact file size */
++        if (fstat(fd, &stats)) {
++                return -1;
++        }
++
++	/* is there any point of moving? */
++	if (bytes >= stats.st_size)
++		return 0;
++
++	file = (char*)mmap(0, stats.st_size,
++			   PROT_READ | PROT_WRITE, MAP_SHARED,
++			   fd, 0);
++	if (file == MAP_FAILED) {
++		perror("mmap");
++		return -2;
++	}
++
++	size = stats.st_size - bytes;
++	memmove(file, file + bytes, size);
++	munmap(file, stats.st_size);
++	ftruncate(fd, size);
++	return 0;
++}
++
++static int
++is_regular_file(int fd) {
++	struct stat stats;
++
++	if (fstat(fd, &stats)) {
++		return 0;
++	}
++
++	if (S_ISREG(stats.st_mode)) {
++		return 1;
++	}
++	return 0;
++}
++
++
+ /*
+  * getpost()
+  *
+  * This reads the post form data into a string.
+  * Remember to free this pointer when done with it.
+  */
+ char *getpost(void) {
+ 	static char *buf=NULL;
++	size_t buflen;
++	struct upload_buffer* ub;
++	int input_is_file = 0;
++
+ #if MODULE_MAGIC_NUMBER > 19961007
+ 	char argsbuffer[HUGE_STRING_LEN];
+ #else
+ 	int bytes;
+ #endif
+ 	int length, cnt;
+ #if FILE_UPLOAD
+@@ -126,15 +187,16 @@ char *getpost(void) {
+ 	if(buf==NULL) {
+ 		Error("POST Error: No Content Length");
+ 		return(NULL);
+ 	}
+ 	
+ 	length = atoi(buf);
+ 	cnt = length;
+-	buf = (char *)emalloc(1,(length+1)*sizeof(char));
++	buflen = MAX_UPLOADBUFFER*sizeof(char);
++	buf = (char *)emalloc(1, buflen); // 8Kb buffer should be enough
+ 	if(!buf) {
+ 		Error("Unable to allocate memory in getpost()");
+ 		return(NULL);
+ 	}
+ #if DEBUG
+ 	Debug("Allocated %d bytes for post buffer\n",length);
+ #endif
+@@ -158,29 +220,99 @@ char *getpost(void) {
+ #endif
+ 			dbpos += dbsize;
+ 		}
+ 		signal(SIGPIPE, handler); /* restore normal sigpipe handling */
+ 		kill_timeout(php_rqst); /* stop timeout timer */
+ 	}	
+ #else
++	if (ub_create(&ub))
++		return NULL;
++
++	input_is_file = is_regular_file(0);
++
++#ifdef UPLOAD_TMPDIR
++	if (ub_init(ub, length, boundary, UPLOAD_TMPDIR)) {
++#else
++	if (ub_init(ub, length, boundary, "/tmp/upload")) {
++#endif
++		ub_free(ub);
++		return NULL;
++	}
+ 	cnt = 0;
+ 	do {
+ #if APACHE
+ 		bytes = read_client_block(php_rqst, buf + cnt, length - cnt);
+ #else
+-		bytes = fread(buf + cnt, 1, length - cnt, stdin);
++		bytes = fread(buf, 1, buflen, stdin);
++		if (bytes > 0) {
++			int nwrote;
++			if (input_is_file) {
++				consume_file(0, bytes);
++				lseek(0, 0, SEEK_SET);
++			}
++			nwrote = ub_write(ub, buf, bytes);
++#if DEBUG
++			if (nwrote != bytes) {
++			  Debug("Only %d bytes were written", ub->filesize);
++			}
++#endif
++		}
+ #endif
+ 		cnt += bytes;
+ 	} while(bytes && cnt<length);
+ #endif
++
++	/*
++	 *  Take the results here ...
++	 */
++
++	/* gettings uploaded files names and parsed form data ... */
++	{
++		struct list_head* pos;
++		struct list_head* n;
++		struct header* h;
++
++		list_for_each_safe(pos, n, &ub->parameters) {
++			h = list_entry(pos, struct header, list);
++			Push(h->value, STRING);
++			SetVar(h->name, 0, 0);
++
++			if (h->is_file) {
++				char name[strlen(h->name) + 5];
++				char number[32];
++				/* filename (client side),
++				 * but we use the same one
++				 * TODO: fix it? */
++				sprintf(name, "%s_name", h->name);
++				Push(h->value, STRING);
++				SetVar(name, 0, 0);
++
++				/* content size (uploaded bytes) */
++				sprintf(name, "%s_size", h->name);
++				sprintf(number, "%ld", h->filesize);
++				Push(number, LNUMBER);
++				SetVar(name, 0, 0);
++
++				/* content type */
++				sprintf(name, "%s_type", h->name);
++				Push("application/octet-stream", STRING);
++				SetVar(name, 0, 0);
++			}
++		}
++	}
++
++	/* free uploadbuffer */
++	//ub_free(ub);
++
+ #if FILE_UPLOAD
+-	if(file_upload) {
+-		mime_split(buf,cnt,boundary);
+-		return(NULL);
+-	} 
++//	if(file_upload) {
++//		mime_split(buf,cnt,boundary);
++//		return(NULL);
++//	}
++	return 0;
+ #endif
+ 
+ 	buf[cnt]='\0';
+ #if DEBUG
+ 	Debug("buf is [%s]\n",buf);
+ #endif
+ 	return(buf);
+--- /dev/null
++++ b/src/uploadbuffer.c
+@@ -0,0 +1,731 @@
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++#define _GNU_SOURCE
++#include <string.h>
++#include <stdlib.h>
++#include <unistd.h>
++
++// #include "header.h"
++#include "buffer.h"
++#include "uploadbuffer.h"
++//#include "liblogger/logger.h"
++//#include "utils.h"
++
++#define CONTENT_DISPHDR "Content-Disposition"
++#define CONTENT_TYPEHDR "Content-Type"
++
++static int parameter_add_file(struct list_head* head,
++			      char* name, char* value,
++			      int is_file, size_t size)
++{
++	struct header* h = (struct header*) calloc(1, sizeof(*h));
++	if (!h) return -1;
++
++	INIT_LIST_HEAD(&h->list);
++	h->name = name;
++	h->value = value;
++	h->is_file = is_file;
++	h->filesize = size;
++	list_add_tail(&h->list, head);
++
++	return 0;
++}
++
++static int parameter_add(struct list_head* head,
++			 char* name, char* value)
++{
++	return parameter_add_file(head, name, value, 0, 0);
++}
++
++int parameter_remove_all(struct list_head* head)
++{
++	struct list_head *pos, *safe;
++	struct header* h;
++
++	if (list_empty(head)) return 0;
++
++	list_for_each_safe(pos, safe, head) {
++		h = list_entry(pos, struct header, list);
++		list_del(&h->list);
++
++		if (h->is_file && access(h->value, W_OK) == 0) {
++			unlink(h->value);
++		}
++
++		free(h->name);
++		free(h->value);
++		free(h);
++	}
++
++	return 0;
++}
++
++static int ub_normalize_filename(char* filename)
++{
++
++    char *fwd_slash;
++    char *back_slash;
++    size_t size;
++    /**
++     *  normalize uploaded file name. In particular windows
++     *  browsers tend to give a full file path in C:\dir\filename.txt
++     *  format ... leave only filename.txt. in case any unix browser
++     *  does similar thing  - strip path, leaving only uploaded file
++     *  name.
++     * CORRECTION:
++     * strip only windows path part, leaving our local filesystem path
++     * strip everything between (last '/') and (last '\'), but leaving everything else the same
++     * Example:
++     * /tmp/uhttpd/upload/C:\dir\filename.txt normalizes to /tmp/uhttpd/upload/filename.txt
++     */
++    if (filename == 0)
++    {
++        return -1;
++    }
++    size = strlen(filename);
++    fwd_slash = strrchr(filename, '/');
++    back_slash = strrchr(filename, '\\');
++    if ((fwd_slash == 0) ||
++	(back_slash == 0))
++    {
++	    /* No slashes or backslashes */
++        return 0;
++    }
++    if ((back_slash - filename == size - 1) ||
++	(fwd_slash - filename == size - 1))
++    {
++        return -1; /* 'Empty filename ???' */
++    }
++    /* Move file part from last backslash to last forwardslash,
++       Copy including ending string \0 */
++    memmove(fwd_slash + 1, back_slash + 1, size - (back_slash - filename));
++    return 0;
++}
++
++static char* trim(char* ptr)
++{
++	char *begin, *end;
++
++	if (!ptr) return 0;
++	if (strlen(ptr) == 0) return ptr;
++
++	begin = ptr;
++	end = ptr + strlen(ptr);
++	while (*begin == ' ' && begin < end) begin ++;
++	while (*end   == ' ' && begin < ptr) end --;
++	*end = 0;
++
++	return begin;
++}
++
++static int ub_init_writeout(struct upload_buffer* ub)
++{
++	ub->ignore = 0;
++
++	switch (ub->state) {
++	case ST_PARAMETER:
++		if (ub->content) warn("buffer was already created ?\n");
++
++		if (buffer_create(&ub->content))
++			return -1;
++		break;
++	case ST_FILE:
++		ub_normalize_filename(ub->filename);
++		ub->fd = open(ub->filename, O_CREAT|O_TRUNC|O_WRONLY, 0600);
++		if (ub->fd < 0) {
++			// error_errno("can't open file '%s'\n", ub->filename);
++			ub->ignore = 1;
++			// return -1;
++		}
++		break;
++	default:
++		error("Invalid state %d\n on writeout init.\n", ub->state);
++		return -1;
++	};
++	return 0;
++}
++
++static int ub_do_writeout(struct upload_buffer* ub, const void* ptr, size_t size)
++{
++	int nwrote = -1;
++
++	switch (ub->state) {
++	case ST_PARAMETER:
++		return buffer_write(ub->content, ptr, size);
++	case ST_FILE:
++		if (ub->ignore) {
++			ub->filesize += nwrote;
++			return size;
++		} else {
++			nwrote = write(ub->fd, ptr, size);
++			if (nwrote > 0) ub->filesize += nwrote;
++			return nwrote;
++		}
++
++	default:
++		error("Invalid state %d\n on writeout.\n", ub->state);
++	};
++	return 0;
++}
++
++static int ub_finish_writeout(struct upload_buffer* ub)
++{
++	char* content;
++	size_t size;
++
++	switch (ub->state)
++	{
++	case ST_PARAMETER:
++		size = ub->content->size;
++		if (size > 0) {
++			content = malloc(size+1);
++			if (!content) return -1;
++			if (buffer_read(ub->content, content, size) != size)
++				return -1;
++			content[size] = 0;
++		} else {
++			content = strdup("");
++		}
++
++		if (parameter_add(&ub->parameters, ub->parameter, content))
++			return -1;
++
++		break;
++	case ST_FILE:
++		if (ub->ignore) {
++			free(ub->filename);
++			free(ub->parameter);
++			break;
++		}
++
++		if (parameter_add_file(&ub->parameters,
++				  strdup(ub->parameter),
++				  strdup(ub->filename), 1, ub->filesize))
++			return -1;
++
++		close(ub->fd);
++		ub->fd = -1;
++		break;
++	default:
++		error("Invalid state %d\n on writeout finish.\n", ub->state);
++	};
++
++	buffer_delete(ub->content);
++	ub->content = 0;
++	ub->filesize = 0;
++	ub->filename = 0;
++	ub->parameter = 0;
++	ub->fd = -1;
++	ub->state = ST_UNKNOWN;
++
++	return 0;
++}
++
++static int ub_parse_disposition(const struct upload_buffer* ub,
++				char *begin, char* end,
++				char** name, char** filename)
++{
++	char* bq, *eq;	/* begin and end of quotes. */
++	char* ptr = begin;
++	char* token;
++	size_t size;
++
++	while ((token = strsep(&ptr, ";"))) {
++		token = trim(token);
++
++		if (strncmp(token, CONTENT_DISPHDR,
++			    sizeof(CONTENT_DISPHDR)-1) == 0) {
++			if (strncmp(token + strlen(token) - 9, "form-data", 9) != 0)
++				warn("ingoring '%s'\n", token);
++
++		} else if (strncmp(token, "filename", 8) == 0) {
++			bq = strchr(token+8, '"');
++			eq = strrchr(token+8, '"');
++
++			if (bq == 0 ||
++			    eq == 0 ||
++			    bq == eq) {
++				error("token: %s, missing quotes in filename=\"...\"\n",
++				      token);
++				return -1;
++			}
++			*eq=0;	/* terminate string on '"' */
++			++ bq;  /* skip '"' too ... */
++
++			if (eq - bq == 0) {
++				*filename = 0;
++				continue;
++			}
++			size = 10;
++			size += strlen(ub->upload_path);
++			size += strlen(bq);
++
++			*filename = malloc(size+1);
++			if (!*filename) return -1;
++
++			strcpy(*filename, ub->upload_path);
++			strcat(*filename, "/");
++			strcat(*filename, bq);
++		} else if (strncmp(token, "name", 4) == 0) {
++			bq = strchr(token + 4, '"');
++			eq = strrchr(token + 4, '"');
++
++			if (bq == 0 ||
++			    eq == 0 ||
++			    bq == eq) {
++				error("token: %s, missing quotes in name=\"...\"\n",
++				      token);
++				return -1;
++			}
++
++			*eq=0;
++			++ bq ;
++
++			if (eq - bq == 0) {
++				*filename = 0;
++				continue;
++			}
++
++			*name = strdup(bq);
++		} else {
++			warn("ignoring unknown token '%s'\n", token);
++		}
++	}
++
++	return 0;
++}
++
++static int ub_parse_type(char* begin, char* end)
++{
++	/* leave this function empty for now. we don't care about
++	 * content type, as we can't do much about it now. */
++	return 0;
++}
++
++/**
++ * Parses content headers, to find out content type.
++ * If it is a POST parameter, ST_PARAMETER state is set,
++ * and parameter content is stored in 'content' buffer.
++ *
++ * If 'content' is a file - ST_FILE is set and content
++ * is written out to a specified config->upload_directory
++ * under the same file name as specified in content headers.
++ *
++ * @return 0, success, otherwise failure.
++ */
++static int ub_parse_headers(const struct upload_buffer* ub,
++			    char* line, size_t size,
++			    char** name, char** filename)
++{
++	size_t length;
++	char* end;
++	char* ptr = line;
++
++	end = (char*)memmem(ptr, size, "\r\n", 2);
++	if (!end) return -1;
++
++	length = end - ptr;
++	if (length > 0) {
++		*end = 0;
++		if (ub_parse_disposition(ub, ptr, end, name, filename)) {
++			error("Invalid header: '%s'\n", ptr);
++			return -1;
++		}
++	}
++
++	ptr = end + 2;
++	size -= length + 2;
++
++	end = (char*)memmem(ptr, size, "\r\n", 2);
++	if (!end) {
++		warn("no content type present ?\n");
++	}
++
++	length = end - ptr;
++	if (length > 0) {
++		*end = 0;
++		if (ub_parse_type(ptr, end)) {
++			// debug("Invalid content type header: '%s'\n", ptr);
++			return -1;
++		}
++
++		ptr = end + 2;
++		size -= length + 2;
++	}
++
++	if (size != 2      ||
++	    ptr[0] != '\r' ||
++	    ptr[1] != '\n')
++		warn("unknown bytes %d left, content: '%s'\n", size, ptr);
++
++	return 0;
++}
++
++
++int ub_create(struct upload_buffer** ub)
++{
++	struct upload_buffer *buf;
++
++	buf = malloc(sizeof(*buf));
++	if (!buf) return -1;
++
++	memset(buf, 0, sizeof(*buf));
++	/* prevent fd number '0' to be closed in ub_free() */
++	buf->fd = -1;
++	*ub = buf;
++	return 0;
++}
++
++/*
++ * TODO: there some members in structure never free(3) ...
++ */
++void ub_free(struct upload_buffer* ub)
++{
++	if (!ub) return;
++
++	free(ub->buffer);
++	free(ub->boundary);
++	free(ub->upload_path);
++	buffer_delete(ub->content);
++
++	parameter_remove_all(&ub->parameters);
++	if (ub->fd >= 0) {
++		close(ub->fd);
++		ub->fd = -1;
++	}
++
++	if (ub->filename) {
++		unlink(ub->filename);
++	}
++
++	free(ub->parameter);
++	free(ub->filename);
++	free(ub);
++}
++
++
++int ub_init(struct upload_buffer* ub,
++	    size_t expected,
++	    const char* boundary,
++	    const char* upload)
++{
++	size_t size;
++
++	memset(ub, 0, sizeof(*ub));
++	/* make sure fd is not zero, prevents /dev/null closing by accident */
++	ub->fd = -1;
++
++	ub->buffer = malloc(MAX_UPLOADBUFFER);
++	if (!ub->buffer) return -1;
++
++	ub->size = MAX_UPLOADBUFFER;
++
++	if (boundary) {
++		size = strlen(boundary) + 2;
++		ub->boundary = malloc(size+1);
++		if (!ub->boundary) return -1;
++		strcpy(ub->boundary, "--");
++		strcat(ub->boundary, boundary);
++		ub->length = size;
++	}
++	ub->expected = expected;
++	ub->state = ST_UNKNOWN;
++	ub->upload_path = strdup(upload);
++	{
++		struct stat st;
++		if (stat(ub->upload_path, &st) < 0) {
++			mkdir(ub->upload_path, 0755);
++		} else if (!S_ISDIR(st.st_mode)) {
++			unlink(ub->upload_path);
++			mkdir(ub->upload_path, 0755);
++		}
++	}
++	INIT_LIST_HEAD(&ub->parameters);
++
++	return 0;
++}
++
++int ub_process_content(struct upload_buffer* ub)
++{
++	char  line[512];
++	size_t length;
++	size_t offset = 0;
++
++	char  *eol;
++	char  *ptr = ub->buffer;
++	char  *end = ub->buffer + ub->data;
++
++	size_t size = ub->data;
++
++	while (ptr < end) {
++		if (size < ub->length)
++			break;
++
++		if ((~ub->got) & GOT_BOUNDARY) {
++			eol = (char*)memmem(ptr, size, "\r\n", 2);
++			if (!eol) break;
++
++			length = eol - ptr + 2;
++			memcpy(line, ptr, length);
++			line[length] = 0;
++
++			if (strncmp(ub->boundary, line, ub->length) == 0) {
++				ub->got |= GOT_BOUNDARY;
++
++				/* check if boundary has trailing '--' -
++				 * which is the end of POST request.
++				 */
++				if (length > ub->length &&
++				    line[ub->length+0] == '-' &&
++				    line[ub->length+1] == '-') {
++					ub->got |= GOT_ENDBOUNDARY;
++					return 0;
++				}
++			} else  {
++				return -1;
++			}
++
++			ptr = eol + 2;
++			size -= length;
++			offset += length;
++
++			continue;
++		}
++
++		if ((~ub->got) & GOT_HEADER) {
++			eol = (char*)memmem(ptr, size, "\r\n\r\n", 4);
++			if (!eol) break;
++
++			length = eol - ptr + 4;
++			memcpy(line, ptr, length);
++			line[length] = 0;
++
++			if (ub_parse_headers(ub, line, length, &ub->parameter, &ub->filename))
++				return -1;
++
++			if (ub->parameter && strlen(ub->parameter)> 0) {
++				ub->state = ST_PARAMETER;
++			} else {
++				/* name can't not be empty ! */
++				return -1;
++			}
++
++			if (ub->filename && strlen(ub->filename) > 0) {
++				ub->state = ST_FILE;
++			}
++
++			if (ub_init_writeout(ub))
++				return -1;
++
++			ub->got |= GOT_HEADER;
++
++			ptr = eol + 4;
++			size -= length;
++			offset += length;
++			continue;
++		}
++
++		if ((ub->got & (GOT_HEADER|GOT_BOUNDARY)) == (GOT_HEADER|GOT_BOUNDARY))
++		{
++			// if (size < ub->length) return 0;
++			eol = (char*)memmem(ptr, size, ub->boundary, ub->length);
++			if (!eol) {
++				size_t left = end - ptr;
++
++				if (left > ub-> length) {
++					left -= ub->length;
++				}
++
++				if (ub_do_writeout(ub, ptr, left) != left)
++					return -1;
++
++				// if (buffer_write(ub->content, ptr, left) != left)
++				//	return -1;
++
++				ptr = ptr + left;
++				break;
++			}
++
++			length = eol - ptr;
++
++			/* strip extra '\r\n' */
++			if (ub_do_writeout(ub, ptr, length -2) != length - 2)
++				return -1;
++
++
++			if (ub_finish_writeout(ub))
++				return -1;
++
++			// if (buffer_write(ub->content, ptr, length) != length)
++			//	return -1;
++
++			offset += length;
++			size   -= length;
++			ub->got = 0;
++			ptr = eol;
++			continue;
++		}
++	}
++
++	if (ptr != ub->buffer) {
++		size = end - ptr;
++		ub->data = size;
++		memmove(ub->buffer, ptr, ub->data);
++	}
++	return 0;
++}
++
++static int ub_write_post(struct upload_buffer* ub, const void* buffer, size_t size)
++{
++	size_t uleft, bleft, nleft;
++
++	uleft = ub->size - ub->data;	/* ub capacity left */
++	bleft = size;			/* bytes left in buffer */
++	nleft = (uleft > bleft) ? bleft : uleft;
++
++	memcpy(ub->buffer+ub->data, buffer, nleft);
++
++	ub->data += nleft;
++	ub->total += nleft;
++
++	if (ub_process_content(ub))
++		return -1;
++
++	return nleft;
++}
++
++static int ub_parse_urlencoded(struct list_head* parameters, char* query, size_t size)
++{
++	char *token, *value;
++	char *ptr = query;
++
++	while ((token=strsep(&ptr, "&"))) {
++		value = strchr(token, '=');
++		if (!value) return -1;
++		*value = 0;
++		++ value;
++
++		decode_urlencoded(token, &token);
++		decode_urlencoded(value, &value);
++
++		if (parameter_add(parameters, token, value))
++			return -1;
++	}
++
++	return 0;
++}
++
++static int ub_write_urlencoded(struct upload_buffer* ub, const void* buffer, size_t size)
++{
++	/* make sure that ub->content is created, it there we store
++	 * url-encoded-form-data */
++	if (!ub->boundary && !ub->content) {
++		if (buffer_create(&ub->content))
++			return -1;
++	}
++
++	if (buffer_write(ub->content, buffer, size) != size) {
++		// debug("error writing bytes ...\n");
++		return -1;
++	}
++
++	ub->total += size;
++
++	if (ub->total > ub->expected)
++		warn("too much data got.\n");
++
++	if (ub->total >= ub->expected) {
++		size_t urlsize = ub->content->size;
++		char* urlencoded = malloc(urlsize+1);
++
++		if (!urlencoded) return -1;
++		buffer_read(ub->content, urlencoded, ub->content->size);
++		urlencoded[urlsize] = 0;
++
++		if (ub_parse_urlencoded(&ub->parameters,
++					urlencoded, urlsize))
++			warn("invalid URL encoded parameters passed.\n");
++		free(urlencoded);
++	}
++
++	return size;
++}
++
++int ub_write(struct upload_buffer* ub, const void* buffer, size_t size)
++{
++	size_t nwritten = 0;
++	int nwrote;
++
++	/* check parameters before procceeding. */
++	if (!size) {
++		// debug("ub_write: zero bytes write requested.\n");
++		return 0;
++	}
++
++	do {
++		if (ub->boundary) {
++			nwrote = ub_write_post(ub,
++					       buffer + nwritten,
++					       size   - nwritten);
++			if (nwrote < 0) {
++				// debug("error writing POST content bytes ... \n");
++				return -1;
++			}
++
++			nwritten += nwrote;
++	 	} else {
++			nwrote = ub_write_urlencoded(ub,
++						     buffer + nwritten,
++						     size   - nwritten);
++
++			if (nwrote != size) {
++				// debug("error writing bytes ...\n");
++				return -1;
++			}
++
++			// debug("wrote %d bytes to content ...\n", size);
++			nwritten  += nwrote;
++		}
++
++	} while(nwritten < size);
++
++	return nwritten;
++}
++
++#if 0
++int main(int argc, char* argv[])
++{
++	char buffer[4096*2];
++	struct upload_buffer* ub;
++	int fd, nread, nwrote;
++
++
++	fd = open("content.dump", O_RDONLY);
++	if (fd < 0)
++		return -1;
++
++#define BOUNDARY "---------------------------2519993291436235669941269728"
++	if (ub_create(&ub))
++		return -1;
++
++	if (ub_init(ub, BOUNDARY, "/tmp/upload"))
++		return -1;
++
++	nread = read(fd, buffer, sizeof(buffer));
++	while (nread > 0) {
++		nwrote = ub_write(ub, buffer, nread);
++		if (nwrote != nread) {
++			error("Error : nwrote: %d, nread: %d\n", nwrote, nread);
++			break;
++		}
++		nread = read(fd, buffer, sizeof(buffer));
++	}
++
++
++	close(fd);
++
++	ub_free(ub);
++	return 0;
++}
++#endif
+--- /dev/null
++++ b/src/uploadbuffer.h
+@@ -0,0 +1,59 @@
++#ifndef __UPLOADBUFFER_H__
++#define __UPLOADBUFFER_H__
++
++#include "list.h"
++
++struct header
++{
++	struct list_head list;
++
++	char* name;
++	char* value;
++
++	int is_file;
++	size_t filesize;
++};
++
++struct upload_buffer
++{
++	struct list_head parameters;
++
++	char* upload_path;	/* upload directory */
++#define MAX_UPLOADBUFFER	4096*8
++	char *buffer;
++	size_t size;		/* allocated ub->buffer size */
++	size_t data;		/* contains data in ub->buffer */
++	size_t total;		/* currently received bytes counter */
++	size_t expected;	/* expected content lenght */
++
++
++#define	GOT_BOUNDARY 		0x0001
++#define GOT_HEADER		0x0002
++#define GOT_DISPOSITION		0x0004
++#define GOT_ENDBOUNDARY		0x8000
++	int  got;
++
++	char  *boundary;	/* --'boundary' */
++	size_t length;
++	int   ignore;		/* if 1, ignore errors on write(2) to file. */
++
++	enum {
++		ST_UNKNOWN,	/* content uknown, possibly processing headers. */
++		ST_HEADER,	/* HTTP/1.x request header, ended by '\r\n\r\n' */
++		ST_PARAMETER,	/* POST'ed parameter content */
++		ST_FILE		/* POST'ed file content */
++	} state;		/* shows what we are parsing */
++
++	char* parameter;
++	struct buffer* content;
++	char*  filename;
++	size_t filesize;
++	int fd;
++};
++
++int ub_create(struct upload_buffer** ub);
++int ub_init(struct upload_buffer* b, size_t expected, const char* boundary, const char* upload);
++void ub_free(struct upload_buffer* b);
++int ub_write(struct upload_buffer* b, const void* data, size_t size);
++
++#endif //__UPLOADBUFFER_H__
+--- /dev/null
++++ b/src/utils.c
+@@ -0,0 +1,134 @@
++#include <sys/types.h>
++#include <sys/socket.h>
++#include <sys/stat.h>
++#include <net/if.h>
++#include <netdb.h>
++#include <arpa/inet.h>
++#include <sys/time.h>
++#include <sys/select.h>
++#include <unistd.h>
++#include <fcntl.h>
++#include <errno.h>
++#include <string.h>
++#include <ctype.h>
++#include "utils.h"
++
++int convert(const char* str, unsigned int* number)
++{
++	unsigned int value;
++	char *endptr = 0;
++
++	value = strtoul(str, &endptr, 10);
++	if (endptr != 0 && *endptr != 0)
++		return -1;
++	else
++		*number	= value;
++
++	return 0;
++}
++
++int directory_check_path(const char* path)
++{
++	struct stat ds;
++	size_t size;
++
++	char buffer[1024];
++	const char* ptr;
++	const char* end;
++
++	if (!path || !strlen(path))
++	{
++		errno = EINVAL;
++		return -1;
++	}
++
++	if (stat(path, &ds) == 0 && S_ISDIR(ds.st_mode))
++		return 0;
++
++	ptr = path;
++	end = path + strlen(path);
++	while (ptr < end)
++	{
++
++		ptr = strchr(ptr+1, '/');
++		if (ptr != 0)
++		{
++			size = ptr - path;
++			memcpy(buffer, path, size);
++			buffer[size] = 0;
++		}
++		else
++		{
++			size = end - path;
++			memcpy(buffer, path, size);
++			buffer[size] = 0;
++			ptr = end;	/* terminates loop */
++		}
++
++		if (stat(buffer, &ds) == 0 && S_ISDIR(ds.st_mode))
++		{
++			continue;	/* directory exists already */
++		}
++		else
++		{
++			if (mkdir(buffer, 0700))
++			{
++				return -1;
++			}
++		}
++	}
++
++	return 0;
++}
++
++static int unhex(char c)
++{
++	if (c >= '0' && c <= '9')
++		return c - '0';
++	if (c >= 'a' && c <= 'f')
++		return c - 'a' + 10;
++	if (c >= 'A' && c <= 'F')
++		return c - 'A' + 10;
++
++	return 0;
++}
++
++int decode_urlencoded(const char *token, char** decoded)
++{
++	size_t size = strlen(token);
++	char *dptr;
++	const char *ptr = token;
++	const char *end = token + size;
++
++	*decoded = strdup(token);
++	if (!*decoded) return -1;
++
++	dptr = *decoded;
++
++	while (ptr < end)
++	{
++		if (*ptr == '+')
++			*dptr = ' ';
++		else if (*ptr == '%')
++		{
++			if (ptr + 2 <= end   &&
++			    isxdigit(ptr[1]) &&
++			    isxdigit(ptr[2]))
++			{
++				*dptr = unhex(ptr[1])*16 + unhex(ptr[2]);
++				ptr += 2;
++			}
++		}
++		else
++		{
++			*dptr = *ptr;
++		}
++
++		++ ptr;
++		++ dptr;
++	}
++
++	*dptr = 0;
++
++	return 0;
++}
+--- /dev/null
++++ b/src/utils.h
+@@ -0,0 +1,26 @@
++#ifndef __UTILS_H__
++#define __UTILS_H__
++
++
++/**
++ * converts string to integer.
++ * @param str string to convert to int
++ * @param number
++ *
++ * @return 0 on success, -1 on failure.
++ */
++int convert(const char* str, unsigned int* number);
++
++/**
++ * checks if request path (directory) exists. If it doesn't
++ * exists - let's try to create it. On success 0 is returned,
++ * -1 on failure.
++ */
++int directory_check_path(const char* path);
++
++/**
++ * @todo: add decode_urlencoded comment.
++ */
++int decode_urlencoded(const char *token, char** decoded);
++
++#endif //__UTILS_H__

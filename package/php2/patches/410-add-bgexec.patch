@@ -1,0 +1,135 @@
+--- a/src/exec.c
++++ b/src/exec.c
+@@ -19,14 +19,15 @@
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.                 *
+ *                                                                            *
+ \****************************************************************************/
+ /* $Id: exec.c,v 1.25 1997/09/14 14:38:25 rasmus Exp $ */
+ #include "php.h"
+ #include "parse.h"
+ #include <ctype.h>
++#include <unistd.h>
+ #if APACHE
+ #include "http_protocol.h"
+ #include "http_config.h"
+ #endif
+ 
+ /*
+  * If type==0, only last line of output is returned
+@@ -175,7 +176,80 @@ void EscapeShellCmd(void) {
+             l++; /* length has been increased */
+             cmd[x] = '\\';
+             x++; /* skip the character */
+         }
+     }
+ 	Push(cmd,s->type);
+ }
++
++/**
++ * this is a primitive function to execute some command in background
++ * after a given timeout. 0 as timeout means do not wait
++ * NOTES:
++ *  - this command executes /bin/sh -c $command
++ *  - there is no way to return an error of failed execution
++ */
++void BgExec(void) {
++	Stack *s;
++	pid_t pid;
++	unsigned int sec;
++	char cmd[255]; /* 255 should be enough */
++	int null;
++
++	s = Pop();
++	if(!s) {
++		Error("Stack error in bgexec");
++                Push("-1", LNUMBER);
++		return;
++	}
++	if(!s->strval || (s->strval && !*(s->strval))) {
++                Error("Invalid exec command in bgexec");
++                Push("-1", LNUMBER);
++                return;
++        }
++	memset(cmd, 0, sizeof(cmd));
++	strncpy(cmd, s->strval, sizeof(cmd));
++
++	s = Pop();
++	if(!s) {
++		Error("Stack error in bgexec");
++                Push("-1", LNUMBER);
++		return;
++	}
++	sec = s->intval >= 0 ? s->intval : 0;
++
++	pid = fork();
++        if (pid < 0) {
++                Error("Fork failure in bgexec");
++                Push("-1", LNUMBER);
++                return;
++        } else if (pid) {
++                /* parent */
++                Push("0", LNUMBER);
++		return;
++        }
++
++	/* 255 should be enough? */
++	for (null = 0; null < 255; null++) {
++		close(null);
++	}
++
++	/* pid == 0, child */
++	setsid();
++
++	null = open("/dev/null", O_RDONLY);
++	if (null != 0)
++	{
++		dup2(null, 0);
++		close(null);
++	}
++	null = open("/dev/null", O_WRONLY);
++	if (null != 1)
++	{
++		dup2(null, 1);
++		close(null);
++	}
++	dup2(1, 2);  /* stdout == stderr */
++	if (sec)
++		sleep(sec);
++	execl("/bin/sh", "/bin/sh", "-c", cmd, 0);
++}
+--- a/src/lex.c
++++ b/src/lex.c
+@@ -224,14 +224,15 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "decoct",INTFUNC1,DecOct }, 
+ 	  { "usleep",INTFUNC1,USleep },
+ #ifdef HAVE_LIBPQ
+ 	  { "pg_tty",INTFUNC1,PGtty },
+ #endif
+ 	  { "fgetss",INTFUNC2,Fgetss },
+ 	  { "uniqid",INTFUNC1,UniqId },
++	  { "bgexec",INTFUNC2,BgExec },
+ 	  { "syslog",INTFUNC2,Syslog },
+ 	  { "arsort",PHPARSORT,NULL },
+ 	  { NULL,0,NULL } }, 
+ 
+ 	{ { "default", DEFAULT,NULL }, /* 7 */
+ #ifdef HAVE_LIBGD
+ 	  { "imagesx", INTFUNC1,ImageSXFN },
+--- a/src/php.h
++++ b/src/php.h
+@@ -944,14 +944,15 @@ void ERegReplace(void);
+ void ERegiReplace(void);
+ char *_ERegReplace(char *, char *, char *, int);
+ char *reg_eprint(int);
+ 
+ /* exec.c */
+ void Exec(char *, char *, int);
+ void EscapeShellCmd(void);
++void BgExec(void);
+ 
+ /* file.c */
+ /* Note: WIN32 Defines for OpenFile, Sleep and ReadFile
+  * are required to avoid conflict with vc5 libraries
+  */
+ #ifdef WINDOWS
+ int _OpenFile(char *, int, long *);

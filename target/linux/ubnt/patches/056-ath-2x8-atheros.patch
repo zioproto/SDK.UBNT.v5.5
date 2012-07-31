@@ -1,0 +1,1642 @@
+TODO: separate cache_cleanup_timer code
+from fs/drop_caches.c file
+
+Index: linux-2.6.32.48/net/ipv4/af_inet.c
+===================================================================
+--- linux-2.6.32.48.orig/net/ipv4/af_inet.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/net/ipv4/af_inet.c	2011-11-21 14:21:22.981041391 +0200
+@@ -1659,7 +1659,7 @@
+ 
+ /* ------------------------------------------------------------------------ */
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ static int __init ipv4_proc_init(void)
+ {
+ 	int rc = 0;
+@@ -1685,12 +1685,12 @@
+ 	goto out;
+ }
+ 
+-#else /* CONFIG_PROC_FS */
++#else /* CONFIG_PROC_FS && !CONFIG_ATH_2X8 */
+ static int __init ipv4_proc_init(void)
+ {
+ 	return 0;
+ }
+-#endif /* CONFIG_PROC_FS */
++#endif /* CONFIG_PROC_FS && !CONFIG_ATH_2X8 */
+ 
+ MODULE_ALIAS_NETPROTO(PF_INET);
+ 
+Index: linux-2.6.32.48/net/netlink/af_netlink.c
+===================================================================
+--- linux-2.6.32.48.orig/net/netlink/af_netlink.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/net/netlink/af_netlink.c	2011-11-21 14:21:22.981041391 +0200
+@@ -1863,7 +1863,7 @@
+ }
+ EXPORT_SYMBOL(nlmsg_notify);
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ struct nl_seq_iter {
+ 	struct seq_net_private p;
+ 	int link;
+@@ -2042,6 +2042,7 @@
+ 	.owner	= THIS_MODULE,	/* for consistency 8) */
+ };
+ 
++#ifndef CONFIG_ATH_2X8
+ static int __net_init netlink_net_init(struct net *net)
+ {
+ #ifdef CONFIG_PROC_FS
+@@ -2062,6 +2063,7 @@
+ 	.init = netlink_net_init,
+ 	.exit = netlink_net_exit,
+ };
++#endif /* CONFIG_ATH_2X8 */
+ 
+ static int __init netlink_proto_init(void)
+ {
+@@ -2107,7 +2109,9 @@
+ 	}
+ 
+ 	sock_register(&netlink_family_ops);
++#ifndef CONFIG_ATH_2X8
+ 	register_pernet_subsys(&netlink_net_ops);
++#endif
+ 	/* The netlink device handler may be needed early. */
+ 	rtnetlink_init();
+ out:
+Index: linux-2.6.32.48/net/packet/af_packet.c
+===================================================================
+--- linux-2.6.32.48.orig/net/packet/af_packet.c	2011-11-21 14:14:05.000000000 +0200
++++ linux-2.6.32.48/net/packet/af_packet.c	2011-11-21 14:21:22.981041391 +0200
+@@ -2403,7 +2403,7 @@
+ 	.notifier_call =	packet_notifier,
+ };
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ static inline struct sock *packet_seq_idx(struct net *net, loff_t off)
+ {
+ 	struct sock *s;
+@@ -2492,15 +2492,18 @@
+ 	rwlock_init(&net->packet.sklist_lock);
+ 	INIT_HLIST_HEAD(&net->packet.sklist);
+ 
++#ifndef CONFIG_ATH_2X8
+ 	if (!proc_net_fops_create(net, "packet", 0, &packet_seq_fops))
+ 		return -ENOMEM;
+-
++#endif
+ 	return 0;
+ }
+ 
+ static void packet_net_exit(struct net *net)
+ {
++#ifndef CONFIG_ATH_2X8
+ 	proc_net_remove(net, "packet");
++#endif
+ }
+ 
+ static struct pernet_operations packet_net_ops = {
+Index: linux-2.6.32.48/net/unix/af_unix.c
+===================================================================
+--- linux-2.6.32.48.orig/net/unix/af_unix.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/net/unix/af_unix.c	2011-11-21 14:21:22.981041391 +0200
+@@ -2126,7 +2126,7 @@
+ 	return mask;
+ }
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ static struct sock *first_unix_socket(int *i)
+ {
+ 	for (*i = 0; *i <= UNIX_HASH_SIZE; (*i)++) {
+@@ -2281,7 +2281,7 @@
+ 	if (unix_sysctl_register(net))
+ 		goto out;
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ 	if (!proc_net_fops_create(net, "unix", 0, &unix_seq_fops)) {
+ 		unix_sysctl_unregister(net);
+ 		goto out;
+@@ -2295,7 +2295,9 @@
+ static void unix_net_exit(struct net *net)
+ {
+ 	unix_sysctl_unregister(net);
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ 	proc_net_remove(net, "unix");
++#endif
+ }
+ 
+ static struct pernet_operations unix_net_ops = {
+Index: linux-2.6.32.48/crypto/algapi.c
+===================================================================
+--- linux-2.6.32.48.orig/crypto/algapi.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/crypto/algapi.c	2011-11-21 14:21:22.981041391 +0200
+@@ -908,13 +908,17 @@
+ 
+ static int __init crypto_algapi_init(void)
+ {
++#ifndef CONFIG_ATH_2X8
+ 	crypto_init_proc();
++#endif
+ 	return 0;
+ }
+ 
+ static void __exit crypto_algapi_exit(void)
+ {
++#ifndef CONFIG_ATH_2X8
+ 	crypto_exit_proc();
++#endif
+ }
+ 
+ module_init(crypto_algapi_init);
+Index: linux-2.6.32.48/arch/mips/kernel/Makefile
+===================================================================
+--- linux-2.6.32.48.orig/arch/mips/kernel/Makefile	2011-11-21 14:14:05.000000000 +0200
++++ linux-2.6.32.48/arch/mips/kernel/Makefile	2011-11-21 14:21:22.981041391 +0200
+@@ -7,9 +7,12 @@
+ extra-y		:= head.o init_task.o vmlinux.lds
+ 
+ obj-y		+= cpu-probe.o branch.o entry.o genex.o irq.o process.o \
+-		   ptrace.o reset.o setup.o signal.o syscall.o \
++		   reset.o setup.o signal.o syscall.o \
+ 		   time.o topology.o traps.o unaligned.o watch.o
+ 
++ifneq ($(CONFIG_ATH_2X8),y)
++obj-y	+= ptrace.o
++endif
+ obj-$(CONFIG_CEVT_BCM1480)	+= cevt-bcm1480.o
+ obj-$(CONFIG_CEVT_R4K_LIB)	+= cevt-r4k.o
+ obj-$(CONFIG_MIPS_MT_SMTC)	+= cevt-smtc.o
+@@ -55,7 +58,9 @@
+ obj-$(CONFIG_MIPS_MT_SMTC)	+= smtc.o smtc-asm.o smtc-proc.o
+ obj-$(CONFIG_MIPS_MT_SMP)	+= smp-mt.o
+ obj-$(CONFIG_MIPS_CMP)		+= smp-cmp.o
++ifneq ($(CONFIG_ATH_2X8),y)
+ obj-$(CONFIG_CPU_MIPSR2)	+= spram.o
++endif
+ 
+ obj-$(CONFIG_MIPS_VPE_LOADER)	+= vpe.o
+ obj-$(CONFIG_MIPS_VPE_APSP_API)	+= rtlx.o
+Index: linux-2.6.32.48/net/ipv4/arp.c
+===================================================================
+--- linux-2.6.32.48.orig/net/ipv4/arp.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/net/ipv4/arp.c	2011-11-21 14:21:22.981041391 +0200
+@@ -1245,7 +1245,7 @@
+ 	register_netdevice_notifier(&arp_netdev_notifier);
+ }
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ #if defined(CONFIG_AX25) || defined(CONFIG_AX25_MODULE)
+ 
+ /* ------------------------------------------------------------------------ */
+@@ -1400,14 +1400,14 @@
+ 	return register_pernet_subsys(&arp_net_ops);
+ }
+ 
+-#else /* CONFIG_PROC_FS */
++#else /* CONFIG_PROC_FS && !CONFIG_ATH_2X8 */
+ 
+ static int __init arp_proc_init(void)
+ {
+ 	return 0;
+ }
+ 
+-#endif /* CONFIG_PROC_FS */
++#endif /* CONFIG_PROC_FS && !CONFIG_ATH_2X8 */
+ 
+ EXPORT_SYMBOL(arp_broken_ops);
+ EXPORT_SYMBOL(arp_find);
+Index: linux-2.6.32.48/fs/proc/base.c
+===================================================================
+--- linux-2.6.32.48.orig/fs/proc/base.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/fs/proc/base.c	2011-11-21 14:23:19.161116177 +0200
+@@ -177,6 +177,7 @@
+ 	return count;
+ }
+ 
++#ifndef CONFIG_ATH_2X8
+ static int proc_cwd_link(struct inode *inode, struct path *path)
+ {
+ 	struct task_struct *task = get_proc_task(inode);
+@@ -200,6 +201,7 @@
+ 	}
+ 	return result;
+ }
++#endif /* CONFIG_ATH_2X8 */
+ 
+ /*
+  * Return zero if current may access user memory in @task, -error if not.
+@@ -239,6 +241,9 @@
+ 	if (mutex_lock_killable(&task->cred_guard_mutex))
+ 		return NULL;
+ 
++#ifdef CONFIG_ATH_2X8
++#define	ptrace_may_access(...)	0
++#endif /* CONFIG_ATH_2X8 */
+ 	mm = get_task_mm(task);
+ 	if (mm && mm != current->mm &&
+ 			!ptrace_may_access(task, PTRACE_MODE_READ)) {
+@@ -250,6 +255,7 @@
+ 	return mm;
+ }
+ 
++#ifndef CONFIG_ATH_2X8
+ static int proc_pid_cmdline(struct task_struct *task, char * buffer)
+ {
+ 	int res = 0;
+@@ -327,6 +333,7 @@
+ 		return sprintf(buffer, "%s", symname);
+ }
+ #endif /* CONFIG_KALLSYMS */
++#endif /* CONFIG_ATH_2X8 */
+ 
+ static int lock_trace(struct task_struct *task)
+ {
+@@ -463,6 +470,7 @@
+ 
+ /* The badness from the OOM killer */
+ unsigned long badness(struct task_struct *p, unsigned long uptime);
++#ifndef CONFIG_ATH_2X8
+ static int proc_oom_score(struct task_struct *task, char *buffer)
+ {
+ 	unsigned long points = 0;
+@@ -544,6 +552,7 @@
+ 
+ 	return count;
+ }
++#endif /* CONFIG_ATH_2X8 */
+ 
+ #ifdef CONFIG_HAVE_ARCH_TRACEHOOK
+ static int proc_pid_syscall(struct task_struct *task, char *buffer)
+@@ -1344,6 +1353,7 @@
+ 	newmm->exe_file = get_mm_exe_file(oldmm);
+ }
+ 
++#ifndef CONFIG_ATH_2X8
+ static int proc_exe_link(struct inode *inode, struct path *exe_path)
+ {
+ 	struct task_struct *task;
+@@ -1367,6 +1377,7 @@
+ 	} else
+ 		return -ENOENT;
+ }
++#endif /* CONFIG_ATH_2X8 */
+ 
+ static void *proc_pid_follow_link(struct dentry *dentry, struct nameidata *nd)
+ {
+@@ -2521,6 +2532,7 @@
+ }
+ #endif /* CONFIG_TASK_IO_ACCOUNTING */
+ 
++#ifndef CONFIG_ATH_2X8
+ static int proc_pid_personality(struct seq_file *m, struct pid_namespace *ns,
+ 				struct pid *pid, struct task_struct *task)
+ {
+@@ -2531,6 +2543,7 @@
+ 	}
+ 	return err;
+ }
++#endif /* CONFIG_ATH_2X8 */
+ 
+ /*
+  * Thread groups
+@@ -2539,6 +2552,7 @@
+ static const struct inode_operations proc_task_inode_operations;
+ 
+ static const struct pid_entry tgid_base_stuff[] = {
++#if !defined(CONFIG_ATH_2X8)
+ 	DIR("task",       S_IRUGO|S_IXUGO, proc_task_inode_operations, proc_task_operations),
+ 	DIR("fd",         S_IRUSR|S_IXUSR, proc_fd_inode_operations, proc_fd_operations),
+ 	DIR("fdinfo",     S_IRUSR|S_IXUSR, proc_fdinfo_inode_operations, proc_fdinfo_operations),
+@@ -2611,6 +2625,7 @@
+ #ifdef CONFIG_TASK_IO_ACCOUNTING
+ 	INF("io",	S_IRUSR, proc_tgid_io_accounting),
+ #endif
++#endif /* CONFIG_ATH_2X8 */
+ };
+ 
+ static int proc_tgid_base_readdir(struct file * filp,
+@@ -2882,6 +2897,7 @@
+  * Tasks
+  */
+ static const struct pid_entry tid_base_stuff[] = {
++#ifndef CONFIG_ATH_2X8
+ 	DIR("fd",        S_IRUSR|S_IXUSR, proc_fd_inode_operations, proc_fd_operations),
+ 	DIR("fdinfo",    S_IRUSR|S_IXUSR, proc_fdinfo_inode_operations, proc_fdinfo_operations),
+ 	REG("environ",   S_IRUSR, proc_environ_operations),
+@@ -2946,6 +2962,7 @@
+ #ifdef CONFIG_TASK_IO_ACCOUNTING
+ 	INF("io",	S_IRUSR, proc_tid_io_accounting),
+ #endif
++#endif /* CONFIG_ATH_2X8 */
+ };
+ 
+ static int proc_tid_base_readdir(struct file * filp,
+Index: linux-2.6.32.48/drivers/pci/bus.c
+===================================================================
+--- linux-2.6.32.48.orig/drivers/pci/bus.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/drivers/pci/bus.c	2011-11-21 14:21:22.991041459 +0200
+@@ -90,8 +90,10 @@
+ 		return retval;
+ 
+ 	dev->is_added = 1;
++#ifndef CONFIG_ATH_2X8
+ 	pci_proc_attach_device(dev);
+ 	pci_create_sysfs_dev_files(dev);
++#endif
+ 	return 0;
+ }
+ 
+Index: linux-2.6.32.48/crypto/Makefile
+===================================================================
+--- linux-2.6.32.48.orig/crypto/Makefile	2011-11-21 14:14:06.000000000 +0200
++++ linux-2.6.32.48/crypto/Makefile	2011-11-21 14:21:22.991041459 +0200
+@@ -9,7 +9,9 @@
+ 
+ obj-$(CONFIG_CRYPTO_FIPS) += fips.o
+ 
++ifneq ($(CONFIG_ATH_2X8),y)
+ crypto_algapi-$(CONFIG_PROC_FS) += proc.o
++endif
+ crypto_algapi-objs := algapi.o scatterwalk.o $(crypto_algapi-y)
+ obj-$(CONFIG_CRYPTO_ALGAPI2) += crypto_algapi.o
+ 
+Index: linux-2.6.32.48/net/core/dev.c
+===================================================================
+--- linux-2.6.32.48.orig/net/core/dev.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/net/core/dev.c	2011-11-21 14:21:22.991041459 +0200
+@@ -3028,7 +3028,7 @@
+ 	return copy_to_user(arg, &ifc, sizeof(struct ifconf)) ? -EFAULT : 0;
+ }
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ /*
+  *	This is invoked by the /proc filesystem handler to display a device
+  *	in detail.
+@@ -5703,7 +5703,9 @@
+ 
+ 	hotcpu_notifier(dev_cpu_callback, 0);
+ 	dst_init();
++#ifndef CONFIG_ATH_2X8
+ 	dev_mcast_init();
++#endif /* CONFIG_ATH_2X8 */
+ 	rc = 0;
+ out:
+ 	return rc;
+Index: linux-2.6.32.48/net/core/dev_mcast.c
+===================================================================
+--- linux-2.6.32.48.orig/net/core/dev_mcast.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/net/core/dev_mcast.c	2011-11-21 14:21:22.991041459 +0200
+@@ -155,6 +155,7 @@
+ }
+ EXPORT_SYMBOL(dev_mc_unsync);
+ 
++#ifndef CONFIG_ATH_2X8
+ #ifdef CONFIG_PROC_FS
+ static int dev_mc_seq_show(struct seq_file *seq, void *v)
+ {
+@@ -224,6 +225,7 @@
+ {
+ 	register_pernet_subsys(&dev_mc_net_ops);
+ }
++#endif /* CONFIG_ATH_2X8 */
+ 
+ EXPORT_SYMBOL(dev_mc_add);
+ EXPORT_SYMBOL(dev_mc_delete);
+Index: linux-2.6.32.48/kernel/dma.c
+===================================================================
+--- linux-2.6.32.48.orig/kernel/dma.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/kernel/dma.c	2011-11-21 14:21:22.991041459 +0200
+@@ -112,7 +112,7 @@
+ 
+ #endif
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ 
+ #ifdef MAX_DMA_CHANNELS
+ static int proc_dma_show(struct seq_file *m, void *v)
+Index: linux-2.6.32.48/drivers/Makefile
+===================================================================
+--- linux-2.6.32.48.orig/drivers/Makefile	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/drivers/Makefile	2011-11-21 14:21:22.991041459 +0200
+@@ -5,11 +5,15 @@
+ # Rewritten to use lists instead of if-statements.
+ #
+ 
++ifneq ($(CONFIG_ATH_2X8),y)
+ obj-y				+= gpio/
++endif
+ obj-$(CONFIG_PCI)		+= pci/
+ obj-$(CONFIG_PARISC)		+= parisc/
+ obj-$(CONFIG_RAPIDIO)		+= rapidio/
++ifneq ($(CONFIG_ATH_2X8),y)
+ obj-y				+= video/
++endif
+ obj-$(CONFIG_ACPI)		+= acpi/
+ obj-$(CONFIG_SFI)		+= sfi/
+ # PnP must come after ACPI since it will eventually need to check if acpi
+@@ -27,8 +31,10 @@
+ # default.
+ obj-y				+= char/
+ 
++ifneq ($(CONFIG_ATH_2X8),y)
+ # gpu/ comes after char for AGP vs DRM startup
+ obj-y				+= gpu/
++endif
+ 
+ obj-$(CONFIG_CONNECTOR)		+= connector/
+ 
+@@ -38,9 +44,14 @@
+ 
+ obj-y				+= serial/
+ obj-$(CONFIG_PARPORT)		+= parport/
+-obj-y				+= base/ block/ misc/ mfd/
++obj-y				+= base/
++ifneq ($(CONFIG_ATH_2X8),y)
++obj-y				+= block/ misc/ mfd/
++endif
+ obj-$(CONFIG_NUBUS)		+= nubus/
++ifneq ($(CONFIG_ATH_2X8),y)
+ obj-y				+= macintosh/
++endif
+ obj-$(CONFIG_IDE)		+= ide/
+ obj-$(CONFIG_SCSI)		+= scsi/
+ obj-$(CONFIG_ATA)		+= ata/
+@@ -50,10 +61,14 @@
+ obj-$(CONFIG_ATM)		+= atm/
+ obj-$(CONFIG_FUSION)		+= message/
+ obj-$(CONFIG_FIREWIRE)		+= firewire/
+-obj-y				+= ieee1394/
++ifneq ($(CONFIG_ATH_2X8),y)
++ obj-y				+= ieee1394/
++endif
+ obj-$(CONFIG_UIO)		+= uio/
+-obj-y				+= cdrom/
+-obj-y				+= auxdisplay/
++ifneq ($(CONFIG_ATH_2X8),y)
++ obj-y				+= cdrom/
++ obj-y				+= auxdisplay/
++endif
+ obj-$(CONFIG_PCCARD)		+= pcmcia/
+ obj-$(CONFIG_DIO)		+= dio/
+ obj-$(CONFIG_SBUS)		+= sbus/
+@@ -66,14 +81,18 @@
+ obj-$(CONFIG_USB_OTG_UTILS)	+= usb/otg/
+ obj-$(CONFIG_USB)		+= usb/
+ obj-$(CONFIG_USB_MUSB_HDRC)	+= usb/musb/
++ifneq ($(CONFIG_ATH_2X8),y)
+ obj-$(CONFIG_PCI)		+= usb/
++endif
+ obj-$(CONFIG_USB_GADGET)	+= usb/gadget/
+ obj-$(CONFIG_SERIO)		+= input/serio/
+ obj-$(CONFIG_GAMEPORT)		+= input/gameport/
+ obj-$(CONFIG_INPUT)		+= input/
+ obj-$(CONFIG_I2O)		+= message/
+ obj-$(CONFIG_RTC_LIB)		+= rtc/
++ifneq ($(CONFIG_ATH_2X8),y)
+ obj-y				+= i2c/ media/
++endif
+ obj-$(CONFIG_PPS)		+= pps/
+ obj-$(CONFIG_W1)		+= w1/
+ obj-$(CONFIG_POWER_SUPPLY)	+= power/
+@@ -88,7 +107,9 @@
+ obj-$(CONFIG_EDAC)		+= edac/
+ obj-$(CONFIG_MCA)		+= mca/
+ obj-$(CONFIG_EISA)		+= eisa/
++ifneq ($(CONFIG_ATH_2X8),y)
+ obj-y				+= lguest/
++endif
+ obj-$(CONFIG_CPU_FREQ)		+= cpufreq/
+ obj-$(CONFIG_CPU_IDLE)		+= cpuidle/
+ obj-y				+= idle/
+@@ -97,7 +118,9 @@
+ obj-$(CONFIG_NEW_LEDS)		+= leds/
+ obj-$(CONFIG_INFINIBAND)	+= infiniband/
+ obj-$(CONFIG_SGI_SN)		+= sn/
++ifneq ($(CONFIG_ATH_2X8),y)
+ obj-y				+= firmware/
++endif
+ obj-$(CONFIG_CRYPTO)		+= crypto/
+ obj-$(CONFIG_SUPERH)		+= sh/
+ obj-$(CONFIG_GENERIC_TIME)	+= clocksource/
+@@ -110,4 +133,6 @@
+ obj-$(CONFIG_VLYNQ)		+= vlynq/
+ obj-$(CONFIG_STAGING)		+= staging/
+ obj-y				+= platform/
++ifneq ($(CONFIG_ATH_2X8),y)
+ obj-y				+= ieee802154/
++endif
+Index: linux-2.6.32.48/drivers/mtd/Makefile
+===================================================================
+--- linux-2.6.32.48.orig/drivers/mtd/Makefile	2011-11-21 14:14:05.000000000 +0200
++++ linux-2.6.32.48/drivers/mtd/Makefile	2011-11-21 14:21:22.991041459 +0200
+@@ -30,6 +30,9 @@
+ nftl-objs		:= nftlcore.o nftlmount.o
+ inftl-objs		:= inftlcore.o inftlmount.o
+ 
++obj-y		+= devices/
++ifneq ($(CONFIG_ATH_2X8),y)
+ obj-y		+= chips/ lpddr/ maps/ devices/ nand/ onenand/ tests/
++endif
+ 
+ obj-$(CONFIG_MTD_UBI)		+= ubi/
+Index: linux-2.6.32.48/drivers/pci/Makefile
+===================================================================
+--- linux-2.6.32.48.orig/drivers/pci/Makefile	2011-11-21 14:14:06.000000000 +0200
++++ linux-2.6.32.48/drivers/pci/Makefile	2011-11-21 14:21:22.991041459 +0200
+@@ -2,10 +2,15 @@
+ # Makefile for the PCI bus specific drivers.
+ #
+ 
+-obj-y		+= access.o bus.o probe.o remove.o pci.o quirks.o \
+-			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
++obj-y		+= access.o bus.o probe.o remove.o pci.o \
++			pci-driver.o search.o setup-res.o \
+ 			irq.o
++
++ifneq ($(CONFIG_ATH_2X8),y)
++obj-y += pci-sysfs.o quirks.o rom.o
+ obj-$(CONFIG_PROC_FS) += proc.o
++endif
++
+ obj-$(CONFIG_SYSFS) += slot.o
+ 
+ obj-$(CONFIG_PCI_LEGACY) += legacy.o
+Index: linux-2.6.32.48/fs/drop_caches.c
+===================================================================
+--- linux-2.6.32.48.orig/fs/drop_caches.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/fs/drop_caches.c	2011-11-21 14:21:22.991041459 +0200
+@@ -8,6 +8,17 @@
+ #include <linux/writeback.h>
+ #include <linux/sysctl.h>
+ #include <linux/gfp.h>
++#include <linux/timer.h>
++#include <linux/workqueue.h>
++
++#define CACHE_CLEANUP_TIMEOUT (4 * HZ)
++
++static struct timer_list cache_cleanup_timer = {
++    .function = NULL,
++    .data = 0,
++};
++
++static struct work_struct drop_cache_workq;
+ 
+ /* A global variable is a bit ugly, but it keeps the code simple */
+ int sysctl_drop_caches;
+@@ -62,15 +73,47 @@
+ 	} while (nr_objects > 10);
+ }
+ 
++static void drop_caches_timer_handler(void)
++{
++	schedule_work(&drop_cache_workq);
++}
++
++static void drop_caches(void *arg)
++{
++	//printk("**** %s: starting the cache cleanup ...**** \n", __func__);
++	drop_pagecache();
++	drop_slab();
++	mod_timer(&cache_cleanup_timer, (jiffies + CACHE_CLEANUP_TIMEOUT));
++}
++
+ int drop_caches_sysctl_handler(ctl_table *table, int write,
+ 	void __user *buffer, size_t *length, loff_t *ppos)
+ {
++#ifndef CONFIG_ATH_2X8
+ 	proc_dointvec_minmax(table, write, buffer, length, ppos);
++#else
++	sysctl_drop_caches = 3;
++#endif
++	if (cache_cleanup_timer.function == NULL)
++	{
++		init_timer(&cache_cleanup_timer);
++		INIT_WORK(&drop_cache_workq, (void *)drop_caches);
++		cache_cleanup_timer.expires = (jiffies + CACHE_CLEANUP_TIMEOUT);
++		cache_cleanup_timer.function = (void *)drop_caches_timer_handler;
++		printk("**** %s: all done timer added ...**** \n", __func__);
++		add_timer(&cache_cleanup_timer);
++	}
++#ifndef CONFIG_ATH_2X8
++	else
++		*length = 0;
++#endif
++#if 0
+ 	if (write) {
+ 		if (sysctl_drop_caches & 1)
+ 			drop_pagecache();
+ 		if (sysctl_drop_caches & 2)
+ 			drop_slab();
+ 	}
++#endif
+ 	return 0;
+ }
+Index: linux-2.6.32.48/kernel/exec_domain.c
+===================================================================
+--- linux-2.6.32.48.orig/kernel/exec_domain.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/kernel/exec_domain.c	2011-11-21 14:21:22.991041459 +0200
+@@ -154,7 +154,7 @@
+ 	return 0;
+ }
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ static int execdomains_proc_show(struct seq_file *m, void *v)
+ {
+ 	struct exec_domain	*ep;
+Index: linux-2.6.32.48/kernel/exit.c
+===================================================================
+--- linux-2.6.32.48.orig/kernel/exit.c	2011-11-21 14:14:06.000000000 +0200
++++ linux-2.6.32.48/kernel/exit.c	2011-11-21 14:21:22.991041459 +0200
+@@ -782,7 +782,9 @@
+ 	struct task_struct *p, *n, *reaper;
+ 	LIST_HEAD(dead_children);
+ 
++#ifndef CONFIG_ATH_2X8
+ 	exit_ptrace(father);
++#endif /* CONFIG_ATH_2X8 */
+ 
+ 	write_lock_irq(&tasklist_lock);
+ 	reaper = find_new_reaper(father);
+Index: linux-2.6.32.48/net/ipv4/fib_frontend.c
+===================================================================
+--- linux-2.6.32.48.orig/net/ipv4/fib_frontend.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/net/ipv4/fib_frontend.c	2011-11-21 14:21:22.991041459 +0200
+@@ -1031,9 +1031,11 @@
+ 	error = nl_fib_lookup_init(net);
+ 	if (error < 0)
+ 		goto out_nlfl;
++#ifndef CONFIG_ATH_2X8
+ 	error = fib_proc_init(net);
+ 	if (error < 0)
+ 		goto out_proc;
++#endif /* CONFIG_ATH_2X8 */
+ out:
+ 	return error;
+ 
+@@ -1046,7 +1048,9 @@
+ 
+ static void __net_exit fib_net_exit(struct net *net)
+ {
++#ifndef CONFIG_ATH_2X8
+ 	fib_proc_exit(net);
++#endif
+ 	nl_fib_lookup_exit(net);
+ 	ip_fib_net_exit(net);
+ }
+Index: linux-2.6.32.48/net/ipv4/fib_hash.c
+===================================================================
+--- linux-2.6.32.48.orig/net/ipv4/fib_hash.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/net/ipv4/fib_hash.c	2011-11-21 14:21:23.000114212 +0200
+@@ -798,7 +798,7 @@
+ }
+ 
+ /* ------------------------------------------------------------------------ */
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ 
+ struct fib_iter_state {
+ 	struct seq_net_private p;
+@@ -1071,4 +1071,4 @@
+ {
+ 	proc_net_remove(net, "route");
+ }
+-#endif /* CONFIG_PROC_FS */
++#endif /* CONFIG_PROC_FS && !CONFIG_ATH_2X8 */
+Index: linux-2.6.32.48/fs/filesystems.c
+===================================================================
+--- linux-2.6.32.48.orig/fs/filesystems.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/fs/filesystems.c	2011-11-21 14:21:23.000114212 +0200
+@@ -216,7 +216,7 @@
+ 	return len;
+ }
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ static int filesystems_proc_show(struct seq_file *m, void *v)
+ {
+ 	struct file_system_type * tmp;
+Index: linux-2.6.32.48/arch/mips/include/asm/fpu.h
+===================================================================
+--- linux-2.6.32.48.orig/arch/mips/include/asm/fpu.h	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/arch/mips/include/asm/fpu.h	2011-11-21 14:21:23.000114212 +0200
+@@ -121,7 +121,11 @@
+ 		__own_fpu();
+ 		_init_fpu();
+ 	} else {
++#ifdef CONFIG_ATH_2X8
++		printk("ATH-2X8: No FP init\n");
++#else
+ 		fpu_emulator_init_fpu();
++#endif
+ 	}
+ 	preempt_enable();
+ }
+Index: linux-2.6.32.48/fs/fscache/Makefile
+===================================================================
+--- linux-2.6.32.48.orig/fs/fscache/Makefile	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/fs/fscache/Makefile	2011-11-21 14:21:23.000114212 +0200
+@@ -12,7 +12,9 @@
+ 	operation.o \
+ 	page.o
+ 
++ifneq ($(CONFIG_ATH_2X8),y)
+ fscache-$(CONFIG_PROC_FS) += proc.o
++endif
+ fscache-$(CONFIG_FSCACHE_STATS) += stats.o
+ fscache-$(CONFIG_FSCACHE_HISTOGRAM) += histogram.o
+ fscache-$(CONFIG_FSCACHE_OBJECT_LIST) += object-list.o
+Index: linux-2.6.32.48/fs/proc/Makefile
+===================================================================
+--- linux-2.6.32.48.orig/fs/proc/Makefile	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/fs/proc/Makefile	2011-11-21 14:21:23.000114212 +0200
+@@ -1,9 +1,9 @@
+ #
+ # Makefile for the Linux proc filesystem routines.
+ #
+-
+ obj-$(CONFIG_PROC_FS) += proc.o
+ 
++ifneq ($(CONFIG_ATH_2X8),y)	#{
+ proc-y			:= nommu.o task_nommu.o
+ proc-$(CONFIG_MMU)	:= mmu.o task_mmu.o
+ 
+@@ -26,3 +26,6 @@
+ proc-$(CONFIG_PROC_DEVICETREE)	+= proc_devtree.o
+ proc-$(CONFIG_PRINTK)	+= kmsg.o
+ proc-$(CONFIG_PROC_PAGE_MONITOR)	+= page.o
++else	#}{
++proc-y			:= root.o meminfo.o base.o generic.o inode.o
++endif	#}
+Index: linux-2.6.32.48/include/linux/hardirq.h
+===================================================================
+--- linux-2.6.32.48.orig/include/linux/hardirq.h	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/include/linux/hardirq.h	2011-11-21 14:21:23.000114212 +0200
+@@ -137,7 +137,7 @@
+ 
+ struct task_struct;
+ 
+-#if !defined(CONFIG_VIRT_CPU_ACCOUNTING) && !defined(CONFIG_IRQ_TIME_ACCOUNTING)
++#if (!defined(CONFIG_VIRT_CPU_ACCOUNTING) && !defined(CONFIG_IRQ_TIME_ACCOUNTING)) || defined(CONFIG_ATH_2X8)
+ static inline void account_system_vtime(struct task_struct *tsk)
+ {
+ }
+Index: linux-2.6.32.48/net/ipv4/igmp.c
+===================================================================
+--- linux-2.6.32.48.orig/net/ipv4/igmp.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/net/ipv4/igmp.c	2011-11-21 14:21:23.000114212 +0200
+@@ -2295,7 +2295,7 @@
+ 	return rv;
+ }
+ 
+-#if defined(CONFIG_PROC_FS)
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ struct igmp_mc_iter_state {
+ 	struct seq_net_private p;
+ 	struct net_device *dev;
+@@ -2638,7 +2638,7 @@
+ {
+ 	return register_pernet_subsys(&igmp_net_ops);
+ }
+-#endif
++#endif /* CONFIG_PROC_FS && !CONFIG_ATH_2X8 */
+ 
+ EXPORT_SYMBOL(ip_mc_dec_group);
+ EXPORT_SYMBOL(ip_mc_inc_group);
+Index: linux-2.6.32.48/include/linux/pci.h
+===================================================================
+--- linux-2.6.32.48.orig/include/linux/pci.h	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/include/linux/pci.h	2011-11-21 14:21:23.000114212 +0200
+@@ -1233,7 +1233,11 @@
+ 			suspend##vendor##device##hook, vendor, device, hook)
+ 
+ 
++#ifdef CONFIG_ATH_2X8
++#define pci_fixup_device(...)	/* nothing */
++#else
+ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
++#endif
+ 
+ void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen);
+ void pcim_iounmap(struct pci_dev *pdev, void __iomem *addr);
+Index: linux-2.6.32.48/kernel/irq/Makefile
+===================================================================
+--- linux-2.6.32.48.orig/kernel/irq/Makefile	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/kernel/irq/Makefile	2011-11-21 14:21:23.000114212 +0200
+@@ -1,7 +1,9 @@
+ 
+ obj-y := handle.o manage.o spurious.o resend.o chip.o devres.o
+ obj-$(CONFIG_GENERIC_IRQ_PROBE) += autoprobe.o
++ifneq ($(CONFIG_ATH_2X8),y)
+ obj-$(CONFIG_PROC_FS) += proc.o
++endif
+ obj-$(CONFIG_GENERIC_PENDING_IRQ) += migration.o
+ obj-$(CONFIG_NUMA_IRQ_DESC) += numa_migrate.o
+ obj-$(CONFIG_PM_SLEEP) += pm.o
+Index: linux-2.6.32.48/kernel/Makefile
+===================================================================
+--- linux-2.6.32.48.orig/kernel/Makefile	2011-11-21 14:14:06.000000000 +0200
++++ linux-2.6.32.48/kernel/Makefile	2011-11-21 14:21:23.000114212 +0200
+@@ -4,7 +4,7 @@
+ 
+ obj-y     = sched.o fork.o exec_domain.o panic.o printk.o \
+ 	    cpu.o exit.o itimer.o time.o softirq.o resource.o \
+-	    sysctl.o capability.o ptrace.o timer.o user.o \
++	    sysctl.o capability.o timer.o user.o \
+ 	    signal.o sys.o kmod.o workqueue.o pid.o \
+ 	    rcupdate.o extable.o params.o posix-timers.o \
+ 	    kthread.o wait.o kfifo.o sys_ni.o posix-cpu-timers.o mutex.o \
+@@ -13,6 +13,10 @@
+ 	    async.o
+ obj-y += groups.o
+ 
++ifneq ($(CONFIG_ATH_2X8),y)
++obj-y += ptrace.o
++endif
++
+ ifdef CONFIG_FUNCTION_TRACER
+ # Do not trace debug files and internal ftrace files
+ CFLAGS_REMOVE_lockdep.o = -pg
+@@ -31,8 +35,10 @@
+ obj-$(CONFIG_DEBUG_MUTEXES) += mutex-debug.o
+ obj-$(CONFIG_LOCKDEP) += lockdep.o
+ ifeq ($(CONFIG_PROC_FS),y)
++ifneq ($(CONFIG_ATH_2X8),y)
+ obj-$(CONFIG_LOCKDEP) += lockdep_proc.o
+ endif
++endif
+ obj-$(CONFIG_FUTEX) += futex.o
+ ifeq ($(CONFIG_COMPAT),y)
+ obj-$(CONFIG_FUTEX) += futex_compat.o
+Index: linux-2.6.32.48/kernel/time/Makefile
+===================================================================
+--- linux-2.6.32.48.orig/kernel/time/Makefile	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/kernel/time/Makefile	2011-11-21 14:21:23.000114212 +0200
+@@ -1,4 +1,8 @@
++ifneq ($(CONFIG_ATH_2X8),y)
+ obj-y += timekeeping.o ntp.o clocksource.o jiffies.o timer_list.o timecompare.o timeconv.o
++else
++obj-y += timekeeping.o ntp.o clocksource.o jiffies.o timecompare.o timeconv.o
++endif
+ 
+ obj-$(CONFIG_GENERIC_CLOCKEVENTS_BUILD)		+= clockevents.o
+ obj-$(CONFIG_GENERIC_CLOCKEVENTS)		+= tick-common.o
+Index: linux-2.6.32.48/include/linux/kmalloc_sizes.h
+===================================================================
+--- linux-2.6.32.48.orig/include/linux/kmalloc_sizes.h	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/include/linux/kmalloc_sizes.h	2011-11-21 14:21:23.000114212 +0200
+@@ -19,6 +19,7 @@
+ 	CACHE(32768)
+ 	CACHE(65536)
+ 	CACHE(131072)
++#ifndef CONFIG_ATH_2X8
+ #if KMALLOC_MAX_SIZE >= 262144
+ 	CACHE(262144)
+ #endif
+@@ -43,3 +44,4 @@
+ #if KMALLOC_MAX_SIZE >= 33554432
+ 	CACHE(33554432)
+ #endif
++#endif /* CONFIG_ATH_2X8 */
+Index: linux-2.6.32.48/init/main.c
+===================================================================
+--- linux-2.6.32.48.orig/init/main.c	2011-11-21 14:14:06.000000000 +0200
++++ linux-2.6.32.48/init/main.c	2011-11-21 14:21:23.000114212 +0200
+@@ -432,6 +432,9 @@
+ 	 * at least once to get things moving:
+ 	 */
+ 	init_idle_bootup_task(current);
++#ifdef CONFIG_ATH_2X8
++	drop_caches_sysctl_handler(NULL, NULL, NULL, NULL, NULL, NULL);
++#endif
+ 	preempt_enable_no_resched();
+ 	schedule();
+ 	preempt_disable();
+@@ -781,7 +784,9 @@
+ 	usermodehelper_init();
+ 	init_tmpfs();
+ 	driver_init();
++#ifndef CONFIG_ATH_2X8
+ 	init_irq_proc();
++#endif
+ 	do_ctors();
+ 	do_initcalls();
+ }
+Index: linux-2.6.32.48/Makefile
+===================================================================
+--- linux-2.6.32.48.orig/Makefile	2011-11-21 14:14:06.000000000 +0200
++++ linux-2.6.32.48/Makefile	2011-11-21 14:21:23.000114212 +0200
+@@ -465,7 +465,11 @@
+ 
+ # Objects we will link into vmlinux / subdirs we need to visit
+ init-y		:= init/
++ifneq ($(CONFIG_ATH_2X8),y)
+ drivers-y	:= drivers/ sound/ firmware/
++else
++drivers-y	:= drivers/
++endif
+ net-y		:= net/
+ libs-y		:= lib/
+ core-y		:= usr/
+Index: linux-2.6.32.48/kernel/irq/manage.c
+===================================================================
+--- linux-2.6.32.48.orig/kernel/irq/manage.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/kernel/irq/manage.c	2011-11-21 14:21:23.000114212 +0200
+@@ -806,9 +806,11 @@
+ 	if (new->thread)
+ 		wake_up_process(new->thread);
+ 
++#ifndef CONFIG_ATH_2X8
+ 	register_irq_proc(irq, desc);
+ 	new->dir = NULL;
+ 	register_handler_proc(irq, new);
++#endif	/* CONFIG_ATH_2X8 */
+ 
+ 	return 0;
+ 
+@@ -908,7 +910,9 @@
+ 
+ 	spin_unlock_irqrestore(&desc->lock, flags);
+ 
++#ifndef CONFIG_ATH_2X8
+ 	unregister_handler_proc(irq, action);
++#endif	/* CONFIG_ATH_2X8 */
+ 
+ 	/* Make sure it's not being used on another CPU: */
+ 	synchronize_irq(irq);
+Index: linux-2.6.32.48/fs/proc/meminfo.c
+===================================================================
+--- linux-2.6.32.48.orig/fs/proc/meminfo.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/fs/proc/meminfo.c	2011-11-21 14:21:23.000114212 +0200
+@@ -15,9 +15,11 @@
+ #include <asm/pgtable.h>
+ #include "internal.h"
+ 
++#ifndef CONFIG_ATH_2X8
+ void __attribute__((weak)) arch_report_meminfo(struct seq_file *m)
+ {
+ }
++#endif
+ 
+ static int meminfo_proc_show(struct seq_file *m, void *v)
+ {
+@@ -34,17 +36,21 @@
+  */
+ #define K(x) ((x) << (PAGE_SHIFT - 10))
+ 	si_meminfo(&i);
++#ifndef CONFIG_ATH_2X8
+ 	si_swapinfo(&i);
+ 	committed = percpu_counter_read_positive(&vm_committed_as);
+ 	allowed = ((totalram_pages - hugetlb_total_pages())
+ 		* sysctl_overcommit_ratio / 100) + total_swap_pages;
++#endif
+ 
+ 	cached = global_page_state(NR_FILE_PAGES) -
+ 			total_swapcache_pages - i.bufferram;
+ 	if (cached < 0)
+ 		cached = 0;
+ 
++#ifndef CONFIG_ATH_2X8
+ 	get_vmalloc_info(&vmi);
++#endif
+ 
+ 	for (lru = LRU_BASE; lru < NR_LRU_LISTS; lru++)
+ 		pages[lru] = global_page_state(NR_LRU_BASE + lru);
+@@ -57,6 +63,7 @@
+ 		"MemFree:        %8lu kB\n"
+ 		"Buffers:        %8lu kB\n"
+ 		"Cached:         %8lu kB\n"
++#ifndef CONFIG_ATH_2X8
+ 		"SwapCached:     %8lu kB\n"
+ 		"Active:         %8lu kB\n"
+ 		"Inactive:       %8lu kB\n"
+@@ -101,11 +108,14 @@
+ #ifdef CONFIG_MEMORY_FAILURE
+ 		"HardwareCorrupted: %5lu kB\n"
+ #endif
++#endif /* #ifndef CONFIG_ATH_2X8 */
+ 		,
+ 		K(i.totalram),
+ 		K(i.freeram),
+ 		K(i.bufferram),
+-		K(cached),
++		K(cached)
++#ifndef CONFIG_ATH_2X8
++		,
+ 		K(total_swapcache_pages),
+ 		K(pages[LRU_ACTIVE_ANON]   + pages[LRU_ACTIVE_FILE]),
+ 		K(pages[LRU_INACTIVE_ANON] + pages[LRU_INACTIVE_FILE]),
+@@ -151,11 +161,14 @@
+ #ifdef CONFIG_MEMORY_FAILURE
+ 		,atomic_long_read(&mce_bad_pages) << (PAGE_SHIFT - 10)
+ #endif
++#endif /* #ifndef CONFIG_ATH_2X8 */
+ 		);
+ 
++#ifndef CONFIG_ATH_2X8
+ 	hugetlb_report_meminfo(m);
+ 
+ 	arch_report_meminfo(m);
++#endif
+ 
+ 	return 0;
+ #undef K
+Index: linux-2.6.32.48/drivers/mtd/mtdcore.c
+===================================================================
+--- linux-2.6.32.48.orig/drivers/mtd/mtdcore.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/drivers/mtd/mtdcore.c	2011-11-21 14:21:23.000114212 +0200
+@@ -574,7 +574,7 @@
+ EXPORT_SYMBOL_GPL(unregister_mtd_user);
+ EXPORT_SYMBOL_GPL(default_mtd_writev);
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ 
+ /*====================================================================*/
+ /* Support for /proc/mtd */
+@@ -638,7 +638,7 @@
+ 		pr_err("Error registering mtd class: %d\n", ret);
+ 		return ret;
+ 	}
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ 	if ((proc_mtd = create_proc_entry( "mtd", 0, NULL )))
+ 		proc_mtd->read_proc = mtd_read_proc;
+ #endif /* CONFIG_PROC_FS */
+@@ -647,7 +647,7 @@
+ 
+ static void __exit cleanup_mtd(void)
+ {
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+         if (proc_mtd)
+ 		remove_proc_entry( "mtd", NULL);
+ #endif /* CONFIG_PROC_FS */
+Index: linux-2.6.32.48/net/core/Makefile
+===================================================================
+--- linux-2.6.32.48.orig/net/core/Makefile	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/net/core/Makefile	2011-11-21 14:21:23.000114212 +0200
+@@ -6,7 +6,9 @@
+ 	 gen_stats.o gen_estimator.o net_namespace.o secure_seq.o
+ 
+ obj-$(CONFIG_SYSCTL) += sysctl_net_core.o
++ifneq ($(CONFIG_ATH_2X8),y)
+ obj-$(CONFIG_HAS_DMA) += skb_dma_map.o
++endif
+ 
+ obj-y		     += dev.o ethtool.o dev_mcast.o dst.o netevent.o \
+ 			neighbour.o rtnetlink.o utils.o link_watch.o filter.o
+Index: linux-2.6.32.48/net/ipv4/Makefile
+===================================================================
+--- linux-2.6.32.48.orig/net/ipv4/Makefile	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/net/ipv4/Makefile	2011-11-21 14:21:23.000114212 +0200
+@@ -16,7 +16,9 @@
+ obj-$(CONFIG_SYSCTL) += sysctl_net_ipv4.o
+ obj-$(CONFIG_IP_FIB_HASH) += fib_hash.o
+ obj-$(CONFIG_IP_FIB_TRIE) += fib_trie.o
++ifneq ($(CONFIG_ATH_2X8),y)
+ obj-$(CONFIG_PROC_FS) += proc.o
++endif
+ obj-$(CONFIG_IP_MULTIPLE_TABLES) += fib_rules.o
+ obj-$(CONFIG_IP_MROUTE) += ipmr.o
+ obj-$(CONFIG_NET_IPIP) += ipip.o
+Index: linux-2.6.32.48/net/ipv6/Makefile
+===================================================================
+--- linux-2.6.32.48.orig/net/ipv6/Makefile	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/net/ipv6/Makefile	2011-11-21 14:21:23.000114212 +0200
+@@ -17,7 +17,9 @@
+ 	xfrm6_output.o
+ ipv6-$(CONFIG_NETFILTER) += netfilter.o
+ ipv6-$(CONFIG_IPV6_MULTIPLE_TABLES) += fib6_rules.o
++ifneq ($(CONFIG_ATH_2X8),y)
+ ipv6-$(CONFIG_PROC_FS) += proc.o
++endif
+ ipv6-$(CONFIG_SYN_COOKIES) += syncookies.o
+ 
+ ipv6-objs += $(ipv6-y)
+Index: linux-2.6.32.48/drivers/pci/pci-driver.c
+===================================================================
+--- linux-2.6.32.48.orig/drivers/pci/pci-driver.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/drivers/pci/pci-driver.c	2011-11-21 14:21:23.011047532 +0200
+@@ -1115,7 +1115,9 @@
+ 	.probe		= pci_device_probe,
+ 	.remove		= pci_device_remove,
+ 	.shutdown	= pci_device_shutdown,
++#ifndef CONFIG_ATH_2X8
+ 	.dev_attrs	= pci_dev_attrs,
++#endif
+ 	.bus_attrs	= pci_bus_attrs,
+ 	.pm		= PCI_PM_OPS_PTR,
+ };
+Index: linux-2.6.32.48/arch/mips/include/asm/pci.h
+===================================================================
+--- linux-2.6.32.48.orig/arch/mips/include/asm/pci.h	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/arch/mips/include/asm/pci.h	2011-11-21 14:21:23.011047532 +0200
+@@ -77,7 +77,11 @@
+ 	/* We don't do dynamic PCI IRQ allocation */
+ }
+ 
++#ifdef CONFIG_ATH_2X8
++#undef HAVE_PCI_MMAP
++#else
+ #define HAVE_PCI_MMAP
++#endif
+ 
+ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ 	enum pci_mmap_state mmap_state, int write_combine);
+Index: linux-2.6.32.48/include/linux/ptrace.h
+===================================================================
+--- linux-2.6.32.48.orig/include/linux/ptrace.h	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/include/linux/ptrace.h	2011-11-21 14:21:23.011047532 +0200
+@@ -108,13 +108,17 @@
+ static inline void ptrace_link(struct task_struct *child,
+ 			       struct task_struct *new_parent)
+ {
++#ifndef CONFIG_ATH_2X8
+ 	if (unlikely(child->ptrace))
+ 		__ptrace_link(child, new_parent);
++#endif /* CONFIG_ATH_2X8 */
+ }
+ static inline void ptrace_unlink(struct task_struct *child)
+ {
++#ifndef CONFIG_ATH_2X8
+ 	if (unlikely(child->ptrace))
+ 		__ptrace_unlink(child);
++#endif /* CONFIG_ATH_2X8 */
+ }
+ 
+ int generic_ptrace_peekdata(struct task_struct *tsk, long addr, long data);
+@@ -146,11 +150,15 @@
+  */
+ static inline int ptrace_event(int mask, int event, unsigned long message)
+ {
++#ifdef CONFIG_ATH_2X8
++	return 0;
++#else /* CONFIG_ATH_2X8 */
+ 	if (mask && likely(!(current->ptrace & mask)))
+ 		return 0;
+ 	current->ptrace_message = message;
+ 	ptrace_notify((event << 8) | SIGTRAP);
+ 	return 1;
++#endif /* CONFIG_ATH_2X8 */
+ }
+ 
+ /**
+Index: linux-2.6.32.48/net/ipv4/raw.c
+===================================================================
+--- linux-2.6.32.48.orig/net/ipv4/raw.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/net/ipv4/raw.c	2011-11-21 14:21:23.011047532 +0200
+@@ -864,7 +864,7 @@
+ #endif
+ };
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ static struct sock *raw_get_first(struct seq_file *seq)
+ {
+ 	struct sock *sk;
+@@ -1031,4 +1031,4 @@
+ {
+ 	unregister_pernet_subsys(&raw_net_ops);
+ }
+-#endif /* CONFIG_PROC_FS */
++#endif /* CONFIG_PROC_FS && !CONFIG_ATH_2X8 */
+Index: linux-2.6.32.48/drivers/pci/remove.c
+===================================================================
+--- linux-2.6.32.48.orig/drivers/pci/remove.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/drivers/pci/remove.c	2011-11-21 14:21:23.011047532 +0200
+@@ -9,7 +9,9 @@
+ 
+  	msi_remove_pci_irq_vectors(dev);
+ 
++#ifndef CONFIG_ATH_2X8
+ 	pci_cleanup_rom(dev);
++#endif /* CONFIG_ATH_2X8 */
+ 	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 		struct resource *res = dev->resource + i;
+ 		if (res->parent)
+@@ -20,8 +22,10 @@
+ static void pci_stop_dev(struct pci_dev *dev)
+ {
+ 	if (dev->is_added) {
++#ifndef CONFIG_ATH_2X8
+ 		pci_proc_detach_device(dev);
+ 		pci_remove_sysfs_dev_files(dev);
++#endif /* CONFIG_ATH_2X8 */
+ 		device_unregister(&dev->dev);
+ 		dev->is_added = 0;
+ 	}
+@@ -64,7 +68,9 @@
+ 
+ void pci_remove_bus(struct pci_bus *pci_bus)
+ {
++#ifndef CONFIG_ATH_2X8
+ 	pci_proc_detach_bus(pci_bus);
++#endif
+ 
+ 	down_write(&pci_bus_sem);
+ 	list_del(&pci_bus->node);
+Index: linux-2.6.32.48/kernel/resource.c
+===================================================================
+--- linux-2.6.32.48.orig/kernel/resource.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/kernel/resource.c	2011-11-21 14:21:23.011047532 +0200
+@@ -50,7 +50,7 @@
+ 	return p->sibling;
+ }
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ 
+ enum { MAX_IORES_LEVEL = 5 };
+ 
+Index: linux-2.6.32.48/fs/proc/root.c
+===================================================================
+--- linux-2.6.32.48.orig/fs/proc/root.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/fs/proc/root.c	2011-11-21 14:21:23.011047532 +0200
+@@ -118,6 +118,7 @@
+ 
+ 	proc_symlink("mounts", NULL, "self/mounts");
+ 
++#ifndef CONFIG_ATH_2X8
+ 	proc_net_init();
+ 
+ #ifdef CONFIG_SYSVIPC
+@@ -136,6 +137,7 @@
+ #endif
+ 	proc_mkdir("bus", NULL);
+ 	proc_sys_init();
++#endif	/* CONFIG_ATH_2X8 */
+ }
+ 
+ static int proc_root_getattr(struct vfsmount *mnt, struct dentry *dentry, struct kstat *stat
+Index: linux-2.6.32.48/net/ipv4/route.c
+===================================================================
+--- linux-2.6.32.48.orig/net/ipv4/route.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/net/ipv4/route.c	2011-11-21 14:21:23.011047532 +0200
+@@ -272,7 +272,7 @@
+ 	return atomic_read(&net->ipv4.rt_genid);
+ }
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ struct rt_cache_iter_state {
+ 	struct seq_net_private p;
+ 	int bucket;
+Index: linux-2.6.32.48/arch/mips/kernel/scall32-o32.S
+===================================================================
+--- linux-2.6.32.48.orig/arch/mips/kernel/scall32-o32.S	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/arch/mips/kernel/scall32-o32.S	2011-11-21 14:21:23.011047532 +0200
+@@ -263,7 +263,11 @@
+ 	sys	sys_setuid		1
+ 	sys	sys_getuid		0
+ 	sys	sys_stime		1	/* 4025 */
++#ifdef CONFIG_ATH_2X8
++	sys	sys_ni_syscall		0	/* was sys_fstat */
++#else /* CONFIG_ATH_2X8 */
+ 	sys	sys_ptrace		4
++#endif /* CONFIG_ATH_2X8 */
+ 	sys	sys_alarm		1
+ 	sys	sys_ni_syscall		0	/* was sys_fstat */
+ 	sys	sys_pause		0
+Index: linux-2.6.32.48/kernel/sched.c
+===================================================================
+--- linux-2.6.32.48.orig/kernel/sched.c	2011-11-21 14:14:06.000000000 +0200
++++ linux-2.6.32.48/kernel/sched.c	2011-11-21 14:21:23.021043286 +0200
+@@ -5235,6 +5235,7 @@
+ 	return ns;
+ }
+ 
++#if !defined(CONFIG_ATH_2X8)
+ /*
+  * Account user cpu time to a process.
+  * @p: the process that the cpu time gets accounted to
+@@ -5354,9 +5355,13 @@
+ 	else
+ 		cpustat->idle = cputime64_add(cpustat->idle, cputime64);
+ }
++#endif /* CONFIG_ATH_2X8 */
+ 
+-#ifndef CONFIG_VIRT_CPU_ACCOUNTING
+-
++#ifdef CONFIG_VIRT_CPU_ACCOUNTING
++void account_process_tick(struct task_struct *p, int user_tick)
++{
++}
++#else
+ /*
+  * Account a single tick of cpu time.
+  * @p: the process that the cpu time gets accounted to
+Index: linux-2.6.32.48/net/core/sock.c
+===================================================================
+--- linux-2.6.32.48.orig/net/core/sock.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/net/core/sock.c	2011-11-21 14:21:23.021043286 +0200
+@@ -2292,7 +2292,7 @@
+ }
+ EXPORT_SYMBOL(proto_unregister);
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ static void *proto_seq_start(struct seq_file *seq, loff_t *pos)
+ 	__acquires(proto_list_lock)
+ {
+Index: linux-2.6.32.48/arch/mips/kernel/syscall.c
+===================================================================
+--- linux-2.6.32.48.orig/arch/mips/kernel/syscall.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/arch/mips/kernel/syscall.c	2011-11-21 14:21:23.021043286 +0200
+@@ -539,3 +539,15 @@
+ 
+ 	return -__v0;
+ }
++
++#ifdef CONFIG_ATH_2X8
++asmlinkage void
++do_syscall_trace(struct pt_regs *regs, int entryexit)
++{
++#if 0
++	Have removed ptrace.o from Makefile.
++	Having a dummy place holder, to pacify
++	the compiler
++#endif
++}
++#endif
+Index: linux-2.6.32.48/net/ipv4/tcp_ipv4.c
+===================================================================
+--- linux-2.6.32.48.orig/net/ipv4/tcp_ipv4.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/net/ipv4/tcp_ipv4.c	2011-11-21 14:21:23.021043286 +0200
+@@ -1885,7 +1885,7 @@
+ 
+ EXPORT_SYMBOL(tcp_v4_destroy_sock);
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ /* Proc filesystem TCP sock list dumping. */
+ 
+ static inline struct inet_timewait_sock *tw_head(struct hlist_nulls_head *head)
+@@ -2379,7 +2379,7 @@
+ {
+ 	unregister_pernet_subsys(&tcp4_net_ops);
+ }
+-#endif /* CONFIG_PROC_FS */
++#endif /* CONFIG_PROC_FS  && !CONFIG_ATH_2X8 */
+ 
+ struct sk_buff **tcp4_gro_receive(struct sk_buff **head, struct sk_buff *skb)
+ {
+@@ -2489,7 +2489,7 @@
+ EXPORT_SYMBOL(tcp_v4_send_check);
+ EXPORT_SYMBOL(tcp_v4_syn_recv_sock);
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ EXPORT_SYMBOL(tcp_proc_register);
+ EXPORT_SYMBOL(tcp_proc_unregister);
+ #endif
+Index: linux-2.6.32.48/net/ipv6/tcp_ipv6.c
+===================================================================
+--- linux-2.6.32.48.orig/net/ipv6/tcp_ipv6.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/net/ipv6/tcp_ipv6.c	2011-11-21 14:21:23.021043286 +0200
+@@ -1886,7 +1886,7 @@
+ 	inet6_destroy_sock(sk);
+ }
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ /* Proc filesystem TCPv6 sock list dumping. */
+ static void get_openreq6(struct seq_file *seq,
+ 			 struct sock *sk, struct request_sock *req, int i, int uid)
+Index: linux-2.6.32.48/arch/mips/kernel/traps.c
+===================================================================
+--- linux-2.6.32.48.orig/arch/mips/kernel/traps.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/arch/mips/kernel/traps.c	2011-11-21 14:21:23.021043286 +0200
+@@ -643,6 +643,10 @@
+ 		return;
+ 	die_if_kernel("FP exception in kernel code", regs);
+ 
++#ifdef CONFIG_ATH_2X8
++		printk("ATH-2X8: %s(%d): FP Error\n", __func__, __LINE__);
++		info.si_code = FPE_FLTINV;
++#else
+ 	if (fcr31 & FPU_CSR_UNI_X) {
+ 		int sig;
+ 
+@@ -688,6 +692,7 @@
+ 		info.si_code = FPE_FLTRES;
+ 	else
+ 		info.si_code = __SI_FAULT;
++#endif
+ 	info.si_signo = SIGFPE;
+ 	info.si_errno = 0;
+ 	info.si_addr = (void __user *) regs->cp0_epc;
+@@ -736,8 +741,12 @@
+ 		 * Terminate if exception was recognized as a delay slot return
+ 		 * otherwise handle as normal.
+ 		 */
++#ifdef CONFIG_ATH_2X8
++		printk("ATH-2X8: %s(%d): FP Error\n", __func__, __LINE__);
++#else
+ 		if (do_dsemulret(regs))
+ 			return;
++#endif
+ 
+ 		die_if_kernel("Math emu break/trap", regs);
+ 		force_sig(SIGTRAP, current);
+@@ -828,6 +837,7 @@
+ 	}
+ }
+ 
++#if !defined(CONFIG_ATH_2X8)
+ /*
+  * MIPS MT processors may have fewer FPU contexts than CPU threads. If we've
+  * emulated more than some threshold number of instructions, force migration to
+@@ -856,6 +866,7 @@
+ 	}
+ #endif /* CONFIG_MIPS_MT_FPAFF */
+ }
++#endif
+ 
+ asmlinkage void do_cpu(struct pt_regs *regs)
+ {
+@@ -900,6 +911,10 @@
+ 		return;
+ 
+ 	case 1:
++#ifdef CONFIG_ATH_2X8
++		printk("ATH-2X8: %s(%d): FP Error\n", __func__, __LINE__);
++		force_sig(SIGFPE, current);
++#else
+ 		if (used_math())	/* Using the FPU again.  */
+ 			own_fpu(1);
+ 		else {			/* First time FPU user.  */
+@@ -916,6 +931,7 @@
+ 			else
+ 				mt_ase_fp_affinity();
+ 		}
++#endif
+ 
+ 		return;
+ 
+@@ -1376,8 +1392,10 @@
+ extern asmlinkage int _save_fp_context(struct sigcontext __user *sc);
+ extern asmlinkage int _restore_fp_context(struct sigcontext __user *sc);
+ 
++#if !defined(CONFIG_ATH_2x8)
+ extern asmlinkage int fpu_emulator_save_context(struct sigcontext __user *sc);
+ extern asmlinkage int fpu_emulator_restore_context(struct sigcontext __user *sc);
++#endif
+ 
+ #ifdef CONFIG_SMP
+ static int smp_save_fp_context(struct sigcontext __user *sc)
+@@ -1395,6 +1413,11 @@
+ }
+ #endif
+ 
++#ifdef CONFIG_ATH_2X8
++int fpu_emulator_save_context(struct sigcontext __user *sc) { return 0; }
++int fpu_emulator_restore_context(struct sigcontext __user *sc) { return 0; }
++#endif
++
+ static inline void signal_init(void)
+ {
+ #ifdef CONFIG_SMP
+Index: linux-2.6.32.48/drivers/char/tty_io.c
+===================================================================
+--- linux-2.6.32.48.orig/drivers/char/tty_io.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/drivers/char/tty_io.c	2011-11-21 14:21:23.021043286 +0200
+@@ -2877,7 +2877,9 @@
+ 				tty_unregister_device(driver, i);
+ 		}
+ 		p = driver->ttys;
++#ifndef CONFIG_ATH_2X8
+ 		proc_tty_unregister_driver(driver);
++#endif
+ 		driver->ttys = NULL;
+ 		driver->termios = NULL;
+ 		kfree(p);
+@@ -2964,7 +2966,9 @@
+ 		for (i = 0; i < driver->num; i++)
+ 		    tty_register_device(driver, i, NULL);
+ 	}
++#ifndef CONFIG_ATH_2X8
+ 	proc_tty_register_driver(driver);
++#endif
+ 	driver->flags |= TTY_DRIVER_INSTALLED;
+ 	return 0;
+ }
+Index: linux-2.6.32.48/net/ipv4/udp.c
+===================================================================
+--- linux-2.6.32.48.orig/net/ipv4/udp.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/net/ipv4/udp.c	2011-11-21 14:21:23.031047916 +0200
+@@ -1615,7 +1615,7 @@
+ EXPORT_SYMBOL(udp_prot);
+ 
+ /* ------------------------------------------------------------------------ */
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ 
+ static struct sock *udp_get_first(struct seq_file *seq, int start)
+ {
+@@ -1816,7 +1816,7 @@
+ {
+ 	unregister_pernet_subsys(&udp4_net_ops);
+ }
+-#endif /* CONFIG_PROC_FS */
++#endif /* CONFIG_PROC_FS && !CONFIG_ATH_2X8 */
+ 
+ void __init udp_table_init(struct udp_table *table)
+ {
+Index: linux-2.6.32.48/net/ipv4/udplite.c
+===================================================================
+--- linux-2.6.32.48.orig/net/ipv4/udplite.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/net/ipv4/udplite.c	2011-11-21 14:21:23.031047916 +0200
+@@ -69,7 +69,7 @@
+ 	.flags		=  INET_PROTOSW_PERMANENT,
+ };
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ static struct udp_seq_afinfo udplite4_seq_afinfo = {
+ 	.name		= "udplite",
+ 	.family		= AF_INET,
+Index: linux-2.6.32.48/mm/vmalloc.c
+===================================================================
+--- linux-2.6.32.48.orig/mm/vmalloc.c	2011-11-21 14:14:06.000000000 +0200
++++ linux-2.6.32.48/mm/vmalloc.c	2011-11-21 14:21:23.031047916 +0200
+@@ -2347,7 +2347,7 @@
+ 	kfree(vms);
+ }
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ static void *s_start(struct seq_file *m, loff_t *pos)
+ {
+ 	loff_t n = *pos;
+Index: linux-2.6.32.48/mm/vmstat.c
+===================================================================
+--- linux-2.6.32.48.orig/mm/vmstat.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/mm/vmstat.c	2011-11-21 14:21:23.031047916 +0200
+@@ -952,7 +952,7 @@
+ 	for_each_online_cpu(cpu)
+ 		start_cpu_timer(cpu);
+ #endif
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ 	proc_create("buddyinfo", S_IRUGO, NULL, &fragmentation_file_operations);
+ 	proc_create("pagetypeinfo", S_IRUGO, NULL, &pagetypeinfo_file_ops);
+ 	proc_create("vmstat", S_IRUGO, NULL, &proc_vmstat_file_operations);
+Index: linux-2.6.32.48/net/wireless/wext.c
+===================================================================
+--- linux-2.6.32.48.orig/net/wireless/wext.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/net/wireless/wext.c	2011-11-21 14:21:23.031047916 +0200
+@@ -614,7 +614,7 @@
+  * The content of the file is basically the content of "struct iw_statistics".
+  */
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ 
+ /* ---------------------------------------------------------------- */
+ /*
+Index: linux-2.6.32.48/arch/mips/include/asm/spram.h
+===================================================================
+--- linux-2.6.32.48.orig/arch/mips/include/asm/spram.h	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/arch/mips/include/asm/spram.h	2011-11-21 14:21:23.031047916 +0200
+@@ -1,7 +1,7 @@
+ #ifndef _MIPS_SPRAM_H
+ #define _MIPS_SPRAM_H
+ 
+-#ifdef CONFIG_CPU_MIPSR2
++#if defined(CONFIG_CPU_MIPSR2) && !defined(CONFIG_ATH_2X8)
+ extern __init void spram_config(void);
+ #else
+ static inline void spram_config(void) { };
+Index: linux-2.6.32.48/drivers/serial/serial_core.c
+===================================================================
+--- linux-2.6.32.48.orig/drivers/serial/serial_core.c	2011-11-21 14:14:02.000000000 +0200
++++ linux-2.6.32.48/drivers/serial/serial_core.c	2011-11-21 14:21:23.031047916 +0200
+@@ -1698,7 +1698,7 @@
+ 	return str;
+ }
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ 
+ static void uart_line_info(struct seq_file *m, struct uart_driver *drv, int i)
+ {
+@@ -2317,7 +2317,7 @@
+ 	.hangup		= uart_hangup,
+ 	.break_ctl	= uart_break_ctl,
+ 	.wait_until_sent= uart_wait_until_sent,
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) && !defined(CONFIG_ATH_2X8)
+ 	.proc_fops	= &uart_proc_fops,
+ #endif
+ 	.tiocmget	= uart_tiocmget,

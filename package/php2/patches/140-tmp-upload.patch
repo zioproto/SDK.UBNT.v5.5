@@ -1,0 +1,19 @@
+--- a/src/php.h
++++ b/src/php.h
+@@ -161,15 +161,15 @@ extern request_rec *php_rqst;
+  * directory will be used.  You can check which directory is the default
+  * temporary directory by searching through your /usr/include directory and
+  * looking for the P_tmpdir variable.
+  *
+  * NOTE: For Apache module, set this via phpUploadTmpDir configuration
+  *       directive.
+  */
+-/* #define UPLOAD_TMPDIR "/tmp" */
++#define UPLOAD_TMPDIR "/tmp/upload"
+ 
+ /*
+  * If no matter what you do, you cannot get it to accept your ?config
+  * password, define the following variable.  Delete any files in your
+  * configuration directory, recompile PHP and try using the password: php
+  */
+ /* #define BROKEN_CONFIG_PW 1 */

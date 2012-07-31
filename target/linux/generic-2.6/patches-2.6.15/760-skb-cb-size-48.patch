@@ -1,0 +1,13 @@
+Index: linux-2.6.15-5.2/include/linux/skbuff.h
+===================================================================
+--- linux-2.6.15-5.2.orig/include/linux/skbuff.h
++++ linux-2.6.15-5.2/include/linux/skbuff.h
+@@ -288,7 +288,7 @@ struct sk_buff {
+ 	 * want to keep them across layers you have to do a skb_clone()
+ 	 * first. This is owned by whoever has the skb queued ATM.
+ 	 */
+-	char			cb[40];
++	char			cb[48];
+ 
+ #ifdef CONFIG_PPP_PACKET_INFO
+ 	struct skb_ppp_info	ppp_info;

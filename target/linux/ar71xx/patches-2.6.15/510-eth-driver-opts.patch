@@ -1,0 +1,244 @@
+Index: linux-2.6.15-5.2/drivers/net/Kconfig
+===================================================================
+--- linux-2.6.15-5.2.orig/drivers/net/Kconfig
++++ linux-2.6.15-5.2/drivers/net/Kconfig
+@@ -2275,85 +2275,130 @@
+ endchoice
+ 
+ config AG7240
+-    tristate "Atheros AR7240 GigE"
+-    depends on MACH_AR7240
+-    help
+-        This enables the building of Atheros AR7240 gigE driver module.
++	tristate "Atheros AR7240 GigE"
++	depends on MACH_AR7240 || MACH_HORNET || \
++		MACH_AR724x || MACH_AR933x || MACH_AR934x
++	help
++	  This enables the building of Atheros AR7240 gigE driver module.
+ 
+-config  AG7240_GE0_IS_CONNECTED
+-    bool "port 0 is connected to a PHY"
++config AR7240_PLC_FILTER
++    bool "Support power line filter"
+     depends on AG7240
+ 
++config AR7240_S26_VLAN_IGMP
++	bool "Support vlan and igmp functions in AR7240-S26 switch"
++	depends on AG7240
++
++config ATHEROS_HEADER_EN
++	bool "Add two bytes atheros header before the ethernet packet."
++	depends on AG7240
++
++config AG7240_GE0_IS_CONNECTED
++	bool "port 0 is connected to a PHY"
++	depends on AG7240
++
+ choice
+-    prompt "port 0 interface"
+-    depends on AG7240
++	prompt "port 0 interface"
++	depends on AG7240_GE0_IS_CONNECTED
+ 
+ config AG7240_GE0_MII
+-    bool "MII mode"
++	bool "MII mode"
+ 
+ config AG7240_GE0_GMII
+-    bool "GMII mode"
++	bool "GMII mode"
+ 
+ config AG7240_GE0_RGMII
+-    bool "RGMII mode"
++	bool "RGMII mode"
+ 
+ endchoice
+ 
+-choice  
+-    prompt "PHY or switch used"
+-    depends on AG7240_GE0_IS_CONNECTED
++choice
++	prompt "Phy or Switch used"
++	depends on AG7240_GE0_IS_CONNECTED
+ 
+-config AR7242_RGMII_PHY
+-    bool "AR7242 RGMII Phy"
++config ATHRF1_PHY
++	bool "Atheros F1 GigE Phy"
+ 
+-config AR7242_S16_PHY
+-    bool "AR7242 S16 Switch"
++config AR7240_S26_PHY
++	bool "Atheros 7240 S26 internal Phy"
+ 
+-endchoice
++config ATHRS27_PHY
++	bool "Atheros S27 Phy"
+ 
+-config  AG7240_QOS
+-    bool "Enable MAC 0 QOS "
+-    depends on AG7240
++endchoice
+ 
+-config  AG7240_GE1_IS_CONNECTED
+-    bool "port 1 is connected to a PHY"
+-    depends on AG7240
++config AG7240_GE1_IS_CONNECTED
++	bool "port 1 is connected to a PHY"
++	depends on AG7240
+ 
+ choice
+-    prompt "port 1 interface (depends on port0)"
+-    depends on AG7240_GE1_IS_CONNECTED
+-    
++	prompt "port 1 interface"
++	depends on AG7240_GE1_IS_CONNECTED
++
+ config AG7240_GE1_MII
+-    bool "MII mode"
++	bool "MII mode"
+ 
+-endchoice
++config AG7240_GE1_GMII
++	bool "GMII mode"
+ 
+-choice  
+-    prompt "PHY or switch used"
+-    depends on AG7240
++config AG7240_GE1_RGMII
++	bool "RGMII mode"
++endchoice
+ 
+-config AR7240_S26_PHY
+-    bool "Atheros S26 Phy"
++config GE1_EXTERNAL_PHY
++	bool "GE1 is connected to different PHY"
++	depends on AG7240_GE1_IS_CONNECTED
+ 
+-config S26_SWITCH_ONLY_MODE
+-    bool "Enable switch only mode"
+-    depends on AR7240_S26_PHY
++choice
++	prompt "Phy or Switch used"
++	depends on GE1_EXTERNAL_PHY
++	default ATHRS80xx_PHY
++
++config ATHRS16_PHY
++	bool "Atheros S16 Phy"
++	depends on GE1_EXTERNAL_PHY
++
++config ATHRS80xx_PHY
++	bool "Atheros AR80xx GigE Phy"
++	depends on GE1_EXTERNAL_PHY
+ 
+ endchoice
+ 
+-config  AG7100_LEN_PER_TX_DS 
+-        int "Len per tx descriptor" 
+-        default "1536" 
+-	depends on (REALTEK_PHY ||  ADM6996FC_PHY || ICPLUS_PHY) && AG7100
+-
+-config  AG7100_LEN_PER_TX_DS 
+-        int "Len per tx descriptor" 
+-	default "512" 	
+-	depends on !(REALTEK_PHY ||  ADM6996FC_PHY || ICPLUS_PHY) && AG7100
+-
+-config  AG7100_MAC_LOCATION 
+-    hex "Memory location of MAC addresses (in flash)" 
+-	default "0xbfff1000" 	
++config AR8021_PHY
++	bool "Atheros AR8021 PHY support"
++	depends on ATHRS80xx_PHY
++	default y
++
++config AR8035_PHY
++	bool "Atheros AR8035 PHY support"
++	depends on ATHRS80xx_PHY
++	default y
++
++config AG7240_QOS
++	bool "Enable MAC 0 QOS "
++	depends on AG7240
++
++config ATHRS_HW_NAT
++	bool "Enable MAC 0 Egress and Ingress NAT engine "
++	depends on AG7240
++
++config ATHRS_HW_ACL
++	bool "Enable MAC 0 Egress and Ingress ACL engine "
++	depends on AG7240
++
++config AG7100_LEN_PER_TX_DS
++	int "Len per tx descriptor"
++	default "1536"
++	depends on (REALTEK_PHY || ADM6996FC_PHY || ICPLUS_PHY) && AG7100
++
++config AG7100_LEN_PER_TX_DS
++	int "Len per tx descriptor"
++	default "512"
++	depends on !(REALTEK_PHY || ADM6996FC_PHY || ICPLUS_PHY) && AG7100
++
++config AG7100_MAC_LOCATION
++	hex "Memory location of MAC addresses (in flash)"
++	default "0xbfff1000"
+ 	help
+ 	  This is the physical address in memory that contains
+ 	  the MAC addresses for the board Ethernet interfaces.  They
+@@ -2361,32 +2406,42 @@
+ 	  of interfaces supported on the board.
+ 	depends on AG7100
+ 
+-config  AG7240_LEN_PER_TX_DS 
+-        int "Len per tx descriptor" 
+-        default "1536" 
+-	depends on (REALTEK_PHY ||  ADM6996FC_PHY || ICPLUS_PHY) && AG7240
+-
+-config  AG7240_LEN_PER_TX_DS 
+-        int "Len per tx descriptor" 
+-	default "512" 	
+-	depends on !(REALTEK_PHY ||  ADM6996FC_PHY || ICPLUS_PHY) && AG7240
++config AG7240_LEN_PER_TX_DS
++	int "Len per tx descriptor"
++	default "1536"
++	depends on (REALTEK_PHY || ADM6996FC_PHY || ICPLUS_PHY) && AG7240
++
++config AG7240_LEN_PER_TX_DS
++	int "Len per tx descriptor"
++	default "512"
++	depends on !(REALTEK_PHY || ADM6996FC_PHY || ICPLUS_PHY) && AG7240
+ 
+ config  AG7240_NUMBER_TX_PKTS
+-        int "Number tx pkts"   
++        int "Number tx pkts for intf 0"
+         default "100"
+         depends on AG7240
+ 
+ config  AG7240_NUMBER_RX_PKTS
+-        int "Number rx pkts"       
++        int "Number rx pkts for intf 0"
+         default "252"
+         depends on AG7240
+ 
+-config  AG7240_MAC_LOCATION 
+-    hex "Memory location of MAC addresses (in flash)" 
+-	default "0xbfff0000" 	
++config  AG7240_NUMBER_TX_PKTS_1
++        int "Number tx pkts for intf 1"
++        default "40"
++        depends on AG7240_GE1_IS_CONNECTED
++
++config  AG7240_NUMBER_RX_PKTS_1
++        int "Number rx pkts for intf 1"
++        default "252"
++        depends on AG7240_GE1_IS_CONNECTED
++
++config  AG7240_MAC_LOCATION
++	hex "Memory location of MAC addresses (in flash)"
++	default "0xbfff0000"
+ 	help
+ 	  This is the physical address in memory that contains
+-	  the MAC addresses for the board Ethernet interfaces.  They
++	  the MAC addresses for the board Ethernet interfaces. They
+ 	  are stored sequentially in 6 byte groups, for the total number
+ 	  of interfaces supported on the board.
+ 	depends on AG7240

@@ -1,0 +1,45 @@
+#!/bin/sh
+
+. /usr/etc/rc.d/rc.funcs
+
+# reboot in 3 secs after kernel panic
+echo "3" > /proc/sys/kernel/panic
+
+if [ -f /etc/persistent/rc.presysinit ]; then
+       	. /etc/persistent/rc.presysinit
+fi
+
+# create module list, skip ip/eb-tables
+if [ -d /etc/modules.d/ ]; then
+
+modules=`cd /etc/modules.d && ls`
+modules=`echo $modules | tr " " "\n" | grep -v -E ".?.?-ipt-.*"`
+modules=`echo $modules | tr " " "\n" | grep -v -E ".?.?-nf-conntrack.*"`
+modules=`echo $modules | tr " " "\n" | grep -v -E ".?.?-ebtables.*"`
+modules=`echo $modules | tr " " "\n" | grep -v -E ".?.?-ip6tables.*"`
+
+# load modules
+. /usr/etc/rc.d/rc.modules load ${modules}
+
+fi
+
+/sbin/hotplug2 --persistent --set-rules-file /usr/etc/hotplug2.rules &
+
+# set hostname
+echo UBNT > /proc/sys/kernel/hostname
+
+# set sane defaults for routing tables and conntrack
+echo "32768" > /proc/sys/net/ipv4/route/max_size
+echo "2048" > /proc/sys/net/ipv4/route/gc_thresh
+# end.
+
+# respond to broadcast ping - this is for discovering neighbours IP addresses
+echo "0" > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts
+
+watchdog_start
+
+if [ -f /etc/persistent/rc.postsysinit ]; then
+       	. /etc/persistent/rc.postsysinit
+fi
+
+dmesg > /tmp/boot.txt

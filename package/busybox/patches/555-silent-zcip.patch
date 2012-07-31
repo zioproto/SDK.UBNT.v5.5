@@ -1,0 +1,34 @@
+--- a/networking/zcip.c
++++ b/networking/zcip.c
+@@ -143,15 +143,14 @@ static int run(char *argv[3], struct in_
+ 	VDBG("%s run %s %s\n", intf, argv[0], argv[1]);
+ 
+ 	if (ip) {
+ 		addr = inet_ntoa(*ip);
+ 		setenv("ip", addr, 1);
+ 		fmt -= 3;
+ 	}
+-	bb_info_msg(fmt, argv[1], intf, addr);
+ 
+ 	status = wait4pid(spawn(argv));
+ 	if (status < 0) {
+ 		bb_perror_msg("%s %s %s" + 3, argv[1], intf);
+ 		return -errno;
+ 	}
+ 	if (status != 0)
+@@ -279,15 +278,14 @@ int zcip_main(int argc, char **argv)
+ 	//  - link already has local address... just defend/update
+ 
+ 	// daemonize now; don't delay system startup
+ 	if (!FOREGROUND) {
+ #if BB_MMU
+ 		bb_daemonize(0 /*was: DAEMON_CHDIR_ROOT*/);
+ #endif
+-		bb_info_msg("start, interface %s", intf);
+ 	}
+ 
+ 	// run the dynamic address negotiation protocol,
+ 	// restarting after address conflicts:
+ 	//  - start with some address we want to try
+ 	//  - short random delay
+ 	//  - arp probes to see if another host uses it

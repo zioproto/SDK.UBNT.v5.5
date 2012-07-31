@@ -1,0 +1,18 @@
+--- linux-2.6.31/net/ipv4/netfilter/nf_conntrack_l3proto_ipv4_compat.c	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/net/ipv4/netfilter/nf_conntrack_l3proto_ipv4_compat.c	2011-03-17 17:03:19.000000000 +0200
+@@ -152,9 +152,14 @@
+ 	if (seq_printf(s, "secmark=%u ", ct->secmark))
+ 		goto release;
+ #endif
++	if (seq_printf(s, "use=%u", atomic_read(&ct->ct_general.use)))
++		goto release;
++
+ 
+-	if (seq_printf(s, "use=%u\n", atomic_read(&ct->ct_general.use)))
++        if (seq_printf(s, "\n"))
+ 		goto release;
++
++
+ 	ret = 0;
+ release:
+ 	nf_ct_put(ct);

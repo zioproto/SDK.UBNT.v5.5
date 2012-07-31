@@ -1,0 +1,16 @@
+Index: linux-2.6.32.29/drivers/mtd/devices/ar7240_flash.h
+===================================================================
+--- linux-2.6.32.29.orig/drivers/mtd/devices/ar7240_flash.h	2011-04-05 16:11:05.000000000 +0300
++++ linux-2.6.32.29/drivers/mtd/devices/ar7240_flash.h	2011-04-08 10:58:37.383669573 +0300
+@@ -23,7 +23,11 @@
+ 
+ #define AR7240_FLASH_MAX_BANKS  1
+ 
++#if 0 /* UBNT: disabled */
+ #define display(_x)     ar7240_reg_wr_nf(0x18040008, (_x))
++#else
++#define display(_x)
++#endif
+ 
+ /*
+  * primitives

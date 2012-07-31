@@ -1,0 +1,64 @@
+--- a/modules/interfaces/main.c
++++ b/modules/interfaces/main.c
+@@ -35,6 +35,13 @@
+ #include <sys/ioctl.h>
+ #include <net/if.h>
+ #include <net/if_arp.h>
++#include <linux/sockios.h>
++#include <linux/types.h>
++typedef __u64 u64;	/* hack, so we may include kernel's ethtool.h */
++typedef __u32 u32;
++typedef __u16 u16;
++typedef __u8 u8;
++#include <linux/ethtool.h>
+ 
+ #include <debug/memory.h>
+ 
+@@ -304,12 +311,34 @@ static int update_iftype (struct odb **o
+    return (update_iftable (odb,IFTYPE,index,BER_INTEGER,&ifType));
+ }
+ 
+-static int update_ifspeed (struct odb **odb,int32_t index)
++static int update_ifspeed (struct odb **odb,const char *dev,int32_t index)
+ {
+-   /* Linux doesn't report the speed of the interface :P */
+-   uint32_t ifSpeed = 0xffffffff;
++	int fd;
++	struct ifreq ifr;
++	struct ethtool_cmd edata;
++	uint32_t ifSpeed = 0;
++
++	fd = socket(AF_INET, SOCK_DGRAM, 0);
++	if(fd < 0) {
++		abz_set_error("failed to open socket");
++		return (-1);
++	}
++
++	memset(&edata, 0, sizeof(edata));
++	edata.cmd = ETHTOOL_GSET;
++
++	memset(&ifr, 0, sizeof(ifr));
++	strncpy(ifr.ifr_name, dev, sizeof(ifr.ifr_name) - 1);
++	ifr.ifr_data = (char *) &edata;
++
++	if (ioctl(fd, SIOCETHTOOL, &ifr) == -1) {
++		close(fd);
++		return (update_iftable (odb,IFSPEED,index,BER_Gauge32,&ifSpeed));
++	}
++	close(fd);
+ 
+-   return (update_iftable (odb,IFSPEED,index,BER_Gauge32,&ifSpeed));
++	ifSpeed = edata.speed * 1000 * 1000;
++	return (update_iftable (odb,IFSPEED,index,BER_Gauge32,&ifSpeed));
+ }
+ 
+ static int update_iflastchange (struct odb **odb,int32_t index)
+@@ -418,7 +447,7 @@ static int iface_update (struct odb **od
+ 			update_ifmtu (odb,stats[i].dev,ifIndex) ||
+ 			update_ifstatus (odb,stats[i].dev,ifIndex) ||
+ 			update_iftype (odb,stats[i].dev,ifIndex) ||
+-			update_ifspeed (odb,ifIndex) ||
++			update_ifspeed (odb,stats[i].dev,ifIndex) ||
+ 			update_iflastchange (odb,ifIndex) ||
+ 			update_ifstats (odb,stats + i,ifIndex) ||
+ 			update_ifoutqlen (odb,stats[i].dev,ifIndex) ||

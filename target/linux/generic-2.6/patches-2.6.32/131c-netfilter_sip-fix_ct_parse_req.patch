@@ -1,0 +1,35 @@
+commit 854e013100d88995a6e25896bd426c303c888682
+Author: Patrick McHardy <kaber@trash.net>
+Date:   Wed Jan 20 18:23:05 2010 +0100
+
+    netfilter: nf_conntrack_sip: fix ct_sip_parse_request() REGISTER request parsing
+    
+    When requests are parsed, the "sip:" part of the SIP URI should be skipped.
+    
+    Usually this doesn't matter because address parsing skips forward until after
+    the username part, but in case REGISTER requests it doesn't contain a username
+    and the address can not be parsed.
+    
+    Signed-off-by: Patrick McHardy <kaber@trash.net>
+
+diff --git a/net/netfilter/nf_conntrack_sip.c b/net/netfilter/nf_conntrack_sip.c
+index 5b1c24e..ac71fa8 100644
+--- a/net/netfilter/nf_conntrack_sip.c
++++ b/net/netfilter/nf_conntrack_sip.c
+@@ -236,12 +236,13 @@ int ct_sip_parse_request(const struct nf_conn *ct,
+ 		return 0;
+ 
+ 	/* Find SIP URI */
+-	limit -= strlen("sip:");
+-	for (; dptr < limit; dptr++) {
++	for (; dptr < limit - strlen("sip:"); dptr++) {
+ 		if (*dptr == '\r' || *dptr == '\n')
+ 			return -1;
+-		if (strnicmp(dptr, "sip:", strlen("sip:")) == 0)
++		if (strnicmp(dptr, "sip:", strlen("sip:")) == 0) {
++			dptr += strlen("sip:");
+ 			break;
++		}
+ 	}
+ 	if (!skp_epaddr_len(ct, dptr, limit, &shift))
+ 		return 0;

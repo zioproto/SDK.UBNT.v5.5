@@ -1,0 +1,28 @@
+Index: linux-2.6.32.29/drivers/mtd/devices/ar7240_flash.c
+===================================================================
+--- linux-2.6.32.29.orig/drivers/mtd/devices/ar7240_flash.c	2011-04-05 16:11:05.000000000 +0300
++++ linux-2.6.32.29/drivers/mtd/devices/ar7240_flash.c	2011-04-08 11:02:37.854293839 +0300
+@@ -18,8 +18,10 @@
+ #include "ar7240.h"
+ #include "ar7240_flash.h"
+ 
++#if 0 /* UBNT: disabled */
+ /* this is passed in as a boot parameter by bootloader */
+ extern int __ath_flash_size;
++#endif
+ 
+ /*
+  * statics
+@@ -246,10 +248,12 @@
+ 		index = ar7240_flash_probe();
+ 		geom = &flash_geom_tbl[index];
+ 
++#if 0 /* UBNT: disabled */
+ 		/* set flash size to value from bootloader if it passed valid value */
+ 		/* otherwise use the default 4MB.                                   */
+ 		if (__ath_flash_size >= 4 && __ath_flash_size <= 16)
+ 			geom->size = __ath_flash_size * 1024 * 1024;
++#endif
+ 
+ 		mtd = kmalloc(sizeof(struct mtd_info), GFP_KERNEL);
+ 		if (!mtd) {

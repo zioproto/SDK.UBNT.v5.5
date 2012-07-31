@@ -1,0 +1,45 @@
+Index: linux-2.6.32.29/drivers/mtd/devices/Kconfig
+===================================================================
+--- linux-2.6.32.29.orig/drivers/mtd/devices/Kconfig	2011-04-06 15:14:42.653668728 +0300
++++ linux-2.6.32.29/drivers/mtd/devices/Kconfig	2011-04-06 15:14:46.013718388 +0300
+@@ -307,5 +307,22 @@
+ 	  LinuxBIOS or if you need to recover a DiskOnChip Millennium on which
+ 	  you have managed to wipe the first block.
+ 
++config MTD_AR7240_SPI_FLASH
++	bool "Support for ar7240 spi flash"
++	depends on MTD
++
++config MTD_ATH_FLASH
++	bool "Support for Atheros spi flash"
++	depends on MTD
++
++config MTD_AR7100_SPI_FLASH
++    bool "Support for ar7100 spi flash"
++    depends on MTD
++
++config MTD_AR9100_PARALLEL_FLASH
++    bool "Support for ar9100 parallel flash"
++    depends on MTD
++
++
+ endmenu
+ 
+Index: linux-2.6.32.29/drivers/mtd/devices/Makefile
+===================================================================
+--- linux-2.6.32.29.orig/drivers/mtd/devices/Makefile	2011-04-06 15:14:42.653668728 +0300
++++ linux-2.6.32.29/drivers/mtd/devices/Makefile	2011-04-06 15:28:49.482106888 +0300
+@@ -16,4 +16,13 @@
+ obj-$(CONFIG_MTD_BLOCK2MTD)	+= block2mtd.o
+ obj-$(CONFIG_MTD_DATAFLASH)	+= mtd_dataflash.o
+ obj-$(CONFIG_MTD_M25P80)	+= m25p80.o
++obj-$(CONFIG_MTD_AR7240_SPI_FLASH)	+= ar7240_flash.o
++obj-$(CONFIG_MTD_AR7100_SPI_FLASH)	+= ar7100_flash.o
++ifeq ($(ATH_SST_FLASH), y)
++CFLAGS_ar7240_flash.o += -DATH_SST_FLASH=1
++endif
++obj-$(CONFIG_MTD_ATH_FLASH)	+= ath_flash.o
++ifeq ($(ATH_SST_FLASH), y)
++CFLAGS_ath_flash.o += -DATH_SST_FLASH=1
++endif
+ obj-$(CONFIG_MTD_SST25L)	+= sst25l.o

@@ -1,0 +1,29 @@
+.trc {
+width: 539px;
+height: 150px;
+overflow: scroll; 
+overflow-x: hidden;
+border-bottom: 1px solid #B8B8B8;
+border-left: 1px solid #B8B8B8;
+}
+table.trh {
+width: 540px; 
+text-align: left;
+border-collapse: collapse;
+border: 1px solid #B8B8B8;
+}
+table.trh td {
+border-collapse: collapse;
+border: 1px solid #B8B8B8;
+}
+table#tr_results {
+width: 539px;
+text-align: left;
+table-layout: fixed;
+}
+table#tr_results, table#tr_results td {
+border-collapse: collapse;
+border: 1px solid #B8B8B8;
+border-left: 0px;
+border-bottom: 0px;
+}

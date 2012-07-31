@@ -1,0 +1,38 @@
+--- a/arch/mips/ar7240/prom.c
++++ b/arch/mips/ar7240/prom.c
+@@ -72,6 +72,13 @@ static void __init ar71xx_detect_mem_siz
+ 	add_memory_region(0, size, BOOT_MEM_RAM);
+ }
+ 
++extern void Uart16550Put(unsigned char byte);
++
++void __init prom_putchar(char c)
++{
++	Uart16550Put((unsigned char)c);
++}
++
+ void __init prom_init(void)
+ {
+ 	int i;
+--- a/arch/mips/ar7240/setup.c
++++ b/arch/mips/ar7240/setup.c
+@@ -43,6 +43,10 @@ u8 Uart16550GetPoll(void);
+  */
+ EXPORT_SYMBOL(ar7240_ahb_freq);
+ 
++void disable_early_printk(void)
++{
++}
++
+ void
+ ar7240_restart(char *command)
+ {
+@@ -231,7 +235,7 @@ void __init plat_setup(void)
+     Uart16550Init();
+     serial_print("Booting AR7240(Python)...\n");
+ 
+-#if 0
++#ifdef CONFIG_EARLY_PRINTK 
+     serial_setup();
+ #endif
+ }

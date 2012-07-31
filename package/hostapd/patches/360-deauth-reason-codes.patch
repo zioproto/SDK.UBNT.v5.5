@@ -1,0 +1,142 @@
+--- a/hostapd/wpa.c
++++ b/hostapd/wpa.c
+@@ -198,16 +198,15 @@ void wpa_auth_vlogger(struct wpa_authent
+ 
+ 
+ static void wpa_sta_disconnect(struct wpa_authenticator *wpa_auth,
+ 			       const u8 *addr)
+ {
+ 	if (wpa_auth->cb.disconnect == NULL)
+ 		return;
+-	wpa_auth->cb.disconnect(wpa_auth->cb.ctx, addr,
+-				WLAN_REASON_PREV_AUTH_NOT_VALID);
++	wpa_auth->cb.disconnect(wpa_auth->cb.ctx, addr,	wpa_auth->reason);
+ }
+ 
+ 
+ static int wpa_use_aes_cmac(struct wpa_state_machine *sm)
+ {
+ 	int ret = 0;
+ #ifdef CONFIG_IEEE80211R
+@@ -817,14 +816,15 @@ void wpa_receive(struct wpa_authenticato
+ 			if (sm->wpa_ie) {
+ 				wpa_hexdump(MSG_DEBUG, "WPA IE in AssocReq",
+ 					    sm->wpa_ie, sm->wpa_ie_len);
+ 			}
+ 			wpa_hexdump(MSG_DEBUG, "WPA IE in msg 2/4",
+ 				    (u8 *) (key + 1), key_data_length);
+ 			/* MLME-DEAUTHENTICATE.request */
++			wpa_auth->reason = WLAN_REASON_IE_IN_4WAY_DIFFERS;
+ 			wpa_sta_disconnect(wpa_auth, sm->addr);
+ 			return;
+ 		}
+ 	}
+ 
+ 	wpa_auth_vlogger(wpa_auth, sm->addr, LOGGER_DEBUG,
+ 			 "received EAPOL-Key frame (%s)", msgtxt);
+@@ -1671,14 +1671,15 @@ SM_STATE(WPA_PTK, PTKINITDONE)
+ 			alg = "CCMP";
+ 			klen = 16;
+ 		}
+ 		if (wpa_auth_set_key(sm->wpa_auth, 0, alg, sm->addr, 0,
+ 				     sm->PTK.tk1, klen)) {
+             wpa_auth_logger(sm->wpa_auth, sm->addr, LOGGER_INFO,
+             	"PTK: Failed to set keys.");
++            sm->wpa_auth->reason = WLAN_REASON_UNSPECIFIED;
+ 			wpa_sta_disconnect(sm->wpa_auth, sm->addr);
+ 			return;
+ 		}
+ 		/* FIX: MLME-SetProtection.Request(TA, Tx_Rx) */
+ 		sm->pairwise_set = TRUE;
+ 
+ 		if (sm->wpa_auth->conf.wpa_ptk_rekey) {
+@@ -1762,36 +1763,39 @@ SM_STEP(WPA_PTK)
+ 		if (wpa_auth_get_eapol(sm->wpa_auth, sm->addr,
+ 				       WPA_EAPOL_keyAvailable) > 0)
+ 			SM_ENTER(WPA_PTK, PTKSTART);
+ 		else {
+ 			wpa_auth->dot11RSNA4WayHandshakeFailures++;
+ 			wpa_auth_logger(sm->wpa_auth, sm->addr, LOGGER_INFO,
+ 					"PTK: No key available.");
++			wpa_auth->reason = WLAN_REASON_IEEE_802_1X_AUTH_FAILED;
+ 			SM_ENTER(WPA_PTK, DISCONNECT);
+ 		}
+ 		break;
+ 	case WPA_PTK_INITPSK:
+ 		if (wpa_auth_get_psk(sm->wpa_auth, sm->addr, NULL))
+ 			SM_ENTER(WPA_PTK, PTKSTART);
+ 		else {
+ 			wpa_auth_logger(sm->wpa_auth, sm->addr, LOGGER_INFO,
+ 					"no PSK configured for the STA");
+ 			wpa_auth->dot11RSNA4WayHandshakeFailures++;
++			wpa_auth->reason = WLAN_REASON_UNSPECIFIED;
+ 			SM_ENTER(WPA_PTK, DISCONNECT);
+ 		}
+ 		break;
+ 	case WPA_PTK_PTKSTART:
+ 		if (sm->EAPOLKeyReceived && !sm->EAPOLKeyRequest &&
+ 		    sm->EAPOLKeyPairwise)
+ 			SM_ENTER(WPA_PTK, PTKCALCNEGOTIATING);
+ 		else if (sm->TimeoutCtr >
+ 			 (int) dot11RSNAConfigPairwiseUpdateCount) {
+ 			wpa_auth->dot11RSNA4WayHandshakeFailures++;
+ 			wpa_auth_logger(sm->wpa_auth, sm->addr, LOGGER_INFO,
+ 					 "PTK: Failed to receive EAPOL-Key msg 2/4 response, all tries exhausted.");
++			wpa_auth->reason = WLAN_REASON_4WAY_HANDSHAKE_TIMEOUT;
+ 			SM_ENTER(WPA_PTK, DISCONNECT);
+ 		} else if (sm->TimeoutEvt)
+ 			SM_ENTER(WPA_PTK, PTKSTART);
+ 		break;
+ 	case WPA_PTK_PTKCALCNEGOTIATING:
+ 		if (sm->MICVerified)
+ 			SM_ENTER(WPA_PTK, PTKCALCNEGOTIATING2);
+@@ -1809,14 +1813,15 @@ SM_STEP(WPA_PTK)
+ 		    sm->EAPOLKeyPairwise && sm->MICVerified)
+ 			SM_ENTER(WPA_PTK, PTKINITDONE);
+ 		else if (sm->TimeoutCtr >
+ 			 (int) dot11RSNAConfigPairwiseUpdateCount) {
+ 			wpa_auth->dot11RSNA4WayHandshakeFailures++;
+ 			wpa_auth_logger(sm->wpa_auth, sm->addr, LOGGER_INFO,
+ 					 "PTK: Failed to receive EAPOL-Key msg 4/4 response, all tries exhausted.");
++			wpa_auth->reason = WLAN_REASON_4WAY_HANDSHAKE_TIMEOUT;
+ 			SM_ENTER(WPA_PTK, DISCONNECT);
+ 		} else if (sm->TimeoutEvt)
+ 			SM_ENTER(WPA_PTK, PTKINITNEGOTIATING);
+ 		break;
+ 	case WPA_PTK_PTKINITDONE:
+ 		break;
+ 	}
+@@ -1909,14 +1914,15 @@ SM_STATE(WPA_PTK_GROUP, KEYERROR)
+ {
+ 	SM_ENTRY_MA(WPA_PTK_GROUP, KEYERROR, wpa_ptk_group);
+ 	if (sm->GUpdateStationKeys)
+ 		sm->group->GKeyDoneStations--;
+ 	sm->GUpdateStationKeys = FALSE;
+ 	wpa_auth_logger(sm->wpa_auth, sm->addr, LOGGER_INFO,
+ 			"GTK: Failed to receive EAPOL-Key msg 2/2 response, all tries exhausted.");
++	sm->wpa_auth->reason = WLAN_REASON_GROUP_KEY_UPDATE_TIMEOUT;
+ 	sm->Disconnect = TRUE;
+ }
+ 
+ 
+ SM_STEP(WPA_PTK_GROUP)
+ {
+ 	if (sm->Init || sm->PtkGroupInit) {
+--- a/hostapd/wpa_auth_i.h
++++ b/hostapd/wpa_auth_i.h
+@@ -174,14 +174,15 @@ struct wpa_authenticator {
+ 	u8 *wpa_ie;
+ 	size_t wpa_ie_len;
+ 
+ 	u8 addr[ETH_ALEN];
+ 
+ 	struct rsn_pmksa_cache *pmksa;
+ 	struct wpa_ft_pmk_cache *ft_pmk_cache;
++	u16 reason;
+ };
+ 
+ 
+ int wpa_write_rsn_ie(struct wpa_auth_config *conf, u8 *buf, size_t len,
+ 		     const u8 *pmkid);
+ void wpa_auth_logger(struct wpa_authenticator *wpa_auth, const u8 *addr,
+ 		     logger_level level, const char *txt);

@@ -1,0 +1,73 @@
+#!/bin/sh
+
+CFG_FILE="/tmp/running.cfg"
+if [ ! -f $CFG_FILE ]; then
+	CFG_FILE="/tmp/system.cfg"
+fi
+
+get_ppp_index()
+{
+	idx=$(grep "ppp\..*\.devname=$DEVICE" $CFG_FILE | cut -f 2 -d ".")
+	echo $idx
+}
+
+remove_fallback_ip()
+{
+	idx=$(get_ppp_index)
+	fallback_ip=$(grep "ppp\.${idx}\.fallback=" $CFG_FILE | awk -F= '{print $2}')
+	fallback_netmask=$(grep "ppp\.${idx}\.fallback_netmask=" $CFG_FILE | awk -F= '{print $2}')
+	[ ! -z $fallback_ip ] && ip addr del $fallback_ip/${fallback_netmask:-24} dev $DEVICE
+	return 0
+}
+
+start_services()
+{
+	SERVICES_FILE="/etc/udhcpc_services"
+	if [ ! -f $SERVICES_FILE ]; then 
+		echo "File $SERVICES_FILE does not exist"
+		return;
+	fi
+
+	for serv in `cat $SERVICES_FILE`; do
+		/usr/etc/init.d/plugin start $serv
+	done
+}
+
+if [ -f /etc/ppp/resolv.conf ]; then
+	rm -f /etc/ppp/resolv.prev
+	if [ -f /etc/resolv.conf ]; then
+		cp /etc/resolv.conf /etc/ppp/resolv.prev
+		grep domain /etc/ppp/resolv.prev > /etc/resolv.conf
+		grep search /etc/ppp/resolv.prev >> /etc/resolv.conf
+		cat /etc/ppp/resolv.conf >> /etc/resolv.conf
+	else
+		cp /etc/ppp/resolv.conf /etc/.
+	fi
+fi
+
+remove_fallback_ip
+
+# set the txqueuelen higher than crappy 3
+ifconfig $IFNAME txqueuelen 32 2>&1 > /dev/null
+
+if [ -x /bin/sysled ]; then
+	/bin/sysled -i 1 2>/dev/null
+fi
+if [ -f /etc/ppp/rssi_decode.sh ]; then
+	. /etc/ppp/rssi_decode.sh start
+fi
+
+start_services
+
+cat > /etc/ppp/info.$IFNAME << EOF
+started = `cat /proc/uptime | cut -d '.' -f 1`
+device = $DEVICE
+ifname = $IFNAME
+name = `sed '/^name /!d; s///; s/^"//; s/"$//; q' /etc/ppp/options`
+iplocal = $IPLOCAL
+ipremote = $IPREMOTE
+dns1 = $DNS1
+dns2 = $DNS2
+peername = $PEERNAME
+linkname = $LINKNAME
+EOF

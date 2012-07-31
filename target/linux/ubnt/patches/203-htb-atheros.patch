@@ -1,0 +1,67 @@
+Index: linux-2.6.32.29/net/sched/sch_htb.c
+===================================================================
+--- linux-2.6.32.29.orig/net/sched/sch_htb.c	2011-02-18 02:00:11.000000000 +0200
++++ linux-2.6.32.29/net/sched/sch_htb.c	2011-04-06 09:31:20.243410979 +0300
+@@ -582,26 +582,62 @@
+ 
+ static inline void htb_accnt_tokens(struct htb_class *cl, int bytes, long diff)
+ {
++        long old_cnt = cl->tokens;
+ 	long toks = diff + cl->tokens;
++        if(toks < old_cnt)
++        {
++            /*overflow*/
++            toks = cl->buffer;
++        }
+ 
+ 	if (toks > cl->buffer)
++	{
+ 		toks = cl->buffer;
++	}
++
++	old_cnt = toks;
+ 	toks -= (long) qdisc_l2t(cl->rate, bytes);
++	if(toks > old_cnt)
++	{
++	    /*overflow*/
++	    toks = 1 - cl->mbuffer;
++	}
++
+ 	if (toks <= -cl->mbuffer)
++	{
+ 		toks = 1 - cl->mbuffer;
++	}
+ 
+ 	cl->tokens = toks;
+ }
+ 
+ static inline void htb_accnt_ctokens(struct htb_class *cl, int bytes, long diff)
+ {
++        long old_cnt = cl->ctokens;
+ 	long toks = diff + cl->ctokens;
++        if(toks < old_cnt)
++        {
++            /*overflow*/
++            toks = cl->cbuffer;
++        }
+ 
+ 	if (toks > cl->cbuffer)
++	{
+ 		toks = cl->cbuffer;
++	}
++
++	old_cnt = toks;
+ 	toks -= (long) qdisc_l2t(cl->ceil, bytes);
++        if(toks > old_cnt)
++        {
++            /*overflow*/
++            toks = 1 - cl->mbuffer;
++        }
++
+ 	if (toks <= -cl->mbuffer)
++	{
+ 		toks = 1 - cl->mbuffer;
++	}
+ 
+ 	cl->ctokens = toks;
+ }

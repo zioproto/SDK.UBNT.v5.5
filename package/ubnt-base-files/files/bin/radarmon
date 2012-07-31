@@ -1,0 +1,63 @@
+#!/bin/sh
+
+
+banner() {
+	echo "----------------------------------------------------------------------------"
+	echo ""
+	echo "                       Radar Detection Monitor"
+	echo "                   (c)2012 Ubiquiti Networks, Inc."
+	echo ""
+	echo "----------------------------------------------------------------------------"
+	echo ""
+	echo "   This script checks the kernel message log for radar detections events."
+	echo "       Every ${SECONDS} second(s), the script will print any events."
+	echo ""
+	echo "Background:"
+	echo ""
+	echo "    When NOL is off, UBNT's DFS may match the same radar test pattern more"
+	echo "    than once.  This script cleans that up and makes monitoring output just"
+	echo "    one line when a radar detection succeeds."
+	echo ""
+	echo "WARNING: Do NOT use this at the same time as radartoolw, as both this script"
+	echo "         and radartoolw script process and empty the kernel message log."
+	echo "         Radartoolw output may be missing or corrupted by this script and"
+	echo "         this script may miss radar detections cleared from the logs by"
+	echo "         the radartoolw script."
+	echo ""
+	echo "WARNING: If the radar pattern overlaps the end of one sampling interval and"
+	echo "         the beginning of the next, and multiple detections occur, you will"
+	echo "         see radar detection status for both intervals.  For this reason,"
+	echo "         it is best to trigger a radar burst right after the preceeding "
+	echo "         interval prints a message."
+	echo ""
+	echo "----------------------------------------------------------------------------"
+}
+
+monitor() {
+        radartool dfsdebug 1 >/dev/null 2>&1
+        while [ 1 ]; do
+                NOW=$(date +%H:%M:%S)
+                MSG=$(dmesg -c 2>&1 | grep "Radar found on channel" | sed -r -e "s/.*Radar/Radar/" | sort -u)
+                sleep ${SECONDS};
+                echo -n "${NOW}] "
+                if [ "${MSG}" = "" ]; then
+                MSG="Nothing during this interval"
+                fi;
+                echo "${MSG}"
+        done;
+}
+
+
+export SECONDS=${1}
+export INTERVAL="<interval>"
+if [ "${SECONDS}" = "" ]; then
+        export SECONDS="${INTERVAL}"
+        fi;
+
+banner
+if [ "${SECONDS}" = "${INTERVAL}" ]; then
+        echo "Usage: $(basename ${0}) <interval>"
+        exit 1;
+fi;
+monitor
+

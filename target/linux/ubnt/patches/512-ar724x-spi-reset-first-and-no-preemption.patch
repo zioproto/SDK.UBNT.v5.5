@@ -1,0 +1,105 @@
+--- a/arch/mips/include/asm/mach-ar7240/ar7240.h
++++ b/arch/mips/include/asm/mach-ar7240/ar7240.h
+@@ -522,6 +522,7 @@ int ar7240_i2c_raw_read_bytes_from_addr(
+ #define AR7240_SPI_CMD_FAST_READ	0x0b
+ #define AR7240_SPI_CMD_PAGE_PROG	0x02
+ #define AR7240_SPI_CMD_SECTOR_ERASE	0xd8
++#define AR7240_SPI_CMD_RDID             0x9f
+ 
+ /* Functions to access SPI through software. Example:
+  *
+--- a/drivers/mtd/devices/ar7240_flash.c
++++ b/drivers/mtd/devices/ar7240_flash.c
+@@ -17,6 +17,9 @@
+ 
+ #include "ar7240.h"
+ #include "ar7240_flash.h"
++#define MXIC_JEDEC_ID        0x00c22017
++#define MXIC_ENSO            0xb1
++#define MXIC_EXSO            0xc1
+ 
+ #if 0 /* UBNT: disabled */
+ /* this is passed in as a boot parameter by bootloader */
+@@ -95,6 +98,33 @@ ar7240_spi_flash_unblock(void)
+ }
+ #endif
+ 
++/*
++Before we claim the SPI driver we need to clean up any work in progress we have
++pre-empted from user-space SPI or other SPI device drivers.
++*/
++static int
++ar7424_flash_spi_reset(void) {
++	/* Enable SPI writes and retrieved flash JEDEC ID */
++	u_int32_t mfrid = 0;
++	ar7240_reg_wr_nf(AR7240_SPI_FS, 1);
++	ar7240_spi_poll();
++	ar7240_reg_wr_nf(AR7240_SPI_WRITE, AR7240_SPI_CS_DIS);
++	ar7240_spi_bit_banger(AR7240_SPI_CMD_RDID);
++	ar7240_spi_bit_banger(0x0);
++	ar7240_spi_bit_banger(0x0);
++	ar7240_spi_bit_banger(0x0);
++	mfrid = ar7240_reg_rd(AR7240_SPI_RD_STATUS) & 0x00ffffff;
++	ar7240_spi_go();
++	/* If this is an MXIC flash, be sure we are not in secure area */
++	if(mfrid == MXIC_JEDEC_ID) {
++		/* Exit secure area of MXIC (in case we're in it) */
++		ar7240_spi_bit_banger(MXIC_EXSO);
++		ar7240_spi_go();
++	}
++	ar7240_spi_poll();
++	ar7240_reg_wr(AR7240_SPI_FS, 0);
++}
++
+ static int
+ ar7240_flash_erase(struct mtd_info *mtd, struct erase_info *instr)
+ {
+@@ -105,6 +135,8 @@ ar7240_flash_erase(struct mtd_info *mtd,
+ 		return (-EINVAL);
+ 
+ 	ar7240_flash_spi_down();
++	preempt_disable();
++	ar7424_flash_spi_reset();
+ 
+ 	res = instr->len;
+ 	do_div(res, mtd->erasesize);
+@@ -125,6 +157,7 @@ ar7240_flash_erase(struct mtd_info *mtd,
+ 
+ 	ar7240_spi_done();
+ 
++	preempt_enable();
+ 	ar7240_flash_spi_up();
+ 
+ 	if (instr->callback) {
+@@ -147,10 +180,13 @@ ar7240_flash_read(struct mtd_info *mtd,
+ 		return (-EINVAL);
+ 
+ 	ar7240_flash_spi_down();
++	preempt_disable();
++	ar7424_flash_spi_reset();
+ 
+ 	memcpy(buf, (uint8_t *)(addr), len);
+ 	*retlen = len;
+ 
++	preempt_enable();
+ 	ar7240_flash_spi_up();
+ 
+ 	return 0;
+@@ -200,6 +236,8 @@ ar7240_flash_write(struct mtd_info *mtd,
+ 	u_char *mem;
+ 
+ 	ar7240_flash_spi_down();
++	preempt_disable();
++	ar7424_flash_spi_reset();
+ 
+ 	while (total < len) {
+ 		mem = (u_char *) (buf + total);
+@@ -213,7 +251,7 @@ ar7240_flash_write(struct mtd_info *mtd,
+ 	}
+ 
+ 	ar7240_spi_done();
+-
++	preempt_enable();
+ 	ar7240_flash_spi_up();
+ 
+ 	*retlen = len;

@@ -1,0 +1,114 @@
+<?
+	Function localize_image $image_name (
+		global $active_language;
+		$l10n_image = "FULL_VERSION_LINK/images/"+$active_language+"/"+$image_name;
+		if (fileSize("."+$l10n_image) > 0)
+		{
+			return $l10n_image;
+		}
+		return "FULL_VERSION_LINK/images/"+$image_name;
+	);
+	Function localize_help $help_page (
+		global $active_language;
+		$h = "FULL_VERSION_LINK/help/"+$active_language+"/"+$help_page;
+		if (fileSize("."+$h) <= 0) {
+			$h = "FULL_VERSION_LINK/help/en_US/"+$help_page;
+		}
+		return $h;
+	);
+
+
+	$tab_main = "main";
+	$tab_link = "link";
+	$tab_net = "net";
+	$tab_4dv = "4dv";
+	$tab_srv = "srv";
+	$tab_system = "system";
+	$tab_ubnt = "ubnt";
+	$var_name = "tab_" +$top_tab;
+        $bt_close = "close";
+	$$var_name += "_top";
+	$img_main = localize_image($tab_main + ".png");
+	$img_link = localize_image($tab_link + ".png");
+	$img_net = localize_image($tab_net + ".png");
+	$img_adv = localize_image($tab_4dv + ".png");
+	$img_srv = localize_image($tab_srv + ".png");
+	$img_system = localize_image($tab_system + ".png");
+	$img_ubnt = localize_image($tab_ubnt + ".png");
+	$img_close = localize_image($bt_close + ".png");
+	$img_product_logo = $board_shortname + ".gif";
+	$alt_product_logo = $board_name;
+	if (strlen($board_subtype) > 0)
+	{
+		$img_product_logo = $board_shortname + "-" + $board_subtype + ".gif";
+		$alt_product_logo += " " + "$board_subtype";
+	}
+	$img_product_logo = localize_image($img_product_logo);
+	if (fileSize("."+$img_product_logo) < 1) {
+		$img_product_logo = "";
+	}
+        $user=$REMOTE_USER; $userid=0; $groupid=0; $is_ro=0;
+        $user_regexp="([^:]+):([^:]+):([^:]+)";
+        if (ereg($user_regexp,$REMOTE_USER,$res)) {
+                $user = $res[1];
+                $userid = $res[2];
+                $groupid = $res[3];
+        }
+        if ($groupid != 0) {
+                $is_ro = 1;
+        }
+	if ($radio_outdoor == 0 && !isset($advmode_status)) {
+		$advmode_status = cfg_get_def($cfg, "system.advanced.mode", "disabled");
+	}
+>
+  <tr>
+    <td height="70">
+<? if (strlen($img_product_logo) == 0) {
+    echo "<span class=\"productlabel\">" + $alt_product_logo + "</span>";
+} else { >
+    <img src="<? echo $img_product_logo; >" alt="<? echo $alt_product_logo;>">
+<? } >    
+    </td>
+    <td valign="bottom" align="right">
+<? if ($feature_logo) { >
+<iframe src="logo.cgi" height="70" width="100%" frameborder=0 scrolling="no"></iframe>
+<? } else {
+        $logo_pic = localize_image("logo-" + $board_shortname + ".gif");
+        if (fileSize("."+$logo_pic) < 1) {
+                $logo_pic = localize_image("airos_logo.png");
+        }
+}
+>
+<img src="<? echo $logo_pic;>">
+</td>
+  </tr>
+  <tr class="menu">
+    <td height="26" style="white-space: nowrap;">
+    <? if ($radio_outdoor != 0 || $advmode_status == "enabled") { > <a<? if ($is_ro == 0) { echo " href=\"ubnt.cgi\"";}?>><img src="<? echo $img_ubnt;>" alt="<? echo dict_translate("UBNT");
+    >" border="0"></a><? } ><a href="index.cgi"><img src="<? echo $img_main;>" alt="<? echo dict_translate("Main");
+    >" border="0"></a><a<? if ($is_ro == 0) { echo " href=\"link.cgi\"";}?>><img src="<? echo $img_link;>" alt="<? echo dict_translate("Wireless");
+    >" border="0"></a><a<? if ($is_ro == 0) { echo " href=\"network.cgi\"";} ?>><img src="<? echo $img_net;>" alt="<? echo dict_translate("Network");
+    >" border="0"></a><a<? if ($is_ro == 0) { echo " href=\"advanced.cgi\"";}?>><img src="<? echo $img_adv;>" alt="<? echo dict_translate("Advanced");
+    >" border="0"></a><a<? if ($is_ro == 0) { echo " href=\"services.cgi\"";}?>><img src="<? echo $img_srv;>" alt="<? echo dict_translate("Services");
+    >" border="0"></a><a<? if ($is_ro == 0) { echo " href=\"system.cgi\"";}?>><img src="<? echo $img_system;>" alt="<? echo dict_translate("System");
+    >" border="0"></a></td>
+	<td align="right" valign="top" style="white-space: nowrap;">
+		<select id="tools" onchange="showTool(this);">
+			<option value="" selected><? echo dict_translate("Tools:");></option>
+			<option value="signal_gui.cgi"><? echo dict_translate("Align Antenna..."); ></option>
+			<? if ($is_ro == 0) { ?>
+			<option value="survey.cgi?mode=tool"><? echo dict_translate("Site Survey...");></option>
+			<option value="discovery.cgi"><? echo dict_translate("Discovery...");></option>
+			<? } ?>
+			<option value="pingtest.cgi"><? echo dict_translate("Ping...");></option>
+			<option value="traceroute.cgi"><? echo dict_translate("Traceroute...");></option>
+			<option value="sptest.cgi"><? echo dict_translate("Speed Test...");></option>
+			<? if ($feature_airview == 1 && $is_ro == 0) { >
+			<option value="airview.cgi"><? echo dict_translate("airView...");></option>
+			<? } >
+		</select>&nbsp;<input type="button" value="<? echo dict_translate("Logout"); >" onClick="window.location.href='/logout.cgi'+'?'+(new Date().getTime());">
+    </td>
+  </tr>
+<? 
+ flush();
+>

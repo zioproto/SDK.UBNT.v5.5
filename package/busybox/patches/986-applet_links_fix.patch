@@ -1,0 +1,15 @@
+--- a/applets/install.sh
++++ b/applets/install.sh
+@@ -87,10 +87,10 @@ for i in $h; do
+ 				bb_path="busybox"
+ 			;;
+ 			/sbin)
+-				bb_path="../bin/busybox"
++				bb_path="busybox"
+ 			;;
+ 			/usr/bin|/usr/sbin)
+-				bb_path="../../bin/busybox"
++				bb_path="busybox"
+ 			;;
+ 			*)
+ 			echo "Unknown installation directory: $appdir"

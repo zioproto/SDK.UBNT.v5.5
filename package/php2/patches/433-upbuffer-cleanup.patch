@@ -1,0 +1,28 @@
+--- a/src/uploadbuffer.c
++++ b/src/uploadbuffer.c
+@@ -1,20 +1,19 @@
+-#include <sys/types.h>
+-#include <sys/stat.h>
+-#include <fcntl.h>
+ #define _GNU_SOURCE
+ #include <string.h>
+ #include <stdlib.h>
++#include <stdio.h>
+ #include <unistd.h>
++#include <fcntl.h>
++#include <sys/types.h>
++#include <sys/stat.h>
+ 
+-// #include "header.h"
+ #include "buffer.h"
+ #include "uploadbuffer.h"
+-//#include "liblogger/logger.h"
+-//#include "utils.h"
++#include "utils.h"
+ 
+ #define CONTENT_DISPHDR "Content-Disposition"
+ #define CONTENT_TYPEHDR "Content-Type"
+ 
+ static int parameter_add_file(struct list_head* head,
+ 			      char* name, char* value,
+ 			      int is_file, size_t size)

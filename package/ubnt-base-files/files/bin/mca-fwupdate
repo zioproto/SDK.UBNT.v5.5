@@ -1,0 +1,64 @@
+#!/bin/sh
+
+FWPATH=/tmp/fwupdate.bin
+FWUPDATE=/sbin/fwupdate
+FWCHECK="$FWUPDATE -c"
+FWUPGRADE="$FWUPDATE -m"
+LOCKFILE=/tmp/.mca-fwupdate.lock
+
+usage() {
+	echo "$0 <firmware file> [<delay>]"
+	exit
+}
+
+if [ $# -lt 1 ]; then
+	usage
+	exit 255
+fi
+
+FWFILE=$1
+DELAY=1
+
+if [ $# -gt 1 ]; then
+	TESTINT=$(echo $2 | sed 's/[0-9]//g')
+	if [ ".$TESTINT" == "." ]; then
+		DELAY=$2
+	else
+		echo "Invalid delay value, defaulting to $DELAY seconds"
+	fi
+fi
+
+if [ -f $FWPATH ]; then
+	echo "$FWPATH is already present, cannot continue"
+	exit 253
+fi
+
+if [ -f $LOCKFILE ]; then
+	echo "$LOCKFILE is present, cannot continue"
+	exit 252
+fi
+
+touch $LOCKFILE
+
+mv $FWFILE $FWPATH
+${FWCHECK}
+RC=$?
+
+if [ "$RC" != "0" ]; then
+	echo "Invalid firmware file"
+	mv $FWPATH $FWFILE
+	rm -f $LOCKFILE
+	exit 254
+fi
+
+UPGRADE_TIME=320
+
+if [ -f /etc/board.info ]; then
+	UPGRADE_TIME=$(grep ^board.upgrade /etc/board.info | cut -d = -f 2)
+fi
+
+echo "Estimated upgrade time: $UPGRADE_TIME s"
+echo "Launching firmware upgrade in $DELAY seconds..."
+sleep $DELAY
+$FWUPGRADE
+

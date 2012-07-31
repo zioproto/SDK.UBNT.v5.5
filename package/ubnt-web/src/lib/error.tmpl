@@ -1,0 +1,11 @@
+<div id="errorpad">
+<table cellspacing="0" cellpadding="0" id="errortbl" class="errortbl" <?if (isset($error_msg) && (strlen($error_msg) > 0)) { echo "style=\"display: block\"";}>>
+<tr>
+<td class="errorleft">&nbsp</td>
+<td class="errorcenter" valign="top">
+    <div id="error"><?if (isset($error_msg) && (strlen($error_msg) > 0)) { echo $error_msg; }></div>
+</td>
+<td class="errorright">&nbsp</td>
+</tr>
+</table>
+</div>

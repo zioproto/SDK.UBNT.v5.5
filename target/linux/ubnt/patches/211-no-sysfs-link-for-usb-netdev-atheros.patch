@@ -1,0 +1,13 @@
+Index: linux-2.6.32.29/drivers/usb/gadget/u_ether.c
+===================================================================
+--- linux-2.6.32.29.orig/drivers/usb/gadget/u_ether.c	2011-02-18 02:00:11.000000000 +0200
++++ linux-2.6.32.29/drivers/usb/gadget/u_ether.c	2011-04-06 09:32:07.954081302 +0300
+@@ -807,7 +807,7 @@
+ 	netif_carrier_off(net);
+ 
+ 	dev->gadget = g;
+-	SET_NETDEV_DEV(net, &g->dev);
++//	SET_NETDEV_DEV(net, &g->dev);
+ 
+ 	status = register_netdev(net);
+ 	if (status < 0) {

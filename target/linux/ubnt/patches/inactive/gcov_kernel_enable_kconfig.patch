@@ -1,0 +1,16 @@
+--- mips-linux-2.6.31/kernel/gcov/Kconfig	2011-10-01 00:46:42.000000000 +0300
++++ mips-linux-2.6.31-9.2.0.915/kernel/gcov/Kconfig	2011-04-01 07:57:27.000000000 +0300
+@@ -45,13 +45,4 @@
+ 	larger and run slower. Also be sure to exclude files from profiling
+ 	which are not linked to the kernel image to prevent linker errors.
+ 
+-config GCOV_KERNEL_ENABLE
+-	bool
+-	option env="GCOV_KERNEL_ENABLE"
+-	default n
+-	select CONSTRUCTORS
+-	select SYSFS
+-	select DEBUG_FS
+-	select GCOV_KERNEL
+-
+ endmenu

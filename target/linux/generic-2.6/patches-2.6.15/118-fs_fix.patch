@@ -1,0 +1,213 @@
+--- linux-2.6.15-5.2/fs/binfmt_elf.c
++++ linux-2.6.15.7/fs/binfmt_elf.c
+@@ -932,6 +932,11 @@
+ 		kfree(elf_interpreter);
+ 	} else {
+ 		elf_entry = loc->elf_ex.e_entry;
++		if (BAD_ADDR(elf_entry)) {
++			send_sig(SIGSEGV, current, 0);
++			retval = -ENOEXEC; /* Nobody gets to see this, but.. */
++			goto out_free_dentry;
++		}
+ 	}
+ 
+ 	kfree(elf_phdata);
+--- linux-2.6.15-5.2/fs/compat_ioctl.c
++++ linux-2.6.15.7/fs/compat_ioctl.c
+@@ -687,7 +687,7 @@
+ 	ifr = ifc.ifc_req;
+ 	ifr32 = compat_ptr(ifc32.ifcbuf);
+ 	for (i = 0, j = 0;
+-             i + sizeof (struct ifreq32) < ifc32.ifc_len && j < ifc.ifc_len;
++             i + sizeof (struct ifreq32) <= ifc32.ifc_len && j < ifc.ifc_len;
+ 	     i += sizeof (struct ifreq32), j += sizeof (struct ifreq)) {
+ 		if (copy_in_user(ifr32, ifr, sizeof (struct ifreq32)))
+ 			return -EFAULT;
+--- linux-2.6.15-5.2/fs/dcache.c
++++ linux-2.6.15.7/fs/dcache.c
+@@ -838,6 +842,7 @@
+ 		dget_locked(alias);
+ 		spin_unlock(&dcache_lock);
+ 		BUG_ON(!d_unhashed(alias));
++		iput(inode);
+ 		return alias;
+ 	}
+ 	list_add(&entry->d_alias, &inode->i_dentry);
+--- linux-2.6.15-5.2/fs/exec.c
++++ linux-2.6.15.7/fs/exec.c
+@@ -1403,7 +1403,7 @@
+ 		do_each_thread(g,p) {
+ 			if (mm == p->mm && p != tsk &&
+ 			    p->ptrace && p->parent->mm == mm) {
+-				__ptrace_unlink(p);
++				__ptrace_detach(p, 0);
+ 			}
+ 		} while_each_thread(g,p);
+ 		write_unlock_irq(&tasklist_lock);
+--- linux-2.6.15-5.2/fs/ramfs/inode.c
++++ linux-2.6.15.7/fs/ramfs/inode.c
+@@ -27,6 +27,7 @@
+ #include <linux/fs.h>
+ #include <linux/pagemap.h>
+ #include <linux/highmem.h>
++#include <linux/time.h>
+ #include <linux/init.h>
+ #include <linux/string.h>
+ #include <linux/smp_lock.h>
+@@ -105,6 +106,7 @@
+ 		d_instantiate(dentry, inode);
+ 		dget(dentry);	/* Extra count - pin the dentry in core */
+ 		error = 0;
++		dir->i_mtime = dir->i_ctime = CURRENT_TIME;
+ 	}
+ 	return error;
+ }
+--- linux-2.6.15-5.2/fs/cramfs/inode.c
++++ linux-2.6.15.7/fs/cramfs/inode.c
+@@ -36,7 +36,7 @@
+ 
+ /* These two macros may change in future, to provide better st_ino
+    semantics. */
+-#define CRAMINO(x)	((x)->offset?(x)->offset<<2:1)
++#define CRAMINO(x)	(((x)->offset && (x)->size)?(x)->offset<<2:1)
+ #define OFFSET(x)	((x)->i_ino)
+ 
+ 
+@@ -66,8 +66,36 @@
+ 
+ static int cramfs_iget5_set(struct inode *inode, void *opaque)
+ {
++	static struct timespec zerotime;
+ 	struct cramfs_inode *cramfs_inode = opaque;
++	inode->i_mode = cramfs_inode->mode;
++	inode->i_uid = cramfs_inode->uid;
++	inode->i_size = cramfs_inode->size;
++	inode->i_blocks = (cramfs_inode->size - 1) / 512 + 1;
++	inode->i_blksize = PAGE_CACHE_SIZE;
++	inode->i_gid = cramfs_inode->gid;
++	/* Struct copy intentional */
++	inode->i_mtime = inode->i_atime = inode->i_ctime = zerotime;
+ 	inode->i_ino = CRAMINO(cramfs_inode);
++	/* inode->i_nlink is left 1 - arguably wrong for directories,
++	   but it's the best we can do without reading the directory
++           contents.  1 yields the right result in GNU find, even
++	   without -noleaf option. */
++	if (S_ISREG(inode->i_mode)) {
++		inode->i_fop = &generic_ro_fops;
++		inode->i_data.a_ops = &cramfs_aops;
++	} else if (S_ISDIR(inode->i_mode)) {
++		inode->i_op = &cramfs_dir_inode_operations;
++		inode->i_fop = &cramfs_directory_operations;
++	} else if (S_ISLNK(inode->i_mode)) {
++		inode->i_op = &page_symlink_inode_operations;
++		inode->i_data.a_ops = &cramfs_aops;
++	} else {
++		inode->i_size = 0;
++		inode->i_blocks = 0;
++		init_special_inode(inode, inode->i_mode,
++			old_decode_dev(cramfs_inode->size));
++	}
+ 	return 0;
+ }
+ 
+@@ -77,37 +105,7 @@
+ 	struct inode *inode = iget5_locked(sb, CRAMINO(cramfs_inode),
+ 					    cramfs_iget5_test, cramfs_iget5_set,
+ 					    cramfs_inode);
+-	static struct timespec zerotime;
+-
+ 	if (inode && (inode->i_state & I_NEW)) {
+-		inode->i_mode = cramfs_inode->mode;
+-		inode->i_uid = cramfs_inode->uid;
+-		inode->i_size = cramfs_inode->size;
+-		inode->i_blocks = (cramfs_inode->size - 1) / 512 + 1;
+-		inode->i_blksize = PAGE_CACHE_SIZE;
+-		inode->i_gid = cramfs_inode->gid;
+-		/* Struct copy intentional */
+-		inode->i_mtime = inode->i_atime = inode->i_ctime = zerotime;
+-		inode->i_ino = CRAMINO(cramfs_inode);
+-		/* inode->i_nlink is left 1 - arguably wrong for directories,
+-		   but it's the best we can do without reading the directory
+-	           contents.  1 yields the right result in GNU find, even
+-		   without -noleaf option. */
+-		if (S_ISREG(inode->i_mode)) {
+-			inode->i_fop = &generic_ro_fops;
+-			inode->i_data.a_ops = &cramfs_aops;
+-		} else if (S_ISDIR(inode->i_mode)) {
+-			inode->i_op = &cramfs_dir_inode_operations;
+-			inode->i_fop = &cramfs_directory_operations;
+-		} else if (S_ISLNK(inode->i_mode)) {
+-			inode->i_op = &page_symlink_inode_operations;
+-			inode->i_data.a_ops = &cramfs_aops;
+-		} else {
+-			inode->i_size = 0;
+-			inode->i_blocks = 0;
+-			init_special_inode(inode, inode->i_mode,
+-				old_decode_dev(cramfs_inode->size));
+-		}
+ 		unlock_new_inode(inode);
+ 	}
+ 	return inode;
+--- linux-2.6.15-5.2/include/linux/ptrace.h
++++ linux-2.6.15.7/include/linux/ptrace.h
+@@ -84,6 +84,7 @@
+ extern int ptrace_writedata(struct task_struct *tsk, char __user *src, unsigned long dst, int len);
+ extern int ptrace_attach(struct task_struct *tsk);
+ extern int ptrace_detach(struct task_struct *, unsigned int);
++extern void __ptrace_detach(struct task_struct *, unsigned int);
+ extern void ptrace_disable(struct task_struct *);
+ extern int ptrace_check_attach(struct task_struct *task, int kill);
+ extern int ptrace_request(struct task_struct *child, long request, long addr, long data);
+--- linux-2.6.15-5.2/kernel/ptrace.c
++++ linux-2.6.15.7/kernel/ptrace.c
+@@ -71,8 +71,8 @@
+  */
+ void __ptrace_unlink(task_t *child)
+ {
+-	if (!child->ptrace)
+-		BUG();
++	BUG_ON(!child->ptrace);
++
+ 	child->ptrace = 0;
+ 	if (!list_empty(&child->ptrace_list)) {
+ 		list_del_init(&child->ptrace_list);
+@@ -183,22 +183,27 @@
+ 	return retval;
+ }
+ 
+-int ptrace_detach(struct task_struct *child, unsigned int data)
+-{
+-	if (!valid_signal(data))
+-		return	-EIO;
+-
+-	/* Architecture-specific hardware disable .. */
+-	ptrace_disable(child);
+-
++void __ptrace_detach(struct task_struct *child, unsigned int data)
++{
++	child->exit_code = data;
+ 	/* .. re-parent .. */
+-	child->exit_code = data;
+-
+-	write_lock_irq(&tasklist_lock);
+ 	__ptrace_unlink(child);
+ 	/* .. and wake it up. */
+ 	if (child->exit_state != EXIT_ZOMBIE)
+ 		wake_up_process(child);
++}
++
++int ptrace_detach(struct task_struct *child, unsigned int data)
++{
++	if (!valid_signal(data))
++		return -EIO;
++
++	/* Architecture-specific hardware disable .. */
++	ptrace_disable(child);
++
++	write_lock_irq(&tasklist_lock);
++	if (child->ptrace)
++		__ptrace_detach(child, data);
+ 	write_unlock_irq(&tasklist_lock);
+ 
+ 	return 0;
+

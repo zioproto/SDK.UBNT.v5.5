@@ -1,0 +1,35 @@
+--- a/modules/interfaces/proc.c
++++ b/modules/interfaces/proc.c
+@@ -169,11 +169,28 @@ struct devstats *getdevstats_stub (const
+ 
+ 			 if (strlen (str) >= IFNAMSIZ || getifstats (stats + *n,s) < 0)
+ 			   {
+-				  parse_error (i + 1);
+-				  if (stats != NULL) mem_free (stats);
+-				  close (fd);
++				  /* invalid interface example: "wds0.49153: No statistics available." */
+ 				  mem_free (str);
+-				  return (NULL);
++
++				  if (*n > 0)
++				    {
++					  if ((ptr = mem_realloc_stub (stats,(*n) * sizeof (struct devstats),filename,line,function)) == NULL)
++					    {
++						  abz_set_error ("failed to allocate memory: %m");
++						  if (stats != NULL) mem_free (stats);
++						  close (fd);
++						  return (NULL);
++					    }
++
++					  stats = ptr;
++				    }
++				  else
++				    {
++					  mem_free (stats);
++					  stats = NULL;
++				    }
++
++				  continue;
+ 			   }
+ 
+ 			 strcpy (stats[*n].dev,str);

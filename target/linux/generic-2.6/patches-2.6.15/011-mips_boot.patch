@@ -1,0 +1,19 @@
+--- a/arch/mips/kernel/head.S
++++ b/arch/mips/kernel/head.S
+@@ -103,14 +103,16 @@
+ #ifdef CONFIG_64BIT
+ 	setup_c0_status ST0_KX ST0_BEV
+ #else
+ 	setup_c0_status 0 ST0_BEV
+ #endif
+ 	.endm
+ 
++	j kernel_entry
++	nop
+ 	/*
+ 	 * Reserved space for exception handlers.
+ 	 * Necessary for machines which link their kernels at KSEG0.
+ 	 */
+ 	.fill	0x400
+ 
+ EXPORT(stext)					# used for profiling

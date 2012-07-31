@@ -1,0 +1,13 @@
+Index: linux-2.6.32.29/arch/mips/ar7240/setup.c
+===================================================================
+--- linux-2.6.32.29.orig/arch/mips/ar7240/setup.c	2011-04-08 15:54:49.104034856 +0300
++++ linux-2.6.32.29/arch/mips/ar7240/setup.c	2011-04-08 15:54:49.163982194 +0300
+@@ -375,7 +375,7 @@
+ #elif defined CONFIG_WASP_SUPPORT
+     serial_print("Booting WASP !!! -:) ...\n");
+ #else
+-    serial_print("Booting AR7240(Python)...\n");
++    serial_print("Booting...\n");
+ #endif
+     //ar7240_serial_setup();
+ 

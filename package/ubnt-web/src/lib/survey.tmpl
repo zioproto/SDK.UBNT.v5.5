@@ -1,0 +1,197 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title><? echo get_title($cfg, dict_translate("Site Survey")); ></title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Pragma" content="no-cache">
+<link rel="shortcut icon" href="FULL_VERSION_LINK/favicon.ico" >
+<link href="FULL_VERSION_LINK/style.css" rel="stylesheet" type="text/css">
+<link href="FULL_VERSION_LINK/survey.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" language="javascript" src="jsl10n.cgi"></script>
+<script type="text/javascript" language="javascript" src="FULL_VERSION_LINK/js/jquery.js"></script>
+<script type="text/javascript" language="javascript" src="FULL_VERSION_LINK/sorttable.js"></script>
+<script type="text/javascript" language="javascript1.2" src="FULL_VERSION_LINK/slink.js"></script>
+<script type="text/javascript" language="javascript">
+//<!--
+
+var itemList = [];
+var fixer = new ieee_mode_fixer("<?echo $ieee_mode>".toLowerCase(), "<?echo $clksel>");
+var clksel = fixer.getClkSel();
+
+function chooseSSID(lock)
+{
+	var value = $("input[name='ssid']:checked").val();
+	if (value)
+	{
+		var idx = parseInt(value);
+		window.opener.setESSID(itemList[idx], clksel, lock);
+		window.close();
+	}
+	else
+	{
+		alert("<? echo dict_translate("warn_no_ssid_selected|No SSID has been selected! Please select one."); >");
+	}
+
+	return false;
+}
+
+function processJSON(json)
+{
+	itemList = json;
+
+	var mode = "<? echo $mode; >";
+	var tool_mode = mode == "tool";
+	var has_ap = false;
+	
+	$('#survey > tbody').empty();
+
+	var tbody = [];
+	for (var i = 0; i < itemList.length; i++)
+	{
+		var row = [];
+		row.push("<tr>");
+
+		if (!tool_mode && itemList[i].essid.length > 0 && itemList[i].mode != "Ad-Hoc")
+		{
+			row.push("<td><input type=\"radio\" name=\"ssid\" value=\"" + i + "\" /></td>");
+			has_ap = true;
+		}
+		else
+		{
+			row.push("<td>&nbsp;</td>");
+		}
+
+		row.push("<td class=\"str\">" + itemList[i].mac + "</td>");
+		row.push("<td class=\"str\">" + itemList[i].essid + "&nbsp;</td>");
+		row.push("<td class=\"str\">" + itemList[i].mtik_name + "&nbsp;</td>");
+		row.push("<td>" + itemList[i].encryption.toUpperCase() + "</td>");
+		row.push("<td>" + itemList[i].signal_level + " / " + itemList[i].noise_level + "</td>");
+		row.push("<td>" + itemList[i].frequency + "</td>");
+		row.push("<td>" + itemList[i].channel + "</td>");
+		
+		row.push("</tr>");
+		
+		tbody.push(row.join(''));
+	}
+	
+	$('#survey > tbody').append(tbody.join(''));
+
+	$("#loader").hide();
+	$('#scan_btn').attr("disabled", false);
+	$('#survey').show();
+
+	if (mode != "tool" && has_ap)
+	{
+		$("#msg_row").show();
+		$("#lock_btn").show();
+		$("#select_btn").show();
+	}
+}
+
+function processError(xhr, err, e)
+{
+	$("#loader").hide();
+	$('#scan_btn').attr("disabled", false);
+}
+
+$(document).ready(function() {
+	$("#loader").show();
+	$('#scan_btn').attr("disabled", true);
+	$('#fl-title').click(function(){
+		$('#fl-data').toggle();
+		return false;
+	});
+	$('#lock_btn').click(function() {
+		chooseSSID(true);
+		return false;
+	});
+	$('#select_btn').click(function() {
+		chooseSSID(false);
+		return false;
+	});
+
+	var data = {};
+	data["iface"] = '<? echo $iface; >';
+	$.ajax({
+		type: "GET",
+		url: "survey.json.cgi",
+		dataType: "json",
+		cache: false,
+		data: data,
+		success: processJSON,
+		error: processError
+	});
+});
+//-->
+</script>
+</head>
+
+<body class="popup">
+<table cellspacing="0" cellpadding="0" align="center" class="popup">
+	<tr><th><? echo dict_translate("Site Survey"); ></th></tr>
+	<tr><td class="wraptext">
+	<a href="#" id="fl-title"><? echo dict_translate("Scanned Frequencies:"); ></a>
+	<div id="fl-data" class="wraptext mleft20">
+<? if ($chans)  {
+        $tok = strtok($chans, " \n\t");
+        while (strlen($tok) != 0) {
+                echo "%gGHz " DoubleVal($tok)/1000.0;
+                $tok = strtok(" \n\t");
+        }
+        echo "<br><br>";
+} else {
+	echo "&nbsp;";
+}
+>
+	</div>
+	</td></tr>
+	<tr><td class="center">
+<span id="loader" class="initial_hide">
+	Scanning, please wait...<br/>
+	<img src="FULL_VERSION_LINK/images/ajax-loader.gif" />
+</span>
+<table cellspacing="0" cellpadding="0" align="center" class="listhead sortable initial_hide" id="survey">
+  <thead>
+  <tr>
+    <th style="width:5px"></th>
+    <th><? echo dict_translate("MAC Address"); ></th>
+    <th><? echo dict_translate("SSID"); ></th>
+    <th><? echo dict_translate("Device Name"); ></th>
+    <th><? echo dict_translate("Encryption"); ></th>
+    <th class="sorttable_numeric"><? echo dict_translate("Signal") + " / " + dict_translate("Noise"); >, dBm</th>
+    <th class="sorttable_numeric"><? echo dict_translate("Frequency"); >, <?
+	    if ($radio1_ccode_fixed && $radio1_ccode == 900) {
+		echo "MHz";
+	    } else {
+		echo "GHz";
+	    }
+    ></th>
+    <th class="sorttable_numeric"><? echo dict_translate("Channel"); ></th>
+  </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+</td>
+</tr>
+<tr id="msg_row" class="initial_hide"><td>
+<br>
+<div class="roundmsg_box">
+   <div class="roundmsg_top"><div></div></div>
+      <div class="roundmsg_content">
+         Selectable SSID's must be visible and have compatible channel bandwidth and security settings
+      </div>
+   <div class="roundmsg_bottom"><div></div></div>
+</div>
+<td></tr>
+<tr><th>&nbsp;</th></tr>
+<tr>
+	<td class="change">
+		<input type="button" value="<? echo dict_translate("Lock to AP");>" id="lock_btn" class="initial_hide" />
+		<input type="button" value="<? echo dict_translate("Select");>" id="select_btn" class="initial_hide" />
+		<input type="button" value=" <? echo dict_translate("Scan");> " id="scan_btn" onClick="window.location.reload()">
+	</td>
+</tr>
+</table>
+</body>
+</html>

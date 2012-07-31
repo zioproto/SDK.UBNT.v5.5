@@ -1,0 +1,31 @@
+--- a/arch/mips/kernel/gdb-stub.c
++++ b/arch/mips/kernel/gdb-stub.c
+@@ -652,26 +652,28 @@ void set_async_breakpoint(unsigned long 
+ 		return;
+ #endif
+ 
+ 	async_bp.addr = *epc;
+ 	*epc = (unsigned long)async_breakpoint;
+ }
+ 
++#ifdef CONFIG_SMP
+ static void kgdb_wait(void *arg)
+ {
+ 	unsigned flags;
+ 	int cpu = smp_processor_id();
+ 
+ 	local_irq_save(flags);
+ 
+ 	__raw_spin_lock(&kgdb_cpulock[cpu]);
+ 	__raw_spin_unlock(&kgdb_cpulock[cpu]);
+ 
+ 	local_irq_restore(flags);
+ }
++#endif
+ 
+ 
+ /*
+  * This function does all command processing for interfacing to gdb.  It
+  * returns 1 if you should skip the instruction at the trap address, 0
+  * otherwise.
+  */

@@ -1,0 +1,48 @@
+#!/bin/sh
+
+local C=/dev/console
+local G=/proc/sys/dev/ubnt_poll/gps_gpio
+
+#Reset GPS
+if [ -f ${G} ]; then
+	echo 1 > ${G}
+else
+#remap Console output
+	if [ -c $C ]; then
+		exec < $C 2>&1 > $C
+	fi
+fi
+
+CHECKFILE="/etc/do-firmware-update"
+FWUPDATE="/sbin/fwupdate.real"
+echo="logger -t $0 -s"
+
+# if cfgmtd -w is running - wait for it
+while ! bgnd -s cfgmtd > /dev/null; do 
+	echo "Waiting for cfgmtd..."
+	sleep 1
+done
+
+if [ -f ${CHECKFILE} ]; then
+	if ${FWUPDATE} -c; then
+		${echo} "Going to firmware update mode"
+	
+		wdog_pid=`pidof watchdog`
+		if [ ".${wdog_pid}" != "." ]; then
+			# shutdown watchdog
+			kill -HUP ${wdog_pid}
+		fi
+                # Cleanup to have more ram
+                rm -fr  /var/log/* \
+                	/tmp/.sessions.tdb \
+                	/tmp/boot.txt \
+			/tmp/system.cfg \
+                        /tmp/ubntconf.log
+                dmesg -c > /dev/null
+		${FWUPDATE} -m; rc=$?
+
+		${echo} "FIRMWARE UPDATE FAILED, REASON=${rc}"
+	else
+		${echo} "Firmware update requested, but check failed!"
+	fi
+fi

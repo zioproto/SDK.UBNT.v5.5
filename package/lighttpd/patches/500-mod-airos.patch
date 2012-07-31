@@ -1,0 +1,1119 @@
+--- a/configure.ac
++++ b/configure.ac
+@@ -638,14 +638,15 @@ AC_CONFIG_FILES([Makefile src/Makefile
+ 		 tests/docroot/www/expire/Makefile \
+ 		 distribute.sh])
+ AC_OUTPUT
+ 
+ 
+ do_build="mod_cgi mod_fastcgi mod_extforward mod_proxy mod_evhost mod_simple_vhost mod_access mod_alias mod_setenv mod_usertrack mod_auth mod_status mod_accesslog"
+ do_build="$do_build mod_rrdtool mod_secdownload mod_expire mod_compress mod_dirlisting mod_indexfile mod_userdir mod_webdav mod_staticfile mod_scgi mod_flv_streaming"
++do_build="$do_build mod_airos"
+ 
+ plugins="mod_rewrite mod_redirect mod_ssi mod_trigger_b4_dl"
+ features="regex-conditionals"
+ if test ! "x$PCRE_LIB" = x; then
+ 	do_build="$do_build $plugins"
+ 	enable_feature="$features"
+ else
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -304,7 +304,11 @@ proc_open_CPPFLAGS= -DDEBUG_PROC_OPEN
+ #evalo_SOURCES = buffer.c eval.c
+ #bench_SOURCES = buffer.c bench.c
+ #ajp_SOURCES = ajp.c
+ 
+ noinst_HEADERS   = $(hdr)
+ EXTRA_DIST = mod_skeleton.c configparser.y mod_ssi_exprparser.y lempar.c SConscript
+ 
++lib_LTLIBRARIES += mod_airos.la
++mod_airos_la_SOURCES = mod_airos.c
++mod_airos_la_LDFLAGS = -module -export-dynamic -avoid-version -no-undefined
++mod_airos_la_LIBADD = $(TDB_LIB)  $(common_libadd)
+--- /dev/null
++++ b/src/mod_airos.c
+@@ -0,0 +1,1033 @@
++#include <ctype.h>
++#include <stdlib.h>
++#include <stdio.h>
++#include <string.h>
++#include <time.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++
++
++#include "base.h"
++#include "log.h"
++#include "buffer.h"
++#include "response.h"
++#include "stat_cache.h"
++
++#include "plugin.h"
++
++#ifdef USE_OPENSSL
++# include <openssl/md5.h>
++#else
++# include "md5.h"
++#endif
++
++#ifdef HAVE_CONFIG_H
++#include "config.h"
++#endif
++
++#ifdef HAVE_TDB_H
++#include <tdb.h>
++#endif
++
++#include "mod_airos.h"
++
++#define LOG_ENTER(...) log_error_write(srv, __FILE__, __LINE__, "ss", __func__, "- ENTER")
++#define LOG_EXIT(...) log_error_write(srv, __FILE__, __LINE__, "ss", __func__, "- EXIT")
++#define LOG(x) log_error_write(srv, __FILE__, __LINE__, "ss", __func__, (x))
++
++#define SCONST_STR_LEN(x) x, sizeof(x) - 1
++
++/**
++ * AirOS plugin is targeted as the main resource controller for
++ * Web UI on AirOS based (Ubiquiti Networks, Inc.) embedded devices.
++ * The main roles of the plugin:
++ *  - check authentication for protected resources
++ *  - deny access to resources that shouldn't be accessible at all
++ *  - allow access to public resources
++ *
++ *  Authentication is based on cookie solution. Cookies are associated with
++ *  sessions, that are stored on local database. TDB (http://tdb.samba.org/)
++ *  has been chosen as the database library for it's capability to allow
++ *  external changes to the data, so more than one process can access/modify
++ *  the same data.
++ *
++ *  The plugin does check whether the browser is capable of accepting cookies,
++ *  if it's not, browser is redirected to a nocookie-page.
++ *
++ * The main reason of duplicating the functionality of other available plugins
++ * is resource hungriness when dl-loading several modules.
++ *
++ * @author Kestutis Kupciunas
++ * @copyright Copyright (c) 2009 Ubiquiti Networks, Inc.
++ * @version 0.3
++ */
++
++typedef struct {
++	array* allowed;
++	array* denied;
++	array* cachable;
++	unsigned short cachable_gz;
++	buffer* login_page;
++	buffer* nocookie_page;
++	buffer* sessiondb_file;
++	unsigned short session_timeout;
++	unsigned short redirect_https_port;
++	void* tdb;
++} plugin_config;
++
++typedef struct {
++	PLUGIN_DATA;
++	size_t trigger_count;
++	int debug;
++	buffer* expires_str;
++	plugin_config** config_storage;
++
++	plugin_config conf;
++} plugin_data;
++
++/* initialize the plugin data */
++INIT_FUNC(mod_airos_init) {
++	plugin_data* p;
++	time_t expires = 441792000;
++	size_t len = 0;
++	p = calloc(1, sizeof(*p));
++	p->trigger_count = 0;
++	p->debug = 0;
++	p->expires_str = buffer_init();
++	buffer_prepare_copy(p->expires_str, 128);
++	/* TODO: error check */
++	len = strftime(p->expires_str->ptr, p->expires_str->size - 1,
++			"%a, %d %b %Y %H:%M:%S GMT", gmtime(&(expires)));
++	p->expires_str->used = len + 1;
++	return p;
++}
++
++/* destroy the plugin data */
++FREE_FUNC(mod_airos_free) {
++	plugin_data* p = p_d;
++	UNUSED(srv);
++
++	if (!p) return HANDLER_GO_ON;
++
++	if (p->config_storage) {
++		size_t i;
++
++		for (i = 0; i < srv->config_context->used; i++) {
++			plugin_config* s = p->config_storage[i];
++
++			if (!s) continue;
++
++			array_free(s->allowed);
++			array_free(s->denied);
++			buffer_free(s->login_page);
++			buffer_free(s->nocookie_page);
++			buffer_free(s->sessiondb_file);
++
++#ifdef HAVE_TDB_H
++			if (s->tdb)
++				tdb_close((struct tdb_context*)s->tdb);
++#endif
++
++			free(s);
++		}
++		free(p->config_storage);
++	}
++
++	buffer_free(p->expires_str);
++
++	free(p);
++	return HANDLER_GO_ON;
++}
++
++static const char SCHEME_HTTPS[] = "https://";
++
++/* handle plugin config and check values */
++
++static const char COOKIE_NAME[] = "AIROS_SESSIONID";
++static const char COOKIE_NAME_EQ[] = "AIROS_SESSIONID=";
++static const char COOKIE_TEST_PAGE[] = "/cookiechecker";
++
++static const char CONFIG_ALLOW[] = "airos.allow";
++static const char CONFIG_DENIED[] = "airos.deny";
++static const char CONFIG_CACHABLE[] = "airos.cachable";
++static const char CONFIG_CACHABLE_GZ[] = "airos.cachable-gzip";
++static const char CONFIG_LOGIN_PAGE[] = "airos.login-page";
++static const char CONFIG_NOCOOKIE_PAGE[] = "airos.nocookie-page";
++static const char CONFIG_SESSIONDB_FILE[] = "airos.sessiondb-file";
++static const char CONFIG_SESSION_TIMEOUT[] = "airos.session-timeout";
++
++static const char CONFIG_HTTPS_REDIRECT[] = "airos.redirect-https-port";
++
++static const char DEFAULT_LOGIN_PAGE[] = "/login.html";
++static const char DEFAULT_NOCOOKIE_PAGE[] = "/nocookies.html";
++static const unsigned short DEFAULT_SESSION_TIMEOUT = 15 * 60;
++
++SETDEFAULTS_FUNC(mod_airos_set_defaults) {
++	plugin_data* p = p_d;
++	size_t i = 0;
++	data_string* ds = NULL;
++
++	config_values_t cv[] = {
++		{ CONFIG_ALLOW,             NULL, T_CONFIG_ARRAY, T_CONFIG_SCOPE_CONNECTION },  /* 0 */
++		{ CONFIG_DENIED,            NULL, T_CONFIG_ARRAY, T_CONFIG_SCOPE_CONNECTION },  /* 1 */
++		{ CONFIG_CACHABLE,          NULL, T_CONFIG_ARRAY, T_CONFIG_SCOPE_CONNECTION },  /* 2 */
++		{ CONFIG_CACHABLE_GZ,       NULL, T_CONFIG_BOOLEAN, T_CONFIG_SCOPE_CONNECTION },/* 3 */
++		{ CONFIG_LOGIN_PAGE,		NULL, T_CONFIG_STRING, T_CONFIG_SCOPE_CONNECTION }, /* 4 */
++		{ CONFIG_NOCOOKIE_PAGE,		NULL, T_CONFIG_STRING, T_CONFIG_SCOPE_CONNECTION }, /* 5 */
++		{ CONFIG_SESSIONDB_FILE,	NULL, T_CONFIG_STRING, T_CONFIG_SCOPE_CONNECTION }, /* 6 */
++		{ CONFIG_SESSION_TIMEOUT,	NULL, T_CONFIG_SHORT, T_CONFIG_SCOPE_CONNECTION },  /* 7 */
++		{ CONFIG_HTTPS_REDIRECT,	NULL, T_CONFIG_SHORT, T_CONFIG_SCOPE_CONNECTION },  /* 8 */
++		{ NULL, NULL, T_CONFIG_UNSET, T_CONFIG_SCOPE_UNSET }
++	};
++
++	if (!p) return HANDLER_ERROR;
++
++	p->config_storage = calloc(1, srv->config_context->used * sizeof(specific_config *));
++
++	for (i = 0; i < srv->config_context->used; i++) {
++		plugin_config* s;
++		int rc;
++
++		s = calloc(1, sizeof(plugin_config));
++		s->allowed = array_init();
++		s->denied = array_init();
++		s->cachable = array_init();
++		s->cachable_gz = 0;
++		s->login_page = buffer_init();
++		s->nocookie_page = buffer_init();
++		s->sessiondb_file = buffer_init();
++		s->session_timeout = DEFAULT_SESSION_TIMEOUT;
++		s->redirect_https_port = 0;
++
++		cv[0].destination = s->allowed;
++		cv[1].destination = s->denied;
++		cv[2].destination = s->cachable;
++		cv[3].destination = &(s->cachable_gz);
++		cv[4].destination = s->login_page;
++		cv[5].destination = s->nocookie_page;
++		cv[6].destination = s->sessiondb_file;
++		cv[7].destination = &(s->session_timeout);
++		cv[8].destination = &(s->redirect_https_port);
++
++		p->config_storage[i] = s;
++
++		if (0 != config_insert_values_global(srv, ((data_config *)srv->config_context->data[i])->value, cv)) {
++			return HANDLER_ERROR;
++		}
++
++		if (buffer_is_empty(s->login_page)) {
++			buffer_append_string_len(s->login_page,
++					SCONST_STR_LEN(DEFAULT_LOGIN_PAGE));
++		}
++		if (buffer_is_empty(s->nocookie_page)) {
++			buffer_append_string_len(s->nocookie_page,
++					SCONST_STR_LEN(DEFAULT_NOCOOKIE_PAGE));
++		}
++		/* automatically include login and nocookie pages
++		 * to the allowed page list */
++		ds = data_string_init();
++		buffer_copy_string_buffer(ds->value, s->login_page);
++		buffer_copy_string_buffer(ds->key, s->login_page);
++		rc = array_insert_unique(s->allowed, (data_unset*)ds);
++		ds = data_string_init();
++		buffer_copy_string_buffer(ds->value, s->nocookie_page);
++		buffer_copy_string_buffer(ds->key, s->nocookie_page);
++		rc = array_insert_unique(s->allowed, (data_unset*)ds);
++
++#ifdef HAVE_TDB_H
++		if (!buffer_is_empty(s->sessiondb_file)) {
++			s->tdb = tdb_open(s->sessiondb_file->ptr, 0, 0, O_RDWR | O_CREAT, 0666);
++			if (s->tdb == NULL) {
++				log_error_write(srv, __FILE__, __LINE__, "sb",
++										"tdb failed to open:", s->sessiondb_file);
++				return HANDLER_ERROR;
++			}
++		}
++#else
++		s->tdb = NULL;
++#endif
++	}
++	return HANDLER_GO_ON;
++}
++
++#define PATCH(x) \
++	p->conf.x = s->x;
++static int mod_airos_patch_connection(server* srv, connection* con, plugin_data* p) {
++	size_t i, j;
++	plugin_config* s = p->config_storage[0];
++
++	PATCH(allowed);
++	PATCH(denied);
++	PATCH(cachable);
++	PATCH(cachable_gz);
++	PATCH(login_page);
++	PATCH(nocookie_page);
++	PATCH(sessiondb_file);
++	PATCH(session_timeout);
++	PATCH(redirect_https_port);
++	PATCH(tdb);
++
++	/* skip the first, the global context */
++	for (i = 1; i < srv->config_context->used; i++) {
++		data_config* dc = (data_config *)srv->config_context->data[i];
++		s = p->config_storage[i];
++
++		/* condition didn't match */
++		if (!config_check_cond(srv, con, dc)) continue;
++
++		/* merge config */
++		for (j = 0; j < dc->value->used; j++) {
++			data_unset* du = dc->value->data[j];
++
++			if (buffer_is_equal_string(du->key, SCONST_STR_LEN(CONFIG_ALLOW))) {
++				PATCH(allowed);
++			} else if (buffer_is_equal_string(du->key, SCONST_STR_LEN(CONFIG_DENIED))) {
++				PATCH(denied);
++			} else if (buffer_is_equal_string(du->key, SCONST_STR_LEN(CONFIG_CACHABLE))) {
++				PATCH(cachable);
++			} else if (buffer_is_equal_string(du->key, SCONST_STR_LEN(CONFIG_CACHABLE_GZ))) {
++				PATCH(cachable_gz);
++			} else if (buffer_is_equal_string(du->key, SCONST_STR_LEN(CONFIG_LOGIN_PAGE))) {
++				PATCH(login_page);
++			} else if (buffer_is_equal_string(du->key, SCONST_STR_LEN(CONFIG_NOCOOKIE_PAGE))) {
++				PATCH(nocookie_page);
++			} else if (buffer_is_equal_string(du->key, SCONST_STR_LEN(CONFIG_SESSIONDB_FILE))) {
++				PATCH(sessiondb_file);
++				PATCH(tdb);
++			} else if (buffer_is_equal_string(du->key, SCONST_STR_LEN(CONFIG_SESSION_TIMEOUT))) {
++				PATCH(session_timeout);
++			} else if (buffer_is_equal_string(du->key, SCONST_STR_LEN(CONFIG_HTTPS_REDIRECT))) {
++				PATCH(redirect_https_port);
++			}
++		}
++	}
++
++	return 0;
++}
++#undef PATCH
++
++static buffer*
++fetch_cookie_value(const char* cookie_name, buffer* cookie_data) {
++	char* cname;
++	const char* ptr;
++	const char* end;
++	const char* s;
++	/* parse cookie value, multiple cookies may be present,
++	 * example from RFC:
++	 * Cookie: $Version="1";
++             Customer="WILE_E_COYOTE"; $Path="/acme";
++             Part_Number="Rocket_Launcher_0001"; $Path="/acme";
++             Shipping="FedEx"; $Path="/acme"
++	 * we care only about our cookie, hence, search for it and extract
++	 * the value.
++	 * TODO: improve cookie parsing to support white spaces around '='
++	 **/
++	buffer* value = NULL;
++	if (!cookie_data || !cookie_name)
++		return NULL;
++
++	ptr = cookie_data->ptr;
++	end = ptr + cookie_data->used - 1;
++	/* TODO: consider using memmem instead of strstr, so that we do not
++	 * get out of boundaries
++	 */
++	while ((cname = strstr(ptr, cookie_name)) != NULL) {
++		ptr = cname + strlen(cookie_name);
++		while ((*ptr != '=') && (ptr < end)) ptr++;
++		if (*ptr != '=')
++			break;
++		ptr++;
++		while ((ptr < end) && (isspace(*ptr))) ptr++;
++		if (*ptr == '"') ptr++;
++		s = ptr;
++		while ((ptr < end) && (*ptr != ';')) ptr++;
++		if ((ptr - s) > 1) {
++			if (*(ptr - 1) == '"') ptr--;
++			value = buffer_init();
++			buffer_copy_string_len(value, s, ptr - s);
++			return value;
++		}
++	}
++
++	return NULL;
++}
++
++static session_t*
++session_get(void* tdb, const buffer* id) {
++	if (id == NULL || tdb == NULL)
++		return NULL;
++#ifdef HAVE_TDB_H
++	{
++		TDB_DATA key, value;
++		memset(&value, 0, sizeof(value));
++		key.dptr = (unsigned char*)id->ptr;
++		key.dsize = id->used;
++		value = tdb_fetch((struct tdb_context*)tdb, key);
++		if (value.dptr == NULL)
++			return NULL;
++		/* TODO: check length */
++		if (*((unsigned short*)value.dptr) != SESSION_VERSION) {
++			tdb_delete((struct tdb_context*)tdb, key);
++			free(value.dptr);
++			return NULL;
++		}
++		return (session_t*)value.dptr;
++	}
++#endif
++	return NULL;
++}
++
++static int
++session_store(void* tdb, const session_t* s) {
++	int rc = -1;
++	if (s == NULL || tdb == NULL)
++		return -1;
++#ifdef HAVE_TDB_H
++	{
++		TDB_DATA key, value;
++		memset(&key, 0, sizeof(key));
++		memset(&value, 0, sizeof(value));
++		key.dptr = (unsigned char*)s->session_id;
++		key.dsize = sizeof(s->session_id);
++		value.dptr = (unsigned char*)s;
++		value.dsize = sizeof(*s);
++		rc = tdb_store(tdb, key, value, TDB_REPLACE);
++	}
++#endif
++	return rc;
++}
++
++static int
++session_destroy(void* tdb, const session_t* s) {
++	int rc = -1;
++	if (s == NULL || tdb == NULL)
++		return -1;
++#ifdef HAVE_TDB_H
++	{
++		TDB_DATA key;
++		memset(&key, 0, sizeof(key));
++		key.dptr = (unsigned char*)s->session_id;
++		key.dsize = sizeof(s->session_id);
++		rc = tdb_delete(tdb, key);
++	}
++#endif
++	return rc;
++}
++
++static int
++session_has_timedout(const session_t* s, size_t timeout, int check_unused) {
++	time_t diff;
++	if (s == NULL)
++		return 0;
++	diff = time(NULL) - timeout;
++
++	if (s->time_lastaccess) {
++		return diff > s->time_lastaccess;
++	}
++        /* unused sessions are the ones that are not accessed.
++         * Timeout them in 30 seconds
++         */
++	if (!s->time_lastaccess && check_unused)
++		return (diff + timeout - 30 ) > s->time_created;
++
++	return 0;
++}
++
++static int
++session_is_authenticated(const session_t* s) {
++	if (s == NULL)
++		return 0;
++	if (!s->authenticated)
++		return 0;
++	return 1;
++}
++
++static int
++session_is_authorized(const session_t* s, server* srv, connection* con) {
++	stat_cache_entry *sce = NULL;
++
++	if (s == NULL || !s->authenticated)
++		return 0;
++
++	/* cannot stat? assume, allowed... */
++	if (HANDLER_ERROR == stat_cache_get_entry(srv, con, con->physical.path, &sce)) {
++		return 1;
++	}
++
++	if (sce->st.st_uid == s->uid)
++		return 1;
++	if ((sce->st.st_gid == s->gid) && (sce->st.st_mode & S_IRGRP))
++		return 1;
++
++	if (sce->st.st_mode & S_IROTH)
++		return 1;
++
++	return 0;
++}
++
++static session_t*
++session_create(const buffer* id, const buffer* ip) {
++	session_t* s;
++
++	if (!id || id->used != sizeof(s->session_id))
++		return NULL;
++
++	s = calloc(1, sizeof(session_t));
++	if (s == NULL)
++		return NULL;
++
++	s->type = SESSION_VERSION;
++	memcpy(s->session_id, id->ptr, id->used);
++	if (ip && ip->used > 0 && ip->used < sizeof(s->ipaddr)) {
++		memcpy(s->ipaddr, ip->ptr, ip->used - 1);
++	}
++	s->time_created = time(NULL);
++	s->time_lastaccess = 0;
++	s->gid = s->uid = 0;
++	s->authenticated = 0;
++	s->level = 0;
++	return s;
++}
++
++#ifdef HAVE_TDB_H
++static int
++session_cleanup_iterator(struct tdb_context* db,
++                TDB_DATA key, TDB_DATA value, void *a) {
++	if (IS_SESSION(value.dptr) && (value.dsize == sizeof(session_t))) {
++		session_t* s = (session_t*)value.dptr;
++		if (a != NULL && session_has_timedout(s, *((size_t*)a), 1)) {
++			tdb_delete(db, key);
++		}
++	} else {
++		tdb_delete(db, key);
++	}
++	return 0;
++}
++#endif
++
++static int
++session_cleanup(void* tdb, size_t timeout) {
++	if (tdb == NULL)
++		return -1;
++#ifdef HAVE_TDB_H
++	tdb_traverse(tdb, session_cleanup_iterator, &timeout);
++#endif
++	return 0;
++}
++
++static int
++uri_is_in_list(const request_uri* uri, const array* list) {
++	size_t k, ct_len;
++	data_string* ds;
++	size_t uri_len = uri->path->used - 1;
++
++	for (k = 0; k < list->used; k++) {
++		ds = (data_string *)list->data[k];
++		ct_len = ds->value->used - 1;
++
++		if (ct_len < 1) continue;
++		if (ct_len > uri_len) continue;
++
++		if (strncasecmp(uri->path->ptr + uri_len - ct_len,
++				ds->value->ptr, ct_len) == 0) {
++			return 1;
++		}
++	}
++
++	return 0;
++}
++
++static int
++phy_is_in_list(const physical* uri, const array* list) {
++	size_t k, ct_len;
++	data_string* ds;
++	size_t uri_len = uri->path->used - 1;
++
++	for (k = 0; k < list->used; k++) {
++		ds = (data_string *)list->data[k];
++		ct_len = ds->value->used - 1;
++
++		if (ct_len < 1) continue;
++		if (ct_len > uri_len) continue;
++
++		if (strncasecmp(uri->path->ptr + uri_len - ct_len,
++				ds->value->ptr, ct_len) == 0) {
++			return 1;
++		}
++	}
++
++	return 0;
++}
++
++static int
++is_ajax_request(const request* req) {
++	data_string* header;
++	if (req == NULL)
++		return 0;
++
++	header = (data_string *)array_get_element(req->headers, "X-Requested-With");
++	if (header == NULL || header->value == NULL || header->value->used == 0)
++		return 0;
++
++	if (strncasecmp(header->value->ptr, CONST_STR_LEN("XMLHttpRequest")) == 0)
++		return 1;
++
++	return 0;
++}
++
++static session_t*
++session_init(server* srv, connection* con, plugin_data* p) {
++	unsigned char h[16];
++	MD5_CTX Md5Ctx;
++	char hh[32];
++	session_t* session;
++	data_string* ds;
++	buffer* new_id = buffer_init();
++
++	/* set a cookie */
++	if (NULL == (ds = (data_string *)array_get_unused_element(con->response.headers, TYPE_STRING))) {
++		ds = data_response_init();
++	}
++	/* taken from mod_auth.c */
++
++	/* generate shared-secret */
++	MD5_Init(&Md5Ctx);
++	MD5_Update(&Md5Ctx, (unsigned char *)con->uri.path->ptr, con->uri.path->used - 1);
++	MD5_Update(&Md5Ctx, (unsigned char *)"+", 1);
++
++	/* we assume sizeof(time_t) == 4 here, but if not it ain't a problem at all */
++	LI_ltostr(hh, srv->cur_ts);
++	MD5_Update(&Md5Ctx, (unsigned char *)hh, strlen(hh));
++	MD5_Update(&Md5Ctx, (unsigned char *)srv->entropy, sizeof(srv->entropy));
++	LI_ltostr(hh, rand());
++	MD5_Update(&Md5Ctx, (unsigned char *)hh, strlen(hh));
++
++	MD5_Final(h, &Md5Ctx);
++
++	buffer_copy_string_hex(new_id, (char*)h, 16);
++
++	buffer_copy_string_len(ds->key, CONST_STR_LEN("Set-Cookie"));
++	buffer_copy_string_len(ds->value, SCONST_STR_LEN(COOKIE_NAME_EQ));
++	buffer_append_string_buffer(ds->value, new_id);
++	buffer_append_string_len(ds->value, CONST_STR_LEN("; Path=/"));
++	buffer_append_string_len(ds->value, CONST_STR_LEN("; Version=1"));
++
++	array_insert_unique(con->response.headers, (data_unset *)ds);
++
++	/* create and insert the session into session database */
++	session = session_create(new_id, con->dst_addr_buf);
++	if (session == NULL) {
++		log_error_write(srv, __FILE__, __LINE__, "ssb", __func__,
++				"Failed creating session: ", new_id);
++	} else {
++		session_store(p->conf.tdb, session);
++	}
++	buffer_free(new_id);
++
++	return session;
++}
++
++static buffer*
++build_redirected_https_url(const server* srv, const connection* con, const plugin_data* p) {
++	buffer* location;
++	char* pos;
++	UNUSED(srv);
++
++	location = buffer_init();
++	/* scheme */
++	buffer_append_string_len(location, SCONST_STR_LEN(SCHEME_HTTPS));
++
++	/* authority - may have port specified after : */
++	pos = memchr(con->uri.authority->ptr, ':', con->uri.authority->used - 1);
++	if (pos == NULL) {
++		buffer_append_string_buffer(location, con->uri.authority);
++	} else {
++		buffer_append_string_len(location,
++				con->uri.authority->ptr, pos - con->uri.authority->ptr);
++	}
++	/* if https port is not 443, append proper port */
++	if (p->conf.redirect_https_port != 443) {
++		buffer_append_string_len(location, ":", 1);
++		buffer_append_long(location, p->conf.redirect_https_port);
++	}
++	/* path, unmodified */
++	buffer_append_string_buffer(location, con->uri.path_raw);
++	/* uri, if available */
++	if (con->uri.query->used > 0) {
++		buffer_append_string_len(location, "?", 1);
++		buffer_append_string_buffer(location, con->uri.query);
++	}
++	return location;
++}
++
++URIHANDLER_FUNC(mod_airos_uri_handler) {
++	plugin_data* p = p_d;
++	size_t uri_len;
++	session_t* session = NULL;
++	data_string* ds;
++	int needs_cookie = 1;
++	int is_uri_allowed = 0;
++	int is_ajax = 0;
++
++	if (con->mode != DIRECT) return HANDLER_GO_ON;
++
++	if (con->uri.path->used == 0) return HANDLER_GO_ON;
++
++	mod_airos_patch_connection(srv, con, p);
++
++	/* forced https redirection case */
++	if (p->conf.redirect_https_port != 0) {
++		buffer* location;
++		location = build_redirected_https_url(srv, con, p);
++		response_header_insert(srv, con, CONST_STR_LEN("Location"), CONST_BUF_LEN(location));
++		con->http_status = 302;
++		con->mode = DIRECT;
++		con->file_finished = 1;
++
++		return HANDLER_FINISHED;
++	}
++
++	uri_len = con->uri.path->used - 1;
++
++	/*
++	 * if the URI requested is on deny list, just deny it.
++	 */
++	if (uri_is_in_list(&con->uri, p->conf.denied)) {
++		con->http_status = 403;
++		con->mode = DIRECT;
++
++		return HANDLER_FINISHED;
++	}
++
++	is_uri_allowed = uri_is_in_list(&con->uri, p->conf.allowed);
++	is_ajax = is_ajax_request(&con->request);
++
++	ds = (data_string *)array_get_element(con->request.headers, "Cookie");
++
++	/*
++	 * if URI is cookie test, this means it's our internal stuff
++	 */
++	if ((uri_len == strlen(COOKIE_TEST_PAGE)) &&
++			(strcmp(con->uri.path->ptr, COOKIE_TEST_PAGE) == 0)) {
++		int got_cookie = 0;
++		buffer* redirto = buffer_init();
++		// if we are here, we are supposed to fetch cookie value
++		buffer* value = NULL;
++
++		if (ds != NULL)
++			value = fetch_cookie_value(COOKIE_NAME, ds->value);
++
++		if (value != NULL && value->used == 33) {
++			got_cookie = 1;
++		}
++		buffer_free(value);
++
++		// if we have no cookie, redirect to nocookie page
++		// if the cookie is present, redirect to anything that's on the query
++		// 4 is "uri=" length
++		if ((con->uri.query->used > (4 + 1)) && got_cookie) {
++			buffer_append_string(redirto, con->uri.query->ptr + 4);
++		} else {
++			buffer_append_string_buffer(redirto, p->conf.nocookie_page);
++		}
++		response_header_insert(srv, con, CONST_STR_LEN("Location"),
++						redirto->ptr, redirto->used - 1);
++		con->http_status = 302;
++		con->mode = DIRECT;
++		con->file_finished = 1;
++
++		return HANDLER_FINISHED;
++	}
++
++	needs_cookie = 1;
++	if (ds != NULL) {
++		buffer* value = fetch_cookie_value(COOKIE_NAME, ds->value);
++
++		if (value != NULL && value->used == 33) {
++			/* do we have this session in our DB? */
++			session = session_get(p->conf.tdb, value);
++
++			/* if this is login page to be accessed, but there is no session
++			 * for existing valid cookie, then create the session, using the
++			 * same cookie value - this allows us to avoid double-login issue
++			 */
++			if ((session == NULL) &&
++					(con->uri.path->used == p->conf.login_page->used) &&
++					(strcmp(con->uri.path->ptr, p->conf.login_page->ptr) == 0)) {
++				session = session_create(value, con->dst_addr_buf);
++				if (session != NULL) {
++					session_store(p->conf.tdb, session);
++				}
++			}
++			if (session != NULL) {
++				needs_cookie = 0;
++			}
++		}
++		/* we no longer need cookie value, discard it */
++		buffer_free(value);
++
++		if (session_has_timedout(session, p->conf.session_timeout, 0)) {
++			session_destroy(p->conf.tdb, session);
++			free(session);
++			session = NULL;
++			needs_cookie = is_ajax ? 0 : 1;
++		} else if (session_is_authenticated(session)) {
++			session->time_lastaccess = time(NULL);
++			session_store(p->conf.tdb, session);
++			if (session->authenticated && !is_uri_allowed) {
++				char id[16];
++				snprintf(id, sizeof(id), ":%d:%d", session->uid, session->gid);
++					/* set the value of the authed_user - might be useful for CGI */
++				buffer_copy_string(con->authed_user, session->username);
++				buffer_append_string(con->authed_user, id);
++			}
++			free(session);
++			session = NULL;
++			return HANDLER_GO_ON;
++		}
++	}
++
++	if (needs_cookie) {
++		session = session_init(srv, con, p);
++	}
++
++	/*
++	 * if the URI requested is on allow list, allow it.
++	 */
++	if (is_uri_allowed) {
++		if (session) free(session);
++		return HANDLER_GO_ON;
++	}
++
++	/* when redirecting, append URI of the original resource */
++	if (is_ajax){
++		con->http_status = 204;
++	} else 	{
++		buffer* b = buffer_init();
++		/*
++		 * if this is the first time we set the cookie, send the guy
++		 * over to cookie test page, otherwise - login
++		 */
++		if (needs_cookie) {
++			buffer_copy_string(b, COOKIE_TEST_PAGE);
++		} else {
++			buffer_copy_string_buffer(b, p->conf.login_page);
++		}
++		buffer_append_string(b, "?uri=");
++		buffer_append_string_buffer(b, con->uri.path);
++		if (con->uri.query && con->uri.query->used > 1) {
++			buffer_append_string_encoded(b, "?", 1, ENCODING_REL_URI);
++			buffer_append_string_encoded(b, CONST_BUF_LEN(con->uri.query),
++					ENCODING_REL_URI);
++		}
++		response_header_insert(srv, con, CONST_STR_LEN("Location"),
++				b->ptr, b->used - 1);
++		buffer_free(b);
++		con->http_status = 302;
++	}
++
++	con->mode = DIRECT;
++	con->file_finished = 1;
++	if (session) free(session);
++
++	return HANDLER_FINISHED;
++}
++
++TRIGGER_FUNC(mod_airos_trigger) {
++	plugin_data* p = p_d;
++	UNUSED(srv);
++	p->trigger_count++;
++	/* cleaning up each minute should be sufficient ? */
++	if (p->trigger_count > 60) {
++		/* XXX: iterate over all config_storages? */
++		plugin_config* s = p->config_storage[0];
++		if (p->debug) {
++			log_error_write(srv, __FILE__, __LINE__, "ssxd", __func__,
++				"calling cleanup", s->tdb, s->session_timeout);
++		}
++		session_cleanup(s->tdb, s->session_timeout);
++		p->trigger_count = 0;
++	}
++	return HANDLER_GO_ON;
++}
++
++static int
++set_uri_cache(server* srv, connection* con, const buffer* expires, long age) {
++	/* borrowed from mod_expire.c */
++	buffer* b = buffer_init();
++
++	/* HTTP/1.0 */
++	response_header_overwrite(srv, con,
++			CONST_STR_LEN("Expires"), CONST_BUF_LEN(expires));
++
++	/* HTTP/1.1 */
++	buffer_copy_string_len(b, CONST_STR_LEN("max-age="));
++	buffer_append_long(b, age);
++	if (age == 0) {
++		buffer_append_string_len(b, CONST_STR_LEN(", no-cache"));
++	}
++
++	response_header_overwrite(srv, con,
++			CONST_STR_LEN("Cache-Control"), CONST_BUF_LEN(b));
++	if (age == 0) {
++		response_header_overwrite(srv, con,
++				CONST_STR_LEN("Cache-Control"), CONST_STR_LEN("must-revalidate"));
++#if 0
++		response_header_overwrite(srv, con,
++				CONST_STR_LEN("Pragma"), CONST_STR_LEN("no-store"));
++#endif
++	}
++
++	buffer_free(b);
++	return 0;
++}
++
++static inline handler_t
++try_handling_compressed(server* srv, connection* con) {
++	stat_cache_entry* sce = NULL;
++	stat_cache_entry* sce_orig = NULL;
++	buffer* mtime;
++
++	buffer_copy_string_buffer(srv->tmp_buf, con->physical.path);
++	BUFFER_APPEND_STRING_CONST(srv->tmp_buf, ".gz");
++
++	/* no compressed item present - abort */
++	if (stat_cache_get_entry(srv, con, srv->tmp_buf, &sce) == HANDLER_ERROR) {
++		return HANDLER_GO_ON;
++	}
++
++	/* remember original file stat entry for headers */
++	if (stat_cache_get_entry(srv, con, con->physical.path, &sce_orig) == HANDLER_ERROR) {
++		sce_orig = sce;
++	}
++
++	/* TODO: before going and setting everything up for compressed data feed
++	 * we should really check whether original content can be processed
++	 * using http_response_handle_cachable
++	 */
++
++	/* compressed item exists - modify physical path! */
++	buffer_copy_string_buffer(con->physical.path, srv->tmp_buf);
++
++	mtime = strftime_cache_get(srv, sce->st.st_mtime);
++	etag_mutate(con->physical.etag, sce->etag);
++
++	/* make sure to setup necessary headers */
++	response_header_overwrite(srv, con, CONST_STR_LEN("Content-Type"), CONST_BUF_LEN(sce_orig->content_type));
++	response_header_overwrite(srv, con, CONST_STR_LEN("Content-Encoding"), CONST_STR_LEN("gzip"));
++	response_header_overwrite(srv, con, CONST_STR_LEN("Last-Modified"), CONST_BUF_LEN(mtime));
++	response_header_overwrite(srv, con, CONST_STR_LEN("ETag"), CONST_BUF_LEN(con->physical.etag));
++
++	/* try to go through handle_cachable (for etag, if-modified-since) */
++	if (HANDLER_FINISHED == http_response_handle_cachable(srv, con, mtime)) {
++		return HANDLER_FINISHED;
++	}
++
++	/* fall through mod_staticfile with updated physical path */
++	return HANDLER_GO_ON;
++}
++
++#define DEFAULT_CACHE_AGE (60*60*24*365)
++
++SUBREQUEST_FUNC(mod_airos_subrequest_start) {
++	plugin_data* p = p_d;
++	data_string* ds;
++	session_t* session = NULL;
++	int is_uri_cachable = 0;
++	int is_phy_allowed = 0;
++
++	is_uri_cachable = phy_is_in_list(&con->physical, p->conf.cachable);
++	is_phy_allowed = phy_is_in_list(&con->physical, p->conf.allowed);
++
++	if (is_uri_cachable) {
++		time_t expires = srv->cur_ts + DEFAULT_CACHE_AGE;
++		if (expires > srv->cur_ts) {
++			size_t len;
++			buffer* b = buffer_init();
++			buffer_prepare_copy(b, 128);
++			len = strftime(b->ptr, b->size - 1,
++				"%a, %d %b %Y %H:%M:%S GMT", gmtime(&(expires)));
++			b->used = len + 1;
++
++			set_uri_cache(srv, con, b, DEFAULT_CACHE_AGE);
++			buffer_free(b);
++		}
++	} else if (con->authed_user != NULL && con->authed_user->used > 0) {
++		/* assume authenticated session */
++		set_uri_cache(srv, con, p->expires_str, 0);
++	}
++
++	/* TODO: optimize - use connection plugin_ctx to store session */
++	ds = (data_string *)array_get_element(con->request.headers, "Cookie");
++	if (ds != NULL) {
++			buffer* value = fetch_cookie_value(COOKIE_NAME, ds->value);
++
++			if (value != NULL && value->used == 33) {
++				/* do we have this session in our DB? */
++				session = session_get(p->conf.tdb, value);
++			}
++			/* we no longer need cookie value, discard it */
++			buffer_free(value);
++	}
++
++	/* check session authorization */
++	if ((!is_phy_allowed && (!session_is_authenticated(session) || !session_is_authorized(session, srv, con)))
++		|| (session_is_authenticated(session) && !session_is_authorized(session, srv, con))) {
++		 free(session);
++		 session = NULL;
++		 con->http_status = 403;
++		 con->mode = DIRECT;
++
++		 return HANDLER_FINISHED;
++	}
++
++	if (session) free(session);
++
++	/* items, that are in cachable list are static, hence, besides caching them,
++	 * we could also feed their gzipped versions if they are available and
++	 * the client supports gzip encoding.
++	 *
++	 * No, we do not want to support runtime compression as does mod_compress -
++	 * we rely on already prepared content opnly.
++	 *
++	 */
++	if (p->conf.cachable_gz && is_uri_cachable) {
++		/* check whether browser supports gzip */
++		ds = (data_string *)array_get_element(con->request.headers, "Accept-Encoding");
++		if ((ds != NULL) && strstr(ds->value->ptr, "gzip")) {
++			if (try_handling_compressed(srv, con) == HANDLER_FINISHED)
++				return HANDLER_FINISHED;
++		}
++	}
++
++	return HANDLER_GO_ON;
++}
++
++JOBLIST_FUNC(mod_airos_joblist) {
++	UNUSED(p_d);
++	UNUSED(srv);
++	UNUSED(con);
++//	log_error_write(srv, __FILE__, __LINE__, "ssb", __func__,
++//							"called for: ", con->uri.path_raw);
++	return HANDLER_GO_ON;
++}
++
++/* this function is called at dlopen() time and inits the callbacks */
++
++int mod_airos_plugin_init(plugin* p) {
++	p->version     = LIGHTTPD_VERSION_ID;
++	p->name        = buffer_init_string("airos");
++
++	p->init        = mod_airos_init;
++	p->handle_trigger = mod_airos_trigger;
++	p->handle_uri_clean  = mod_airos_uri_handler;
++	p->handle_subrequest_start = mod_airos_subrequest_start;
++	p->handle_joblist = mod_airos_joblist;
++	p->set_defaults  = mod_airos_set_defaults;
++	p->cleanup     = mod_airos_free;
++
++	p->data        = NULL;
++
++	return 0;
++}
+--- /dev/null
++++ b/src/mod_airos.h
+@@ -0,0 +1,48 @@
++#ifndef _MOD_AIROS_H_
++#define _MOD_AIROS_H_
++/**
++ * This file is a part of mod_airos plugin.
++ * Copyright (c) 2009 Ubiquiti Networks, Inc.
++ */
++
++#define SESSION_TYPE 0x00
++#define TICKET_TYPE 0x0a
++
++#define SESSION_V1 0x01
++#define TICKET_V1 0x01
++
++#define SESSION_VERSION (SESSION_TYPE << 8 | SESSION_V1)
++#define TICKET_VERSION (TICKET_TYPE << 8 | TICKET_V1)
++
++#define VERSION_MASK 0xff
++#define TYPE_MASK 0xff00
++
++#define MA_T(a) (*((unsigned short*)(a)))
++#define MA_VERSION(a) (MA_T(a) & VERSION_MASK)
++#define MA_TYPE(a) ((MA_T(a) & TYPE_MASK) >> 8)
++
++#define IS_SESSION(a) (MA_TYPE(a) == SESSION_TYPE)
++#define IS_TICKET(a)  (MA_TYPE(a) == TICKET_TYPE)
++
++typedef struct session {
++	unsigned short type; /* structure type/version */
++	char session_id[33]; /* 32 + '\0' */
++	char ipaddr[50]; /* enough to hold IPv6 */
++	time_t time_created;
++	time_t time_lastaccess;
++	char authenticated; /* 0 - not authenticated */
++	char level; /* authorization level to separate guests from admins, etc */
++	char username[16]; /* makes sense only when authenticated */
++	uid_t uid;         /* user id - filled in during authentication */
++	gid_t gid;         /* group id - filled in during authentication */
++} session_t;
++
++typedef struct ticket {
++	unsigned short type; /* structure type/version */
++	char ticket_id[33]; /* 32 + '\0' */
++	time_t time_created;
++	char username[16];
++} ticket_t;
++
++
++#endif /* _MOD_AIROS_H_ */

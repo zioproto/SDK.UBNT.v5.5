@@ -1,0 +1,123 @@
+--- dnsmasq/src/dnsmasq.h	2009-02-01 17:59:35.000000000 +0200
++++ dnsmasq/src/dnsmasq.h	2009-09-17 18:34:25.000000000 +0300
+@@ -185,6 +185,8 @@
+ #define OPT_NO_OVERRIDE    (1u<<30)
+ #define OPT_NO_REBIND      (1u<<31)
+ 
++#define EXT_OPT_USE_RESOLV     (1u<<4 | 1)  //Start from more than 9 because of overlap with ARG_xxx
++
+ struct all_addr {
+   union {
+     struct in_addr addr4;
+@@ -588,6 +590,7 @@
+      in option.c */
+ 
+   unsigned int options;
++  unsigned int ext_options;
+   struct resolvc default_resolv, *resolv_files;
+   time_t last_resolv;
+   struct mx_srv_record *mxnames;
+--- dnsmasq/src/option.c	2009-02-01 18:01:10.000000000 +0200
++++ dnsmasq/src/option.c	2009-09-17 18:34:25.000000000 +0300
+@@ -98,6 +98,7 @@
+ #define LOPT_MINPORT   288
+ #define LOPT_DHCP_FQDN 289
+ #define LOPT_CNAME     290
++#define LOPT_USE_RESOLV 355
+ 
+ #ifdef HAVE_GETOPT_LONG
+ static const struct option opts[] =  
+@@ -204,6 +205,7 @@
+     {"min-port", 1, 0, LOPT_MINPORT },
+     {"dhcp-fqdn", 0, 0, LOPT_DHCP_FQDN },
+     {"cname", 1, 0, LOPT_CNAME },
++    {"dhcp-use-resolv", 0, 0, LOPT_USE_RESOLV},
+     { NULL, 0, 0, 0 }
+   };
+ 
+@@ -212,6 +214,7 @@
+ #define ARG_ONE       5
+ #define ARG_USED_CL   7
+ #define ARG_USED_FILE 9
++#define EXT_OPT (1u)
+ 
+ static struct {
+   int opt;
+@@ -317,6 +320,7 @@
+   { LOPT_MINPORT, ARG_ONE, "<port>", gettext_noop("Specify lowest port available for DNS query transmission."), NULL },
+   { LOPT_DHCP_FQDN, OPT_DHCP_FQDN, NULL, gettext_noop("Use only fully qualified domain names for DHCP clients."), NULL },
+   { LOPT_CNAME, ARG_DUP, "<alias>,<target>", gettext_noop("Specify alias name for LOCAL DNS name."), NULL },
++  { LOPT_USE_RESOLV, EXT_OPT_USE_RESOLV,  NULL, gettext_noop("Use real DNS hosts for DHCP instead of local IP."), NULL },
+   { 0, 0, NULL, NULL, NULL }
+ }; 
+ 
+@@ -979,7 +983,10 @@
+ 
+ 	 if (rept != ARG_DUP && rept != ARG_ONE && rept != ARG_USED_CL) 
+ 	   {
+-	     daemon->options |= rept;
++	       if ((rept & EXT_OPT) && (rept & ~EXT_OPT))
++		   daemon->ext_options |= (rept & ~EXT_OPT);
++               else
++		   daemon->options |= rept;
+ 	     return NULL;
+ 	   }
+        
+--- dnsmasq/src/rfc2131.c	2009-02-01 18:01:34.000000000 +0200
++++ dnsmasq/src/rfc2131.c	2009-09-17 18:34:25.000000000 +0300
+@@ -75,6 +75,7 @@
+ static struct in_addr server_id(struct dhcp_context *context, struct in_addr override, struct in_addr fallback);
+ static unsigned int calc_time(struct dhcp_context *context, struct dhcp_config *config, unsigned char *opt);
+ static void option_put(struct dhcp_packet *mess, unsigned char *end, int opt, int len, unsigned int val);
++static void option_put_data(struct dhcp_packet *mess, unsigned char *end, int opt, int len, const unsigned char* val);
+ static void option_put_string(struct dhcp_packet *mess, unsigned char *end, 
+ 			      int opt, char *string, int null_term);
+ static struct in_addr option_addr(unsigned char *opt);
+@@ -1497,6 +1498,15 @@
+       *(p++) = val >> (8 * (len - (i + 1)));
+ }
+ 
++static void option_put_data(struct dhcp_packet *mess, unsigned char *end, int opt, int len, const unsigned char* val)
++{
++    unsigned char *p = free_space(mess, end, opt, len);
++    if (p)
++    {
++        memcpy(p, val, len);
++    }
++}
++
+ static void option_put_string(struct dhcp_packet *mess, unsigned char *end, int opt, 
+ 			      char *string, int null_term)
+ {
+@@ -1814,10 +1824,28 @@
+ 	option_put(mess, end, OPTION_ROUTER, INADDRSZ, ntohl(context->router.s_addr));
+       
+       if (in_list(req_options, OPTION_DNSSERVER) &&
+-	  !option_find2(netid, config_opts, OPTION_DNSSERVER))
+-	option_put(mess, end, OPTION_DNSSERVER, INADDRSZ, ntohl(context->local.s_addr));
++       !option_find2(netid, config_opts, OPTION_DNSSERVER)) {
++         if (daemon->servers && (daemon->ext_options & EXT_OPT_USE_RESOLV))
++         {
++             struct server *tmp;
++             int idx = 0;
++             unsigned int dns[5];
++             for (tmp = daemon->servers; tmp && (idx < 5); tmp = tmp->next)
++             {
++                 if (tmp->addr.sa.sa_family == AF_INET)
++                 {
++                     dns[idx] = ntohl(tmp->addr.in.sin_addr.s_addr);
++                     ++idx;
++                 }
++             }
++             option_put_data(mess, end, OPTION_DNSSERVER, INADDRSZ * idx, (unsigned char*)dns);
++         }
++         else
++         {
++             option_put(mess, end, OPTION_DNSSERVER, INADDRSZ, ntohl(context->local.s_addr));
++         }
++      }
+     }
+-
+   if (domain && in_list(req_options, OPTION_DOMAINNAME) && 
+       !option_find2(netid, config_opts, OPTION_DOMAINNAME))
+     option_put_string(mess, end, OPTION_DOMAINNAME, domain, null_term);

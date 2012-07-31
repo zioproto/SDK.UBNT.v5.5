@@ -1,0 +1,147 @@
+--- a/src/drivers/driver_wext.c
++++ b/src/drivers/driver_wext.c
+@@ -255,14 +255,92 @@ int wpa_driver_wext_set_ssid(void *priv,
+ 		perror("ioctl[SIOCSIWESSID]");
+ 		ret = -1;
+ 	}
+ 
+ 	return ret;
+ }
+ 
++static int wext_80211_priv(struct wpa_driver_wext_data *drv, int op,
++		void *data, size_t len)
++{
++	struct iwreq iwr;
++	os_memset(&iwr, 0, sizeof(iwr));
++	os_strlcpy(iwr.ifr_name, drv->ifname, IFNAMSIZ);
++
++	if (len < IFNAMSIZ)
++	{
++		memcpy(iwr.u.name, data, len);
++	}
++	else
++	{
++		iwr.u.data.pointer = data;
++		iwr.u.data.length = len;
++	}
++	if (ioctl(drv->ioctl_sock, op, &iwr) < 0)
++	{
++		return -1;
++	}
++	return 0;
++}
++
++static int wext_80211_set_param(struct wpa_driver_wext_data *drv, int op, int arg)
++{
++	int data[2];
++
++	data[0] = op;
++	data[1] = arg;
++
++#define	IEEE80211_IOCTL_SETPARAM	(SIOCIWFIRSTPRIV+0)
++	if (wext_80211_priv(drv, IEEE80211_IOCTL_SETPARAM, data, sizeof(data)) < 0)
++	{
++		perror("ioctl[IEEE80211_IOCTL_SETPARAM]");
++		fprintf(stderr, "WEXT set80211param op %d arg %d - ", op, arg);
++		return -1;
++	}
++	return 0;
++}
++
++struct ieee80211req_mlme
++{
++	u_int8_t	im_op;
++	u_int8_t	im_ssid_len;
++	u_int16_t	im_reason;
++	u_int8_t	im_macaddr[ETH_ALEN];
++	u_int8_t	im_ssid[WPA_MAX_SSID_LEN];
++};
++
++static inline int wext_80211_set_mlme(struct wpa_driver_wext_data *drv,
++		struct ieee80211req_mlme* mlme)
++{
++#define	IEEE80211_IOCTL_SETMLME		(SIOCIWFIRSTPRIV+6)
++	return wext_80211_priv(drv, IEEE80211_IOCTL_SETMLME, mlme, sizeof(*mlme));
++}
++
++#define IEEE80211_PARAM_ROAMING		12
++static inline int wext_80211_set_roaming_manual(struct wpa_driver_wext_data *drv)
++{
++	return wext_80211_set_param(drv, IEEE80211_PARAM_ROAMING, 2);
++}
++
++static inline int wext_80211_set_roaming_auto(struct wpa_driver_wext_data *drv)
++{
++	return wext_80211_set_param(drv, IEEE80211_PARAM_ROAMING, 1);
++}
++
++static inline int wext_80211_set_mlme_assoc(struct wpa_driver_wext_data *drv,
++		const u_int8_t macaddr[ETH_ALEN])
++{
++	struct ieee80211req_mlme mlme;
++
++	os_memset(&mlme, 0, sizeof(mlme));
++#define	IEEE80211_MLME_ASSOC		1
++	mlme.im_op = IEEE80211_MLME_ASSOC;
++	os_memcpy(mlme.im_macaddr, macaddr, sizeof(mlme.im_macaddr));
++	return wext_80211_set_mlme(drv, &mlme);
++}
+ 
+ /**
+  * wpa_driver_wext_set_freq - Set frequency/channel, SIOCSIWFREQ
+  * @priv: Pointer to private wext data from wpa_driver_wext_init()
+  * @freq: Frequency in MHz
+  * Returns: 0 on success, -1 on failure
+  */
+@@ -949,14 +1027,16 @@ void * wpa_driver_wext_init(void *ctx, c
+ }
+ 
+ 
+ static void wpa_driver_wext_finish_drv_init(struct wpa_driver_wext_data *drv)
+ {
+ 	int flags;
+ 
++	wext_80211_set_roaming_manual(drv);
++
+ 	if (wpa_driver_wext_get_ifflags(drv, &flags) != 0)
+ 		printf("Could not get interface '%s' flags\n", drv->ifname);
+ 	else if (!(flags & IFF_UP)) {
+ #ifdef CONFIG_IFACE_DOWN_CONTROL
+ 		if (wpa_driver_wext_set_ifflags(drv, flags | IFF_UP) != 0) {
+ 			printf("Could not set interface '%s' UP\n",
+ 			       drv->ifname);
+@@ -1026,14 +1106,16 @@ void wpa_driver_wext_deinit(void *priv)
+ 	struct wpa_driver_wext_data *drv = priv;
+ #ifdef CONFIG_IFACE_DOWN_CONTROL
+ 	int flags;
+ #endif /* CONFIG_IFACE_DOWN_CONTROL */
+ 
+ 	eloop_cancel_timeout(wpa_driver_wext_scan_timeout, drv, drv->ctx);
+ 
++	wext_80211_set_roaming_auto(drv);
++
+ 	/*
+ 	 * Clear possibly configured driver parameters in order to make it
+ 	 * easier to use the driver after wpa_supplicant has been terminated.
+ 	 */
+ 	wpa_driver_wext_disconnect(drv);
+ 
+ 	wpa_driver_wext_send_oper_ifla(priv, 0, IF_OPER_UP);
+@@ -2179,14 +2261,17 @@ int wpa_driver_wext_associate(void *priv
+ 	if (params->freq && wpa_driver_wext_set_freq(drv, params->freq) < 0)
+ 		ret = -1;
+ 	if (wpa_driver_wext_set_ssid(drv, params->ssid, params->ssid_len) < 0)
+ 		ret = -1;
+ 	if (params->bssid &&
+ 	    wpa_driver_wext_set_bssid(drv, params->bssid) < 0)
+ 		ret = -1;
++	if (params->bssid &&
++		wext_80211_set_mlme_assoc(drv, params->bssid) < 0)
++		ret = -1;
+ 
+ 	return ret;
+ }
+ 
+ 
+ static int wpa_driver_wext_set_auth_alg(void *priv, int auth_alg)
+ {

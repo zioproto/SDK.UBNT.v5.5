@@ -1,0 +1,107 @@
+#!/bin/sh
+
+. /usr/etc/rc.d/rc.funcs
+
+CFG_SYSTEM="/tmp/system.cfg"
+CFG_SYSTEM_SORTED="/tmp/.system.cfg.$$"
+CFG_RUNNING="/tmp/running.cfg"
+CFG_RUNNING_SORTED="/tmp/.running.cfg.$$"
+CFG_DEFAULT="/etc/default.cfg"
+
+TEST_LOCK_FILE=/var/run/testmode
+
+do_softrestart() {
+	INITTAB_DEF=/usr/etc/inittab
+	INITTAB_CUR=/etc/inittab
+	cp -f ${INITTAB_DEF} ${INITTAB_CUR}
+	kill -1 1
+
+	# extra: if any hang happens, watchdog will reboot
+	watchdog_stop
+
+	rc_stop
+
+	ifconfig wifi0 down
+
+	# extra: restore watchdog functionality
+	watchdog_start
+
+	rm -fr /etc/sysinit/*
+	rm -fr /etc/ccodes.inc
+
+	# run configuration parser
+	if [ -e /sbin/ubntconf ]; then
+		/sbin/ubntconf
+		echo "ubntconf returned $?" >> /tmp/ubntconf.log
+	fi
+
+	if [ -e $TEST_LOCK_FILE ]; then
+		/usr/bin/chmod 644 $TEST_LOCK_FILE
+	fi
+
+	rc_start
+
+	kill -1 1
+}
+
+do_fastrestart() {
+	if [ -e $TEST_LOCK_FILE ]; then
+		killall infctld
+		/usr/bin/chmod 644 $TEST_LOCK_FILE
+	fi
+	/bin/sh /tmp/diff.sh
+}
+
+do_restart() {
+	if [ -e /sbin/ubntconf ]; then
+		/sbin/ubntconf -p $CFG_RUNNING
+		fastrestart=$?
+		echo "ubntconf -p returned $fastrestart" >> /tmp/ubntconf.log
+	fi
+
+	if [ $fastrestart -eq 0 ]; then
+		do_fastrestart
+	else
+		do_softrestart
+	fi
+}
+
+do_save() {
+	sort $CFG_RUNNING | tr -d "\r"> $CFG_RUNNING_SORTED
+	sort $CFG_SYSTEM | tr -d "\r" > $CFG_SYSTEM_SORTED
+	diff $CFG_RUNNING_SORTED $CFG_SYSTEM_SORTED
+	if [ $? -eq 0 ]; then
+		# Old cfg = new cfg. Nothing to save, no need to restart
+		rm -f $CFG_RUNNING_SORTED $CFG_SYSTEM_SORTED
+		exit 0
+	fi
+	rm $CFG_SYSTEM_SORTED $CFG_RUNNING_SORTED
+
+	do_restart
+
+	sort $CFG_SYSTEM | tr -d "\r"> $CFG_RUNNING
+	bgnd -r cfgmtd \
+		-- /sbin/cfgmtd -w -f $CFG_RUNNING \
+		-p /etc/ 2>/dev/null &
+}
+
+do_test() {
+	do_restart
+	cp $CFG_SYSTEM $CFG_RUNNING
+}
+
+case "$1" in
+	force)
+		do_softrestart
+		;;
+	save)
+		do_save
+		;;
+	test)
+		do_test
+		;;
+	*)
+		echo "Usage: /usr/etc/rc.d/rc.softrestart (force|test|save)"
+		exit 1
+		;;
+esac

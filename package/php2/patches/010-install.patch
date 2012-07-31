@@ -1,0 +1,331 @@
+--- a/install
++++ b/install
+@@ -20,15 +20,15 @@ echo
+ echo "PHP/FI Installation"
+ echo
+ echo "If you do not understand any of the following questions,"
+ echo "then the default should be safe - simply hit 'Return'."
+ echo
+ 
+ $ECHO_N "Do you have mSQL installed on this system? [yN] $ECHO_C"
+-read a
++echo N | read a
+ if [ "$a" = "y" ] || [ "$a" = "Y" ]
+ then
+ $ECHO_N "Top of your mSQL install tree? [/usr/local/Minerva] $ECHO_C"
+ HLM=-DHAVE_LIBMSQL=1
+ read INST_TOP
+ if [ "$INST_TOP." = "." ]
+ then
+@@ -36,15 +36,15 @@ then
+ fi
+ else
+ 	INST_TOP=
+ fi
+ 
+ shome="/usr/local/sybase"
+ $ECHO_N "Do you have Sybase libraries installed on this system [yN] $ECHO_C"
+-read a
++echo N | read a
+ if [ "$a" = "y" ] || [ "$a" = "Y" ]
+ then
+ $ECHO_N "Sybase home [$shome] $ECHO_C"
+ HLS=-DHAVE_SYBASE=1
+ read SYB_TOP
+ if [ "$SYB_TOP." = "." ]
+ then
+@@ -68,109 +68,109 @@ if [ -d /usr/local/pgsql ]
+ then
+       PGDEFANS=y
+       PGDEFQUE=Yn
+       PGDEFDIR=/usr/local/pgsql
+ fi
+ 
+ $ECHO_N "Do you have Postgres installed in this system? [$PGDEFQUE] $ECHO_C"
+-read a
++echo N | read a
+ if [ ".$a" = "." -a "$PGDEFANS" = "y" ] || [ "$a" = "y" ] || [ "$a" = "Y" ]
+ then
+ $ECHO_N "Top of your Postgres install tree? [$PGDEFDIR] $ECHO_C"
+ HLP=-DHAVE_LIBPQ=1
+ read PGINST_TOP
+ if [ "$PGINST_TOP." = "." ]
+ then
+       PGINST_TOP=$PGDEFDIR
+ fi
+ else
+ 	PGINST_TOP=
+ fi
+ 
+ $ECHO_N "Do you have mysql installed on this system? [yN] $ECHO_C"
+-read a
++echo N | read a
+ if [ "$a" = "y" ] || [ "$a" = "Y" ]
+ then
+ $ECHO_N "Top of your mysql install tree? [/usr/local] $ECHO_C"
+ HLMY=-DHAVE_LIBMYSQL=1
+ read INST_TOPY
+ if [ "$INST_TOPY." = "." ]
+ then
+ 	INST_TOPY=/usr/local
+ fi
+ else
+ 	INST_TOPY=
+ fi
+ 
+ $ECHO_N "Do you have Adabas installed in this system? [yN] $ECHO_C"
+-read a
++echo N | read a
+ if [ "$a" = "y" ] || [ "$a" = "Y" ]
+ then
+ $ECHO_N "Top of your Adabas install tree? [/usr/local/adabas] $ECHO_C"
+ HLA=-DHAVE_LIBADABAS=1
+ read ADAINST_TOP
+ if [ "$ADAINST_TOP." = "." ]
+ then
+    ADAINST_TOP=/usr/local/adabas
+ fi
+ else
+    ADAINST_TOP=
+ fi
+ 
+ $ECHO_N "Do you have Solid installed in this system? [yN] $ECHO_C"
+-read a
++echo N | read a
+ if [ "$a" = "y" ] || [ "$a" = "Y" ]
+ then
+ $ECHO_N "Top of your Solid install tree? [/usr/local/solid] $ECHO_C"
+ HLS=-DHAVE_LIBSOLID=1
+ read SOLIDINST_TOP
+ if [ "$SOLIDINST_TOP." = "." ]
+ then
+    SOLIDINST_TOP=/usr/local/solid
+ fi
+ else
+    SOLIDINST_TOP=
+ fi
+ 
+ $ECHO_N "Do you have Oracle installed in this system? [yN] $ECHO_C"
+-read a
++echo N | read a
+ if [ "$a" = "y" ] || [ "$a" = "Y" ]
+ then
+ $ECHO_N "Top of your Oracle install tree? [$ORACLE_HOME] $ECHO_C"
+ HLO=-DHAVE_LIBOCIC=1
+ read ORACLEINST_TOP
+ if [ "$ORACLEINST_TOP." = "." ]
+ then
+    ORACLEINST_TOP=$ORACLE_HOME
+ fi
+ else
+    ORACLEINST_TOP=
+ fi
+ 
+ $ECHO_N "Do you have filePro installed in this system? [yN] $ECHO_C"
+-read a
++echo N | read a
+ if [ "$a" = "y" ] || [ "$a" = "Y" ]
+ then
+ HLF=-DHAVE_FILEPRO=1
+ fi
+ 
+ HODBC=""
+ LIBODBC=""
+ $ECHO_N "Do you have ODBC installed in this system? [yN] $ECHO_C"
+-read a
++echo N | read a
+ if [ "$a" = "y" ] || [ "$a" = "Y" ]
+ then
+ HODBC=-DHAVE_ODBC=1
+ LIBODBC=-liodbc
+ fi
+ SED_ODBC="	s,@ODBC_DEF@,$HODBC,
+ 		s,@ODBC_LIB@,$LIBODBC,"
+ 
+ $ECHO_N "Would you like to compile PHP/FI as an Apache module? [yN] $ECHO_C"
+-read a
++echo N | read a
+ if [ "$a" = "y" ] || [ "$a" = "Y" ]
+ then
+ $ECHO_N "Are you compiling for an Apache 1.1 or later server? [Yn] $ECHO_C"
+ read APACHE_API
+ if [ "$APACHE_API." = "." ] || [ "$APACHE_API" = "y" ] || [ "$APACHE_API" = "Y" ]
+ then
+ 	APACHE_API=-DAPACHE_NEWAPI=1
+@@ -226,35 +226,35 @@ if [ "$APACHE_DIR." = "." ]
+ then
+ 	APACHE_DIR=$apache_dir
+ fi
+ else
+ 	APACHE=
+ 	PRG=php.cgi
+ 	$ECHO_N "Please specify the DOCUMENT ROOT directory of your web server [/usr/local/etc/htdocs] $ECHO_C"
+-	read b
++	echo | read b
+ 	if [ "$b." = "." ]
+ 	then
+ 		b="/usr/local/etc/htdocs"
+ 	fi
+-	PHP_DOCUMENT_ROOT=-DPHP_DOCUMENT_ROOT=\\\\\"$b\\\\\"
++#	PHP_DOCUMENT_ROOT=-DPHP_DOCUMENT_ROOT=\\\\\"$b\\\\\"
+ fi
+ 
+ if [ "$APACHE." = "." ]
+ then
+ $ECHO_N "Do you want to dynamically link utility libraries? [Yn] $ECHO_C"
+-read a
++echo N | read a
+ if [ "$a" = "" -o "$a" = y -o "$a" = Y ]
+ then
+     USEDLIBS='$(LIBS)'
+ else
+     USEDLIBS='$(STATICLIBS)'
+ fi
+ 
+ $ECHO_N "Would you like to compile PHP/FI with FastCGI support? [yN] $ECHO_C"
+-read a
++echo N | read a
+ if [ "$a" = "y" ] || [ "$a" = "Y" ]
+ then
+ $ECHO_N "FastCGI development kit source directory? [/usr/local/etc/httpd/fcgi-devel-kit] $ECHO_C"
+ PHPFASTCGI=-DPHPFASTCGI=1
+ PRG=php.cgi
+ read FCGI_DIR
+ if [ "$FCGI_DIR." = "." ]
+@@ -264,15 +264,15 @@ fi
+ else
+ 	PHPFASTCGI=
+ 	PRG=php.cgi
+ fi
+ fi
+ 
+ $ECHO_N "Would you like to include access control support? [yN] $ECHO_C"
+-read a
++echo N | read a
+ if [ "$a." = "." ] || [ "$a" = "n" ] || [ "$a" = "N" ]
+ then
+ 	ACCESS_CONTROL=
+ 	ACCESS_DIR=
+ else
+ 	ACCESS_CONTROL=-DACCESS_CONTROL
+ 	echo 
+@@ -285,17 +285,17 @@ else
+ 	if [ "$b." = "." ]
+ 	then
+ 		b=$DEF_ACC_DIR
+ 	fi
+ 	ACCESS_DIR=-DACCESS_DIR=\\\\\"$b\\\\\"
+ fi
+ 
+-$ECHO_N "Would you like to include page logging support? [Yn] $ECHO_C"
+-read a
+-if [ "$a." = "." ] || [ "$a" = "y" ] || [ "$a" = "Y" ]
++$ECHO_N "Would you like to include page logging support? [yN] $ECHO_C"
++echo N | read a
++if [ "$a" = "y" ] || [ "$a" = "Y" ]
+ then
+ 	if [ "$HLM" = "-DHAVE_LIBMSQL=1" ]
+ 	then
+ 		if [ "$HLMY" = "-DHAVE_LIBMYSQL=1" ]
+ 		then
+ 			$ECHO_N "Would you like to store your log files in dbm, mSQL, or mysql format? [dmy] $ECHO_C"
+ 		else
+@@ -384,58 +384,58 @@ then
+ 	fi
+ else
+ 	LOGGING=
+ 	LOG_DIR=
+ fi
+ 
+ $ECHO_N "Would you like to include file upload support? [Yn] $ECHO_C"
+-read a
++echo N | read a
+ if [ "$a." = "." ] || [ "$a" = "y" ] || [ "$a" = "Y" ]
+ then
+ 	FILE_UPLOAD=-DFILE_UPLOAD
+ else
+ 	FILE_UPLOAD=
+ fi
+ 
+-OPT_CFLAGS=-O
++OPT_CFLAGS=${CFLAGS}
+ 
+ $ECHO_N "Would you like to build an ELF shared library? [yN] $ECHO_C"
+-read a
++echo N | read a
+ if [ "$a" = "" -o "$a" = n -o "$a" = N ]
+ then
+     :
+     PHPLIB_TARGET=staticlib
+ else
+     SYS_CFLAGS=-fPIC
+     SHLIB_TARGET=sharedlib
+     PHPLIB_TARGET=sharedlib
+ fi
+ 
+ $ECHO_N "Additional directories to search for .h files []: $ECHO_C"
+-read a
++echo | read a
+ if [ "$a." = "." ]
+ then
+ 	ADD_INC_DIRS=
+ else
+ 	ADD_INC_DIRS=`echo "$a" | sed 's@  *@ @g; s@^\([^ ]\)@-I\1@; s@ \([^ ]\)@ -I\1@g'`
+ 	INC_CFLAGS="$ADD_INC_DIRS"
+ fi
+ 
+ $ECHO_N "Additional directories to search for library files []: $ECHO_C"
+-read a
++echo | read a
+ if [ "$a." = "." ]
+ then
+ 	ADD_LIB_DIRS=
+ else
+ 	ADD_LIB_DIRS=`echo "$a" | sed 's@  *@ @g; s@^\([^ ]\)@-L\1@; s@ \([^ ]\)@ -L\1@g'`
+ 	LDFLAGS=$ADD_LIB_DIRS
+ 	export LDFLAGS
+ fi
+ 
+-./configure
++./configure $*
+ 
+ mv src/Makefile src/Makefile.$$
+ mv src/mod_php.module src/mod_php.$$
+ 
+ echo "$SED_MSQL"
+ # mSQL part of sed  command
+ if [ "$INST_TOP." = "." ]
+@@ -705,15 +705,15 @@ then
+     DEBIAN=-DDEBIAN
+ else
+     DEBIAN=
+ fi
+ 
+ if grep "sendmail" config.cache >/dev/null 2>&1
+ then
+-	PHPSENDMAIL="-DPHPSENDMAIL=1"
++	PHPSENDMAIL=""
+ else
+ 	PHPSENDMAIL=""
+ fi
+ 
+ if grep "#define HAVE_REGCOMP 1" config.h >/dev/null 2>&1
+ then
+ 	echo "Your system appears to have a Posix compliant regex library";
+@@ -725,15 +725,15 @@ then
+ 	echo "certain that your system library is broken, answer No here."
+ 	echo ""
+ 	echo "*IMPORTANT* If you are compiling the Apache module, make sure"
+ 	echo "you set Apache's regexp setting accordingly in the Configuration"
+ 	echo "file.  ie. WANTHSREGEX=no if you answer No here."
+ 	echo ""
+ 	$ECHO_N "Would you like the bundled regex library? [yN] $ECHO_C"
+-	read a
++	echo N | read a
+ 	if [ "$a" = y -o "$a" = Y ]
+ 	then
+ 		echo "Using the included Posix regular expression library"
+ 		echo ""
+ 		HSREGEX=yes
+ 		LIBREGEX=-lregex	
+ 		LIBREGEXDIR=-L./regex

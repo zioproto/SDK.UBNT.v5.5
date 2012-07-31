@@ -1,0 +1,6 @@
+<? if (strlen($no_header) == 0) { header("Content-Type: application/json"); }>
+{ "dhcpc" : {
+	"status": <? echo $status;>,
+	"sysuptime": <? echo $now;>,
+	"error": "<? echo $error_msg;>",
+	"info":[

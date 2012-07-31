@@ -1,0 +1,793 @@
+Index: linux-2.6.32.48/drivers/char/Kconfig
+===================================================================
+--- linux-2.6.32.48.orig/drivers/char/Kconfig
++++ linux-2.6.32.48/drivers/char/Kconfig
+@@ -1036,6 +1036,9 @@ config GPIO_DEVICE
+ 	  Say Y to enable Linux GPIO device support.  This allows control of
+ 	  GPIO pins using a character device
+ 
++config AR7240_GPIO
++	tristate "Atheros AR7240 GPIO device support"
++	depends on MACH_AR7240 || MACH_AR724x || MACH_AR933x || MACH_AR934x
+ 
+ config RAW_DRIVER
+ 	tristate "RAW driver (/dev/raw/rawN)"
+Index: linux-2.6.32.48/drivers/char/Makefile
+===================================================================
+--- linux-2.6.32.48.orig/drivers/char/Makefile
++++ linux-2.6.32.48/drivers/char/Makefile
+@@ -98,6 +98,7 @@ obj-$(CONFIG_NSC_GPIO)		+= nsc_gpio.o
+ obj-$(CONFIG_CS5535_GPIO)	+= cs5535_gpio.o
+ obj-$(CONFIG_GPIO_DEVICE)	+= gpio_dev.o
+ obj-$(CONFIG_GPIO_TB0219)	+= tb0219.o
++obj-$(CONFIG_AR7240_GPIO)	+= ar7240_gpio.o
+ obj-$(CONFIG_TELCLOCK)		+= tlclk.o
+ 
+ obj-$(CONFIG_MWAVE)		+= mwave/
+Index: linux-2.6.32.48/drivers/char/ar7240_gpio.c
+===================================================================
+--- /dev/null
++++ linux-2.6.32.48/drivers/char/ar7240_gpio.c
+@@ -0,0 +1,602 @@
++#ifndef AUTOCONF_INCLUDED
++#include <linux/config.h>
++#endif
++#include <linux/version.h>
++#include <linux/module.h>
++#include <linux/types.h>
++#include <linux/delay.h>
++#include <linux/fs.h>
++#include <linux/proc_fs.h>
++#include <linux/init.h>
++#include <linux/list.h>
++#include <linux/interrupt.h>
++
++#include "ar7240.h"
++
++#ifndef CONFIG_PROC_FS
++#error This module requires PROCFS
++#endif
++
++#define GPIO_CHAR_DEV
++
++#ifdef GPIO_CHAR_DEV
++#include <asm/uaccess.h>
++#include <linux/miscdevice.h>
++
++#if 1 /* XXX */
++#ifndef GPIO_H_
++#define GPIO_H_
++
++struct gpio_bit {
++	unsigned char bit;
++	unsigned char state;
++};
++
++#define GPIO_MAJOR    127
++#define GPIO_GET_BIT	0x0000001
++#define GPIO_SET_BIT	0x0000002
++#define GPIO_GET_CONFIG	0x0000003
++#define GPIO_SET_CONFIG 0x0000004
++#define GPIO_SET_LEDS   0x0000005
++#define GPIO_GET_FUNC   0x0000006
++#define GPIO_SET_FUNC   0x0000007
++#define GPIO_BITBANG    0x0000008
++#define GPIO_BLINK	0x0000009
++
++#define GPIO_DIR_INPUT	0
++#define GPIO_DIR_OUTPUT	1
++
++#define GPIO_DATA_LO	0
++#define GPIO_DATA_HI	1
++
++void gpio_line_get(unsigned char line, u32 * data);
++unsigned int gpio_line_set(unsigned char line, u32 val);
++unsigned int gpio_line_config(unsigned char line, unsigned char state);
++
++#endif /*GPIO_H_*/
++#else
++#include "gpio.h"
++#endif
++
++#define DEVICE_NAME "gpio"
++
++#endif /* GPIO_CHAR_DEV */
++
++//#define DEBUG
++
++#define MODULE_VERS "1.1"
++#define MODULE_NAME "ar7240-gpio"
++
++#define GP_PROC_NAME "gpio"
++#define GP_RESET_BTN "reset_btn"
++#define GP_SYS_LED "system_led"
++
++#define RESETBTN_GPIO 12
++#define LED1_OFFSET 0
++#define LED2_OFFSET 1
++#define LED3_OFFSET 11
++#define LED4_OFFSET 7
++
++static inline void gpio_set(u32 mask) {
++	ar7240_reg_wr_nf(AR7240_GPIO_SET, mask);
++}
++static inline void gpio_clr(u32 mask) {
++	ar7240_reg_wr_nf(AR7240_GPIO_CLEAR, mask);
++}
++#if 1
++static inline void bb_delay_setup(void) {
++	ndelay(500);
++}
++static inline void bb_delay_value(void) {
++	ndelay(500);
++}
++#else
++#define bb_delay_setup()
++#define bb_delay_value()
++#endif
++
++/* rising-edge (aka positive-edge) bitbanging */
++static u32
++gpio_bitbang_re(u8 clk_pin, u8 data_pin, u8 bitcount, u32 value) {
++	u32 clk = 1 << clk_pin;
++	u32 out = 1 << data_pin;
++	ar7240_reg_t reg = ar7240_reg_rd(AR7240_GPIO_OE);
++	/* enable output on clk and data pins */
++	if (!(reg & (clk | out))) {
++		reg |= clk | out;
++		ar7240_reg_wr_nf(AR7240_GPIO_OE, reg);
++		reg = ar7240_reg_rd(AR7240_GPIO_OE); /* flush */
++	}
++
++	value <<= (32 - bitcount);
++	gpio_clr(clk);
++
++	while (likely(bitcount)) {
++		if (value & (1 << 31))
++			gpio_set(out);
++		else
++			gpio_clr(out);
++
++		bb_delay_setup();
++		gpio_set(clk);
++		bb_delay_value();
++		value <<= 1;
++		bitcount--;
++		gpio_clr(clk);
++	}
++	return 0;
++}
++
++u32 gpio_bitbang(u8 clk_pin, u8 data_pin, u8 bitcount, u32 value)
++{
++	return gpio_bitbang_re(clk_pin, data_pin, bitcount, value);
++}
++
++EXPORT_SYMBOL(gpio_bitbang);
++
++static u32 gpio_leds_set(u8* leds)
++{
++	ar7240_reg_t reg_out = 0;
++	u8 c, n, d, o, i;
++
++	if (!leds || !(c = leds[0]))
++	{
++		return 0;
++	}
++
++	for (i = 1; i <= c; ++i)
++	{
++		n = leds[i] >> 2;
++		d = (leds[i] >> 1) & 1;
++		o = leds[i] & 1;
++#ifdef DEBUG
++		printk("GPIO_OE[%d] = %d, GPIO_OUT[%d] = %d (0x%02X)\n",
++				n, d, n, o, leds[i]);
++#endif
++		gpio_line_config(n, d);
++		gpio_line_set(n, o);
++	}
++
++	return reg_out;
++}
++
++#ifdef GPIO_CHAR_DEV
++
++void gpio_line_get(unsigned char line, u32 * data)
++{
++	*data = (ar7240_reg_rd(AR7240_GPIO_IN) >> line) & 1;
++}
++EXPORT_SYMBOL(gpio_line_get);
++
++void gpio_func_get(u32 * data)
++{
++    *data = ar7240_reg_rd(AR7240_GPIO_FUNCTIONS);
++#ifdef DEBUG
++    printk("Read %x from AR7240_GPIO_FUNCTIONS\n",*data);
++#endif
++}
++EXPORT_SYMBOL(gpio_func_get);
++
++unsigned int gpio_line_set(unsigned char line, u32 val)
++{
++	ar7240_reg_t reg = ar7240_reg_rd(AR7240_GPIO_OUT);
++
++	reg &= ~(1 << line);
++	reg |= (val & 1) << line;
++	ar7240_reg_wr_nf(AR7240_GPIO_OUT, reg);
++	return ar7240_reg_rd(AR7240_GPIO_OUT);
++}
++EXPORT_SYMBOL(gpio_line_set);
++
++unsigned int gpio_func_set(u32 val)
++{
++#ifdef DEBUG
++	printk("Write %x to AR7240_GPIO_FUNCTIONS\n",val);
++#endif
++    ar7240_reg_wr_nf(AR7240_GPIO_FUNCTIONS, val);
++	return ar7240_reg_rd(AR7240_GPIO_FUNCTIONS);
++}
++EXPORT_SYMBOL(gpio_func_set);
++
++unsigned int gpio_line_config(unsigned char line, unsigned char state)
++{
++	ar7240_reg_t reg = ar7240_reg_rd(AR7240_GPIO_OE);
++
++	if (state) /* configure for OUTPUT */
++	{
++		ar7240_reg_wr_nf(AR7240_GPIO_OE, (reg | (1 << line)));
++	}
++	else /* configure for INPUT */
++	{
++		ar7240_reg_wr_nf(AR7240_GPIO_OE, (reg & ~(1 << line)));
++	}
++	return ar7240_reg_rd(AR7240_GPIO_OE); /* flush */
++}
++EXPORT_SYMBOL(gpio_line_config);
++
++typedef struct gpio_toggler_data {
++	struct list_head list;
++	u8 line;
++	u8 state;
++	u32 delay_off; /* in jiffies */
++	u32 delay_on; /* in jiffies */
++	int count;
++	unsigned long expires; /* next expiration time */
++} gpio_toggler_data_t;
++
++typedef struct gpio_toggler {
++	spinlock_t lock;
++	struct timer_list timer;
++	struct list_head togglers;
++} gpio_toggler_t;
++
++static gpio_toggler_t g_toggler;
++
++static void gpio_toggler_timer(unsigned long arg) {
++	unsigned long j = jiffies;
++	long min_diff = -1;
++	unsigned long next_expires = 0;
++	struct list_head* pos;
++	struct list_head* n;
++	gpio_toggler_data_t* gt;
++
++	spin_lock_bh(&g_toggler.lock);
++	/* find togglers that need to be processed */
++	list_for_each_safe(pos, n, &g_toggler.togglers) {
++		long diff;
++		gt = list_entry(pos, struct gpio_toggler_data, list);
++		diff = (long)gt->expires - (long)j;
++#ifdef __DEBUG
++		printk("%s: checking %d gpio: state: %d; expires: %lu, count: %lu\n",
++				__func__, gt->line, gt->state, gt->expires, gt->count);
++#endif
++		if (diff <= 0) {
++			/* process toggler, update expiration */
++			gt->state = !gt->state;
++			/* XXX: polarity support */
++			gpio_line_set(gt->line, gt->state);
++
++			gt->expires = j + (gt->state ? gt->delay_off : gt->delay_on);
++			diff = (long)gt->expires - (long)j;
++			if (gt->count > 0)
++				gt->count--;
++		}
++		if (gt->count == 0) {
++			/* XXX: polarity support */
++			gpio_line_set(gt->line, 0);
++			list_del(&gt->list);
++			kfree(gt);
++		}
++
++		if ((min_diff == -1) || (abs(diff) < min_diff)) {
++			min_diff = abs(diff);
++			next_expires = gt->expires;
++		}
++	}
++	if (min_diff != -1) {
++		mod_timer(&g_toggler.timer, next_expires);
++	}
++	spin_unlock_bh(&g_toggler.lock);
++}
++
++static int gpio_toggler_remove(unsigned char line) {
++	gpio_toggler_data_t* gt;
++	struct list_head* pos;
++	struct list_head* n;
++
++	spin_lock_bh(&g_toggler.lock);
++	list_for_each_safe(pos, n, &g_toggler.togglers) {
++		gt = list_entry(pos, struct gpio_toggler_data, list);
++		if (gt->line == line) {
++			/* XXX: polarity support */
++			gpio_line_set(line, 0);
++			/* TODO: modify the timer? otoh, it will get updated
++			 * on next timer invocation... */
++			list_del(&gt->list);
++			kfree(gt);
++		}
++	}
++	spin_unlock_bh(&g_toggler.lock);
++	return 0;
++}
++
++static int gpio_toggler_add(unsigned char line, u32 on_delay, u32 off_delay, int count) {
++	gpio_toggler_data_t* gt;
++	unsigned long j = jiffies;
++
++#ifdef DEBUG
++	printk("%s: line %u; off: %u; on: %u; %d\n", __func__, line, off_delay, on_delay, count);
++#endif
++
++	/* remove existing toggler - TODO: reuse existing toggler, when possible */
++	gpio_toggler_remove(line);
++	gt = kmalloc(sizeof(gpio_toggler_data_t), GFP_KERNEL);
++	if (gt == NULL)
++		return -1;
++
++	/* make sure gpio line is configured for output */
++	gpio_line_config(line, 1);
++	gt->state = 0;
++	gt->line = line;
++	gt->delay_off = msecs_to_jiffies(off_delay);
++	gt->delay_on = msecs_to_jiffies(on_delay);
++	gt->expires = j + gt->delay_on;
++	gt->count = count * 2; /* two states, hence twice */
++
++	spin_lock_bh(&g_toggler.lock);
++	list_add(&gt->list, &g_toggler.togglers);
++	spin_unlock_bh(&g_toggler.lock);
++
++	/* start timer now */
++	mod_timer(&g_toggler.timer, jiffies);
++	return 0;
++}
++
++static void toggler_init(gpio_toggler_t* t) {
++	INIT_LIST_HEAD(&g_toggler.togglers);
++	setup_timer(&g_toggler.timer, gpio_toggler_timer, (unsigned long)&g_toggler);
++}
++
++static void toggler_cleanup(gpio_toggler_t* t) {
++	gpio_toggler_data_t* gt;
++	struct list_head* pos;
++	struct list_head* n;
++
++	del_timer_sync(&g_toggler.timer);
++	spin_lock_bh(&g_toggler.lock);
++	list_for_each_safe(pos, n, &g_toggler.togglers) {
++		gt = list_entry(pos, struct gpio_toggler_data, list);
++#ifdef DEBUG
++		printk("%s: removing %d\n", __func__, gt->line);
++#endif
++		list_del(&gt->list);
++		kfree(gt);
++	}
++	spin_unlock_bh(&g_toggler.lock);
++}
++
++
++static int gpio_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
++	unsigned long arg)
++{
++	struct gpio_bit bit;
++	u32 val;
++	u8 leds[33];
++	u8 len = 0;
++
++	if (cmd == GPIO_SET_LEDS || cmd == GPIO_BITBANG || cmd == GPIO_BLINK)
++	{
++		if (copy_from_user(&len, (u8*)arg, sizeof(len)))
++		{
++			return -EFAULT;
++		}
++		if (copy_from_user(leds, (u8*)arg, len > 33 ? 33 : len + 1))
++		{
++			return -EFAULT;
++		}
++	}
++	else if (cmd == GPIO_SET_FUNC)
++	{
++		if (copy_from_user(&val, (u32*)arg, sizeof(val)))
++		{
++			return -EFAULT;
++		}
++	}
++	else
++	{
++		if (copy_from_user(&bit, (struct gpio_bit *)arg, sizeof(bit)))
++		{
++			return -EFAULT;
++		}
++	}
++
++	switch (cmd)
++	{
++		case GPIO_GET_BIT:
++			gpio_line_get(bit.bit, &val);
++			bit.state = val;
++			return copy_to_user((void *)arg, &bit, sizeof(bit)) ? -EFAULT : 0;
++		case GPIO_SET_BIT:
++			val = bit.state;
++			gpio_line_set(bit.bit, val);
++			return 0;
++		case GPIO_GET_CONFIG:
++			gpio_line_config(bit.bit, bit.state);
++			return copy_to_user((void *)arg, &bit, sizeof(bit)) ? -EFAULT : 0;
++		case GPIO_SET_CONFIG:
++			val = bit.state;
++			gpio_line_config(bit.bit, bit.state);
++			return 0;
++		case GPIO_SET_LEDS:
++			gpio_leds_set(leds);
++			return 0;
++		case GPIO_GET_FUNC:
++			gpio_func_get(&val);
++			return copy_to_user((void*)arg, &val, sizeof(val)) ? -EFAULT : 0;
++		case GPIO_SET_FUNC:
++			gpio_func_set(val);
++			return 0;
++		case GPIO_BLINK:
++			if (len == 14) {
++				u8 line = leds[1];
++				unsigned int on_delay = *((unsigned int*)(leds + 2));
++				unsigned int off_delay = *((unsigned int*)(leds + 6));
++				int count = *((unsigned int*)(leds + 10));
++#ifdef DEBUG
++				printk("gpio: %d; on: %dms, off: %dms, count: %d\n",
++						line, on_delay, off_delay, count);
++#endif
++				if ((on_delay == 0) || (off_delay == 0) || (count == 0))
++					gpio_toggler_remove(line);
++				else
++					gpio_toggler_add(line, on_delay, off_delay, count);
++				return 0;
++			}
++		case GPIO_BITBANG:
++			if (len == 8) {
++				u8 g_clk = leds[1];
++				u8 g_data = leds[2];
++				u8 bitcount = leds[3];
++				unsigned int value = *((unsigned int*)(leds + 4));
++#ifdef DEBUG
++				printk("l=%d; clk=%d, data=%d; count=%d, value=%u\n", len,
++						g_clk, g_data, bitcount, value);
++#endif
++				gpio_bitbang(g_clk, g_data, bitcount, value);
++				return 0;
++			}
++	}
++	return -EINVAL;
++}
++
++static int gpio_open(struct inode *inode, struct file *file)
++{
++	/* XXX: increase use count? */
++	return 0;
++}
++
++static int gpio_release(struct inode *inode, struct file *file)
++{
++	/* XXX: decrease use count, if it was increase in open? */
++	return 0;
++}
++
++/*
++ *      The file operations we support.
++ */
++static struct file_operations gpio_fops =
++{
++	.owner          = THIS_MODULE,
++	.ioctl          = gpio_ioctl,
++	.open           = gpio_open,
++	.release        = gpio_release,
++};
++
++#endif /* GPIO_CHAR_DEV */
++
++static int ar7240_reset_read(char *page, char **start, off_t off, int count,
++	int *eof, void *data)
++{
++	ar7240_reg_t gpioDataIn;
++
++	/* get button state */
++	gpioDataIn = (ar7240_reg_rd(AR7240_GPIO_IN) >> RESETBTN_GPIO) & 1;
++	return snprintf(page, count, "%d\n", gpioDataIn ? 1 : 0 );
++}
++
++static int ar7240_led_read(char *page, char **start, off_t off,  int count,
++	int *eof, void *data)
++{
++	return snprintf(page, count, "LEDS: %x %x\n",
++			ar7240_reg_rd(AR7240_GPIO_OE),
++			ar7240_reg_rd(AR7240_GPIO_OUT));
++}
++
++static int ar7240_led_write(struct file *file, const char *buf,
++	unsigned long count, void *data)
++{
++	int c = 0, n = 0;
++	u32 result;
++	u32 nr = 0, dir = 0, out = 0;
++	char* p, * v;
++	char lbuf[count + 1];
++	u8 leds[33];
++
++	memset(lbuf, 0, count + 1);
++	if (copy_from_user(lbuf, buf, count))
++	    return -EFAULT;
++
++	lbuf[count] = '\0';
++        p = lbuf;
++#ifdef DEBUG
++	printk("ARG: %s\n", p);
++#endif
++	while (p && (n < 32)) {
++		++c;
++	    v = strsep(&p, " \n\t");
++	    if (!v)
++			break;
++		result = simple_strtoul(v, (char**)NULL, 0);
++	    if (c == 1)
++			nr = result;
++	    else if (c == 2)
++			dir = result;
++	    else {
++			out = result;
++			c = 0;
++			++n;
++#ifdef DEBUG
++			printk("GPIO_%u %s %s\n", nr, dir ? "OUT" : "IN", out ? "HIGH" : "LOW");
++#endif
++            leds[n] = (nr << 2) | (dir ? 2 : 0) | (out ? 1 : 0);
++	    }
++	}
++	leds[0] = n;
++	gpio_leds_set(leds);
++	return count;
++}
++
++/* procfs */
++static struct proc_dir_entry *ar7240_gpio_entry = NULL;
++static struct proc_dir_entry *ar7240_reset_entry = NULL;
++static struct proc_dir_entry *ar7240_led_entry = NULL;
++
++int __init ar7240_gpio_setup(void)
++{
++#ifdef GPIO_CHAR_DEV
++	int retval;
++
++	/* register /dev/gpio file ops */
++	retval = register_chrdev(GPIO_MAJOR, DEVICE_NAME, &gpio_fops);
++	if(retval < 0)
++	{
++		return retval;
++	}
++#endif
++
++	toggler_init(&g_toggler);
++
++	/* register /proc/gpio */
++	ar7240_gpio_entry = proc_mkdir(GP_PROC_NAME, NULL);
++	if (!ar7240_gpio_entry)
++	{
++		printk("Failed to create /proc/%s\n", GP_PROC_NAME);
++		return -ENOENT;
++	}
++
++	/* create /proc/gpio/reset_btn */
++	ar7240_reset_entry = create_proc_read_entry(GP_RESET_BTN, 0444,
++			ar7240_gpio_entry, ar7240_reset_read, NULL);
++
++	/* create /proc/gpio/system_led */
++	ar7240_led_entry = create_proc_entry(GP_SYS_LED, 0644, ar7240_gpio_entry);
++	if (ar7240_led_entry)
++	{
++		ar7240_led_entry->write_proc = ar7240_led_write;
++		ar7240_led_entry->read_proc = ar7240_led_read;
++	}
++
++	printk(KERN_INFO "%s %s initialised\n", MODULE_NAME, MODULE_VERS);
++	return 0;
++}
++
++static void __exit ar7240_gpio_unload(void)
++{
++	remove_proc_entry(GP_SYS_LED, ar7240_gpio_entry);
++	remove_proc_entry(GP_RESET_BTN, ar7240_gpio_entry);
++	remove_proc_entry(GP_PROC_NAME, NULL);
++#ifdef GPIO_CHAR_DEV
++	unregister_chrdev(GPIO_MAJOR, DEVICE_NAME);
++#endif
++	toggler_cleanup(&g_toggler);
++}
++
++module_init(ar7240_gpio_setup);
++module_exit(ar7240_gpio_unload);
++
++MODULE_AUTHOR("Ubiquiti");
++MODULE_DESCRIPTION("AR7240 GPIO control");
++#ifdef MODULE_LICENSE
++MODULE_LICENSE("GPL");
++#endif
++#undef GPIO_CHAR_DEV
+Index: linux-2.6.32.48/arch/mips/ar7240/gpio.c
+===================================================================
+--- linux-2.6.32.48.orig/arch/mips/ar7240/gpio.c
++++ linux-2.6.32.48/arch/mips/ar7240/gpio.c
+@@ -22,11 +22,13 @@
+ 
+ #define AR7240_FACTORY_RESET		0x89ABCDEF
+ 
++#if 0 /* UBNT: disabled code */
+ static atomic_t ar7240_fr_status = ATOMIC_INIT(0);
+ static volatile int ar7240_fr_opened=0;
+ static wait_queue_head_t ar7240_fr_wq;
+ static u_int32_t push_time=0;
+ static struct timer_list  os_timer_t;
++#endif /* UBNT: disabled code */
+ 
+ #define frdbg printk
+ 
+@@ -111,6 +113,7 @@ typedef struct {
+     void            *cb_arg2;
+ } Multi_Callback_t;
+ 
++#if 0 /* UBNT: disabled code */
+ /*
+ ** Specific instance of the callback structure
+ */
+@@ -163,6 +166,7 @@ ar7240_gpio_config_output(int gpio)
+     ar7240_reg_rmw_set(AR7240_GPIO_OE, (1 << gpio));
+ #endif
+ }
++#endif /* UBNT: disabled code */
+ 
+ void
+ ar7240_gpio_config_input(int gpio)
+@@ -174,6 +178,7 @@ ar7240_gpio_config_input(int gpio)
+ #endif
+ }
+ 
++#if 0 || defined AP_USB_LED_GPIO /* UBNT: disabled code */
+ static void
+ ar7240_gpio_out_val(int gpio, int val)
+ {
+@@ -184,6 +189,7 @@ ar7240_gpio_out_val(int gpio, int val)
+         ar7240_reg_rmw_clear(AR7240_GPIO_OUT, (1 << gpio));
+     }
+ }
++#endif /* UBNT: disabled code */
+ 
+ int
+ ar7240_gpio_in_val(int gpio)
+@@ -277,6 +283,7 @@ ar7240_gpio_irq_init(int irq_base)
+ 	}
+ }
+ 
++#if 0 /* UBNT: disabled code */
+ int32_t register_simple_config_callback (char *cbname, void *callback, void *arg1, void *arg2)
+ {
+ 	printk("SC Callback Registration for %s\n",cbname);
+@@ -530,6 +537,7 @@ static int gpio_simple_config_led_write 
+ 
+     return count;
+ }
++#endif /* UBNT: disabled code */
+ 
+ #ifdef AP_USB_LED_GPIO
+ void ap_usb_led_on(void)
+@@ -545,6 +553,7 @@ void ap_usb_led_off(void)
+ EXPORT_SYMBOL(ap_usb_led_off);
+ #endif /* AP_USB_LED_GPIO */
+ 
++#if 0 /* UBNT: disabled code */
+ #ifdef ATH_SUPPORT_LED
+ static void ap_wlan_led_off(void)
+ {
+@@ -750,4 +759,5 @@ static int __init ar7240_simple_config_i
+ #if !defined(CONFIG_I2S) && !defined(CONFIG_AR7240_EMULATION)
+ late_initcall(ar7240_simple_config_init);
+ #endif
++#endif /* UBNT: disabled code */
+ 
+Index: linux-2.6.32.48/arch/mips/atheros/gpio.c
+===================================================================
+--- linux-2.6.32.48.orig/arch/mips/atheros/gpio.c
++++ linux-2.6.32.48/arch/mips/atheros/gpio.c
+@@ -20,11 +20,13 @@
+ 
+ #define ATH_FACTORY_RESET		0x89ABCDEF
+ 
++#if 0 /* UBNT: disabled code */
+ static atomic_t ath_fr_status = ATOMIC_INIT(0);
+ static volatile int ath_fr_opened = 0;
+ static wait_queue_head_t ath_fr_wq;
+ static u_int32_t push_time = 0;
+ static struct timer_list os_timer_t;
++#endif /* UBNT: disabled code */
+ 
+ #define frdbg printk
+ 
+@@ -93,6 +95,7 @@ typedef struct {
+ 	void		*cb_arg2;
+ } multi_callback_t;
+ 
++#if 0 /* UBNT: disabled code */
+ /*
+  * Specific instance of the callback structure
+  */
+@@ -132,6 +135,7 @@ static void ath_gpio_config_int(int gpio
+ 
+ 	ath_reg_rmw_set(ATH_GPIO_INT_ENABLE, (1 << gpio));
+ }
++#endif /* UBNT: disabled code */
+ 
+ static void ath_gpio_config_output(int gpio)
+ {
+@@ -152,6 +156,7 @@ void ath_gpio_config_input(int gpio)
+ #endif
+ }
+ 
++#if 0 || defined AP_USB_LED_GPIO /* UBNT: disabled code */
+ static void ath_gpio_out_val(int gpio, int val)
+ {
+ 	if (val & 0x1) {
+@@ -161,6 +166,7 @@ static void ath_gpio_out_val(int gpio, i
+ 	}
+ }
+ EXPORT_SYMBOL(ath_gpio_out_val);
++#endif /* UBNT: disabled code */
+ 
+ 
+ int ath_gpio_in_val(int gpio)
+@@ -243,6 +249,7 @@ void ath_gpio_irq_init(int irq_base)
+ 	}
+ }
+ 
++#if 0 /* UBNT: disabled code */
+ int32_t register_simple_config_callback(char *cbname, void *callback, void *arg1, void *arg2)
+ {
+ 	printk("SC Callback Registration for %s\n", cbname);
+@@ -446,6 +453,7 @@ static int gpio_simple_config_led_write(
+ 
+ 	return count;
+ }
++#endif /* UBNT: disabled code */
+ 
+ #ifdef AP_USB_LED_GPIO
+ void ap_usb_led_on(void)
+@@ -488,6 +496,7 @@ void ap_usb_led_off(void)
+ EXPORT_SYMBOL(ap_usb_led_off);
+ #endif /* AP_USB_LED_GPIO */
+ 
++#if 0 /* UBNT: disabled code */
+ static int create_simple_config_led_proc_entry(void)
+ {
+ 	if (simple_config_entry != NULL) {
+@@ -654,4 +663,5 @@ static int __init ath_simple_config_init
+ #if !defined(CONFIG_ATH_EMULATION)
+ late_initcall(ath_simple_config_init);
+ #endif
++#endif /* UBNT: disabled code */
+ 

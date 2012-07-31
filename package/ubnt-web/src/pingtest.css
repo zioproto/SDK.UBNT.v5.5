@@ -1,0 +1,34 @@
+img#ip_refresh {
+border: 0px;
+vertical-align: middle;
+padding: 2px 4px 2px 8px;
+}
+.pingc {
+width: 500px; 
+height: 120px; 
+overflow: scroll; 
+overflow-x: hidden;
+border-left: 1px solid #B8B8B8;
+}
+table.pingh {
+width: 500px; 
+border-collapse: collapse;
+text-align: left;
+border: 1px solid #B8B8B8;
+}
+table.pingdata {
+border-collapse: collapse;
+width: 500px; 
+text-align: left;
+}
+table.pingh td {
+border: 1px solid #B8B8B8;
+}
+tr.pingrow {
+border: 1px solid #B8B8B8;
+border-left: 0px;
+border-top: 0px;
+}
+tr.pingrow td {
+padding-left: 6px;
+}

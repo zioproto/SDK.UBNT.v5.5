@@ -1,0 +1,64 @@
+--- a/config.mk
++++ b/config.mk
+@@ -10,7 +10,7 @@ CFLAGS = -I$(tdbsrcdir)/include
+ LIBTDB_OBJ_FILES = $(addprefix $(tdbsrcdir)/common/, \
+ 	tdb.o dump.o io.o lock.o \
+ 	open.o traverse.o freelist.o \
+-	error.o transaction.o)
++	error.o)
+ 
+ ################################################
+ # Start BINARY tdbtool
+--- a/configure
++++ b/configure
+@@ -21338,7 +21338,7 @@ if test x"$tdbdir" = "x"; then
+ $as_echo "$as_me: error: cannot find tdb source in $tdbpaths" >&2;}
+    { (exit 1); exit 1; }; }
+ fi
+-TDB_OBJ="common/tdb.o common/dump.o common/transaction.o common/error.o common/traverse.o"
++TDB_OBJ="common/tdb.o common/dump.o common/error.o common/traverse.o"
+ TDB_OBJ="$TDB_OBJ common/freelist.o common/freelistcheck.o common/io.o common/lock.o common/open.o"
+ 
+ 
+--- a/include/tdb.h
++++ b/include/tdb.h
+@@ -30,6 +30,8 @@
+ extern "C" {
+ #endif
+ 
++#define TDB_WITHOUT_TRANSACTION 1
++
+ #include "signal.h"
+ 
+ /* flags to tdb_store() */
+@@ -128,11 +130,19 @@ const char *tdb_name(struct tdb_context 
+ int tdb_fd(struct tdb_context *tdb);
+ tdb_log_func tdb_log_fn(struct tdb_context *tdb);
+ void *tdb_get_logging_private(struct tdb_context *tdb);
++#ifdef TDB_WITHOUT_TRANSACTION
++#define tdb_transaction_start(tdb) (0)
++#define tdb_transaction_prepare_commit(tdb) (0)
++#define tdb_transaction_commit(tdb) (0)
++#define tdb_transaction_cancel(tdb) (0)
++#define tdb_transaction_recover(tdb) (0)
++#else
+ int tdb_transaction_start(struct tdb_context *tdb);
+ int tdb_transaction_prepare_commit(struct tdb_context *tdb);
+ int tdb_transaction_commit(struct tdb_context *tdb);
+ int tdb_transaction_cancel(struct tdb_context *tdb);
+ int tdb_transaction_recover(struct tdb_context *tdb);
++#endif
+ int tdb_get_seqnum(struct tdb_context *tdb);
+ int tdb_hash_size(struct tdb_context *tdb);
+ size_t tdb_map_size(struct tdb_context *tdb);
+--- a/libtdb.m4
++++ b/libtdb.m4
+@@ -12,7 +12,7 @@ done
+ if test x"$tdbdir" = "x"; then
+    AC_MSG_ERROR([cannot find tdb source in $tdbpaths])
+ fi
+-TDB_OBJ="common/tdb.o common/dump.o common/transaction.o common/error.o common/traverse.o"
++TDB_OBJ="common/tdb.o common/dump.o common/error.o common/traverse.o"
+ TDB_OBJ="$TDB_OBJ common/freelist.o common/freelistcheck.o common/io.o common/lock.o common/open.o"
+ AC_SUBST(TDB_OBJ)
+ AC_SUBST(LIBREPLACEOBJ)

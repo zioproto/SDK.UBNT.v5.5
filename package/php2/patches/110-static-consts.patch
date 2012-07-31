@@ -1,0 +1,60 @@
+--- a/src/date.c
++++ b/src/date.c
+@@ -26,33 +26,33 @@
+ #else
+ #include <time.h>
+ #endif
+ #include <string.h>
+ #include "php.h"
+ #include "parse.h"
+ 
+-static char *Months[] = {
++static const char * const Months[] = {
+ 	"Jan","Feb","Mar","Apr","May","Jun","Jul",
+ 	"Aug","Sep","Oct","Nov","Dec"
+ };
+ 
+-static char *FullMonths[] = {
++static const char * const FullMonths[] = {
+ 	"January", "February", "March", "April", "May", "June", "July",
+ 	"August", "September", "October", "November", "December"
+ };
+ 
+-static char *Days[] = {
++static const char * const Days[] = {
+ 	"Sun","Mon","Tue","Wed","Thu","Fri","Sat"
+ };
+ 
+-static char *FullDays[] = {
++static const char * const FullDays[] = {
+ 	"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+ };
+ 
+-static int  phpday_tab[2][12] = {
++static const int  phpday_tab[2][12] = {
+ 	{31,28,31,30,31,30,31,31,30,31,30,31},
+ 	{31,29,31,30,31,30,31,31,30,31,30,31}  };
+ 
+ /*
+  * Date
+  * 
+  * Function prints out the date and/or time based on the passed
+--- a/src/lex.c
++++ b/src/lex.c
+@@ -88,15 +88,15 @@ typedef struct _cmd_table_t {
+ /* Command hash table
+  * The hash is extremely simplistic and just based on the length of the
+  * command.
+  */
+ #define PHP_MAX_CMD_LEN 21
+ #define PHP_MAX_CMD_NUM 39
+ 
+-static cmd_table_t cmd_table[PHP_MAX_CMD_LEN+1][PHP_MAX_CMD_NUM+1] = {
++static const cmd_table_t cmd_table[PHP_MAX_CMD_LEN+1][PHP_MAX_CMD_NUM+1] = {
+ 	{ { NULL,0,NULL } },        /* 0 */
+ 
+ 	{ { NULL,0,NULL } },        /* 1 */
+ 
+ 	{ { "if", IF, NULL },        /* 2 */
+ 	  { NULL,0,NULL } }, 
+ 

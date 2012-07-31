@@ -1,0 +1,23 @@
+diff -Naupr a/arch/mips/kernel/time.c b/arch/mips/kernel/time.c
+--- a/arch/mips/kernel/time.c	2009-10-15 03:46:33.000000000 -0700
++++ b/arch/mips/kernel/time.c	2010-12-14 00:47:36.096855995 -0800
+@@ -467,7 +467,7 @@ irqreturn_t timer_interrupt(int irq, voi
+ 	 * That is still somewhat imprecise, but it's a good estimate.
+ 	 * --macro
+ 	 */
+-	j = jiffies;
++	j = jiffies - INITIAL_JIFFIES;
+ 	if (j < 4) {
+ 		static unsigned int prev_count;
+ 		static int hpt_initialized;
+@@ -475,7 +475,9 @@ irqreturn_t timer_interrupt(int irq, voi
+ 		switch (j) {
+ 		case 0:
+ 			timerhi = timerlo = 0;
+-			mips_hpt_init(count);
++			if (!hpt_initialized) {
++				mips_hpt_init(count);
++			}
+ 			break;
+ 		case 2:
+ 			prev_count = count;

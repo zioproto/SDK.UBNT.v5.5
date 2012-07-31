@@ -1,0 +1,240 @@
+--- a/src/uploadbuffer.c
++++ b/src/uploadbuffer.c
+@@ -121,30 +121,30 @@ static char* trim(char* ptr)
+ 
+ static int ub_init_writeout(struct upload_buffer* ub)
+ {
+ 	ub->ignore = 0;
+ 
+ 	switch (ub->state) {
+ 	case ST_PARAMETER:
+-		if (ub->content) warn("buffer was already created ?\n");
++		if (ub->content) DBG_WARN("ub_init_writeout: buffer was already created ?\n");
+ 
+ 		if (buffer_create(&ub->content))
+ 			return -1;
+ 		break;
+ 	case ST_FILE:
+ 		ub_normalize_filename(ub->filename);
+ 		ub->fd = open(ub->filename, O_CREAT|O_TRUNC|O_WRONLY, 0600);
+ 		if (ub->fd < 0) {
+ 			// error_errno("can't open file '%s'\n", ub->filename);
+ 			ub->ignore = 1;
+ 			// return -1;
+ 		}
+ 		break;
+ 	default:
+-		error("Invalid state %d\n on writeout init.\n", ub->state);
++		DBG_ERROR("ub_init_writeout: Invalid state %d\n on writeout init.\n", ub->state);
+ 		return -1;
+ 	};
+ 	return 0;
+ }
+ 
+ static int ub_do_writeout(struct upload_buffer* ub, const void* ptr, size_t size)
+ {
+@@ -160,15 +160,15 @@ static int ub_do_writeout(struct upload_
+ 		} else {
+ 			nwrote = write(ub->fd, ptr, size);
+ 			if (nwrote > 0) ub->filesize += nwrote;
+ 			return nwrote;
+ 		}
+ 
+ 	default:
+-		error("Invalid state %d\n on writeout.\n", ub->state);
++		DBG_ERROR("ub_do_writeout: Invalid state %d\n on writeout.\n", ub->state);
+ 	};
+ 	return 0;
+ }
+ 
+ static int ub_finish_writeout(struct upload_buffer* ub)
+ {
+ 	char* content;
+@@ -204,15 +204,15 @@ static int ub_finish_writeout(struct upl
+ 				  strdup(ub->filename), 1, ub->filesize))
+ 			return -1;
+ 
+ 		close(ub->fd);
+ 		ub->fd = -1;
+ 		break;
+ 	default:
+-		error("Invalid state %d\n on writeout finish.\n", ub->state);
++		DBG_ERROR("ub_finish_writeout: Invalid state %d\n on writeout finish.\n", ub->state);
+ 	};
+ 
+ 	buffer_delete(ub->content);
+ 	ub->content = 0;
+ 	ub->filesize = 0;
+ 	ub->filename = 0;
+ 	ub->parameter = 0;
+@@ -233,24 +233,24 @@ static int ub_parse_disposition(const st
+ 
+ 	while ((token = strsep(&ptr, ";"))) {
+ 		token = trim(token);
+ 
+ 		if (strncmp(token, CONTENT_DISPHDR,
+ 			    sizeof(CONTENT_DISPHDR)-1) == 0) {
+ 			if (strncmp(token + strlen(token) - 9, "form-data", 9) != 0)
+-				warn("ingoring '%s'\n", token);
++				DBG_WARN("ub_parse_disposition: ingoring '%s'\n", token);
+ 
+ 		} else if (strncmp(token, "filename", 8) == 0) {
+ 			bq = strchr(token+8, '"');
+ 			eq = strrchr(token+8, '"');
+ 
+ 			if (bq == 0 ||
+ 			    eq == 0 ||
+ 			    bq == eq) {
+-				error("token: %s, missing quotes in filename=\"...\"\n",
++				DBG_ERROR("ub_parse_disposition: token: %s, missing quotes in filename=\"...\"\n",
+ 				      token);
+ 				return -1;
+ 			}
+ 			*eq=0;	/* terminate string on '"' */
+ 			++ bq;  /* skip '"' too ... */
+ 
+ 			if (eq - bq == 0) {
+@@ -270,30 +270,30 @@ static int ub_parse_disposition(const st
+ 		} else if (strncmp(token, "name", 4) == 0) {
+ 			bq = strchr(token + 4, '"');
+ 			eq = strrchr(token + 4, '"');
+ 
+ 			if (bq == 0 ||
+ 			    eq == 0 ||
+ 			    bq == eq) {
+-				error("token: %s, missing quotes in name=\"...\"\n",
++				DBG_ERROR("ub_parse_disposition: token: %s, missing quotes in name=\"...\"\n",
+ 				      token);
+ 				return -1;
+ 			}
+ 
+ 			*eq=0;
+ 			++ bq ;
+ 
+ 			if (eq - bq == 0) {
+ 				*filename = 0;
+ 				continue;
+ 			}
+ 
+ 			*name = strdup(bq);
+ 		} else {
+-			warn("ignoring unknown token '%s'\n", token);
++			DBG_WARN("ub_parse_disposition: ignoring unknown token '%s'\n", token);
+ 		}
+ 	}
+ 
+ 	return 0;
+ }
+ 
+ static int ub_parse_type(char* begin, char* end)
+@@ -325,25 +325,25 @@ static int ub_parse_headers(const struct
+ 	end = (char*)memmem(ptr, size, "\r\n", 2);
+ 	if (!end) return -1;
+ 
+ 	length = end - ptr;
+ 	if (length > 0) {
+ 		*end = 0;
+ 		if (ub_parse_disposition(ub, ptr, end, name, filename)) {
+-			error("Invalid header: '%s'\n", ptr);
++			DBG_ERROR("ub_parse_headers: Invalid header: '%s'\n", ptr);
+ 			return -1;
+ 		}
+ 	}
+ 
+ 	ptr = end + 2;
+ 	size -= length + 2;
+ 
+ 	end = (char*)memmem(ptr, size, "\r\n", 2);
+ 	if (!end) {
+-		warn("no content type present ?\n");
++		DBG_WARN("ub_parse_headers: no content type present ?\n");
+ 	}
+ 
+ 	length = end - ptr;
+ 	if (length > 0) {
+ 		*end = 0;
+ 		if (ub_parse_type(ptr, end)) {
+ 			// debug("Invalid content type header: '%s'\n", ptr);
+@@ -353,15 +353,15 @@ static int ub_parse_headers(const struct
+ 		ptr = end + 2;
+ 		size -= length + 2;
+ 	}
+ 
+ 	if (size != 2      ||
+ 	    ptr[0] != '\r' ||
+ 	    ptr[1] != '\n')
+-		warn("unknown bytes %d left, content: '%s'\n", size, ptr);
++		DBG_WARN("ub_parse_headers: unknown bytes %zu left, content: '%s'\n", size, ptr);
+ 
+ 	return 0;
+ }
+ 
+ 
+ int ub_create(struct upload_buffer** ub)
+ {
+@@ -629,27 +629,27 @@ static int ub_write_urlencoded(struct up
+ 		// debug("error writing bytes ...\n");
+ 		return -1;
+ 	}
+ 
+ 	ub->total += size;
+ 
+ 	if (ub->total > ub->expected)
+-		warn("too much data got.\n");
++		DBG_WARN("ub_write_urlencoded: too much data got.\n");
+ 
+ 	if (ub->total >= ub->expected) {
+ 		size_t urlsize = ub->content->size;
+ 		char* urlencoded = malloc(urlsize+1);
+ 
+ 		if (!urlencoded) return -1;
+ 		buffer_read(ub->content, urlencoded, ub->content->size);
+ 		urlencoded[urlsize] = 0;
+ 
+ 		if (ub_parse_urlencoded(&ub->parameters,
+ 					urlencoded, urlsize))
+-			warn("invalid URL encoded parameters passed.\n");
++			DBG_WARN("ub_write_urlencoded: invalid URL encoded parameters passed.\n");
+ 		free(urlencoded);
+ 	}
+ 
+ 	return size;
+ }
+ 
+ int ub_write(struct upload_buffer* ub, const void* buffer, size_t size)
+@@ -712,15 +712,15 @@ int main(int argc, char* argv[])
+ 	if (ub_init(ub, BOUNDARY, "/tmp/upload"))
+ 		return -1;
+ 
+ 	nread = read(fd, buffer, sizeof(buffer));
+ 	while (nread > 0) {
+ 		nwrote = ub_write(ub, buffer, nread);
+ 		if (nwrote != nread) {
+-			error("Error : nwrote: %d, nread: %d\n", nwrote, nread);
++			DBG_ERROR("Error : nwrote: %d, nread: %d\n", nwrote, nread);
+ 			break;
+ 		}
+ 		nread = read(fd, buffer, sizeof(buffer));
+ 	}
+ 
+ 
+ 	close(fd);
+--- a/src/uploadbuffer.h
++++ b/src/uploadbuffer.h
+@@ -15,15 +15,15 @@ struct header
+ };
+ 
+ struct upload_buffer
+ {
+ 	struct list_head parameters;
+ 
+ 	char* upload_path;	/* upload directory */
+-#define MAX_UPLOADBUFFER	4096*8
++#define MAX_UPLOADBUFFER	1024*128
+ 	char *buffer;
+ 	size_t size;		/* allocated ub->buffer size */
+ 	size_t data;		/* contains data in ub->buffer */
+ 	size_t total;		/* currently received bytes counter */
+ 	size_t expected;	/* expected content lenght */
+ 
+ 

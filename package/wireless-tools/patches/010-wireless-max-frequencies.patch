@@ -1,0 +1,208 @@
+Index: wireless_tools.29/wireless.10.h
+===================================================================
+--- wireless_tools.29.orig/wireless.10.h
++++ wireless_tools.29/wireless.10.h
+@@ -206,10 +206,7 @@
+ /* ----------------------- OTHER CONSTANTS ----------------------- */
+ 
+ /* Maximum frequencies in the range struct */
+-#define IW_MAX_FREQUENCIES	16
+-/* Note : if you have something like 80 frequencies,
+- * don't increase this constant and don't fill the frequency list.
+- * The user will be able to set by channel anyway... */
++#define IW_MAX_FREQUENCIES	255
+ 
+ /* Maximum bit rates in the range struct */
+ #define IW_MAX_BITRATES		8
+Index: wireless_tools.29/wireless.11.h
+===================================================================
+--- wireless_tools.29.orig/wireless.11.h
++++ wireless_tools.29/wireless.11.h
+@@ -213,10 +213,7 @@
+ /* ----------------------- OTHER CONSTANTS ----------------------- */
+ 
+ /* Maximum frequencies in the range struct */
+-#define IW_MAX_FREQUENCIES	16
+-/* Note : if you have something like 80 frequencies,
+- * don't increase this constant and don't fill the frequency list.
+- * The user will be able to set by channel anyway... */
++#define IW_MAX_FREQUENCIES	255
+ 
+ /* Maximum bit rates in the range struct */
+ #define IW_MAX_BITRATES		8
+Index: wireless_tools.29/wireless.12.h
+===================================================================
+--- wireless_tools.29.orig/wireless.12.h
++++ wireless_tools.29/wireless.12.h
+@@ -244,10 +244,7 @@
+ /* ----------------------- OTHER CONSTANTS ----------------------- */
+ 
+ /* Maximum frequencies in the range struct */
+-#define IW_MAX_FREQUENCIES	16
+-/* Note : if you have something like 80 frequencies,
+- * don't increase this constant and don't fill the frequency list.
+- * The user will be able to set by channel anyway... */
++#define IW_MAX_FREQUENCIES	255
+ 
+ /* Maximum bit rates in the range struct */
+ #define IW_MAX_BITRATES		8
+Index: wireless_tools.29/wireless.13.h
+===================================================================
+--- wireless_tools.29.orig/wireless.13.h
++++ wireless_tools.29/wireless.13.h
+@@ -264,10 +264,7 @@
+ /* ----------------------- OTHER CONSTANTS ----------------------- */
+ 
+ /* Maximum frequencies in the range struct */
+-#define IW_MAX_FREQUENCIES	16
+-/* Note : if you have something like 80 frequencies,
+- * don't increase this constant and don't fill the frequency list.
+- * The user will be able to set by channel anyway... */
++#define IW_MAX_FREQUENCIES	255
+ 
+ /* Maximum bit rates in the range struct */
+ #define IW_MAX_BITRATES		8
+Index: wireless_tools.29/wireless.14.h
+===================================================================
+--- wireless_tools.29.orig/wireless.14.h
++++ wireless_tools.29/wireless.14.h
+@@ -287,10 +287,7 @@
+ /* ----------------------- OTHER CONSTANTS ----------------------- */
+ 
+ /* Maximum frequencies in the range struct */
+-#define IW_MAX_FREQUENCIES	16
+-/* Note : if you have something like 80 frequencies,
+- * don't increase this constant and don't fill the frequency list.
+- * The user will be able to set by channel anyway... */
++#define IW_MAX_FREQUENCIES	255
+ 
+ /* Maximum bit rates in the range struct */
+ #define IW_MAX_BITRATES		8
+Index: wireless_tools.29/wireless.15.h
+===================================================================
+--- wireless_tools.29.orig/wireless.15.h
++++ wireless_tools.29/wireless.15.h
+@@ -306,10 +306,7 @@
+ /* ----------------------- OTHER CONSTANTS ----------------------- */
+ 
+ /* Maximum frequencies in the range struct */
+-#define IW_MAX_FREQUENCIES	16
+-/* Note : if you have something like 80 frequencies,
+- * don't increase this constant and don't fill the frequency list.
+- * The user will be able to set by channel anyway... */
++#define IW_MAX_FREQUENCIES	255
+ 
+ /* Maximum bit rates in the range struct */
+ #define IW_MAX_BITRATES		8
+Index: wireless_tools.29/wireless.16.h
+===================================================================
+--- wireless_tools.29.orig/wireless.16.h
++++ wireless_tools.29/wireless.16.h
+@@ -320,10 +320,7 @@
+ /* ----------------------- OTHER CONSTANTS ----------------------- */
+ 
+ /* Maximum frequencies in the range struct */
+-#define IW_MAX_FREQUENCIES	32
+-/* Note : if you have something like 80 frequencies,
+- * don't increase this constant and don't fill the frequency list.
+- * The user will be able to set by channel anyway... */
++#define IW_MAX_FREQUENCIES	255
+ 
+ /* Maximum bit rates in the range struct */
+ #define IW_MAX_BITRATES		32
+Index: wireless_tools.29/wireless.17.h
+===================================================================
+--- wireless_tools.29.orig/wireless.17.h
++++ wireless_tools.29/wireless.17.h
+@@ -327,10 +327,7 @@
+ /* ----------------------- OTHER CONSTANTS ----------------------- */
+ 
+ /* Maximum frequencies in the range struct */
+-#define IW_MAX_FREQUENCIES	32
+-/* Note : if you have something like 80 frequencies,
+- * don't increase this constant and don't fill the frequency list.
+- * The user will be able to set by channel anyway... */
++#define IW_MAX_FREQUENCIES	255
+ 
+ /* Maximum bit rates in the range struct */
+ #define IW_MAX_BITRATES		32
+Index: wireless_tools.29/wireless.18.h
+===================================================================
+--- wireless_tools.29.orig/wireless.18.h
++++ wireless_tools.29/wireless.18.h
+@@ -394,10 +394,7 @@
+ /* ----------------------- OTHER CONSTANTS ----------------------- */
+ 
+ /* Maximum frequencies in the range struct */
+-#define IW_MAX_FREQUENCIES	32
+-/* Note : if you have something like 80 frequencies,
+- * don't increase this constant and don't fill the frequency list.
+- * The user will be able to set by channel anyway... */
++#define IW_MAX_FREQUENCIES	255
+ 
+ /* Maximum bit rates in the range struct */
+ #define IW_MAX_BITRATES		32
+Index: wireless_tools.29/wireless.19.h
+===================================================================
+--- wireless_tools.29.orig/wireless.19.h
++++ wireless_tools.29/wireless.19.h
+@@ -406,10 +406,7 @@
+ /* ----------------------- OTHER CONSTANTS ----------------------- */
+ 
+ /* Maximum frequencies in the range struct */
+-#define IW_MAX_FREQUENCIES	32
+-/* Note : if you have something like 80 frequencies,
+- * don't increase this constant and don't fill the frequency list.
+- * The user will be able to set by channel anyway... */
++#define IW_MAX_FREQUENCIES	255
+ 
+ /* Maximum bit rates in the range struct */
+ #define IW_MAX_BITRATES		32
+Index: wireless_tools.29/wireless.20.h
+===================================================================
+--- wireless_tools.29.orig/wireless.20.h
++++ wireless_tools.29/wireless.20.h
+@@ -410,10 +410,7 @@
+ /* ----------------------- OTHER CONSTANTS ----------------------- */
+ 
+ /* Maximum frequencies in the range struct */
+-#define IW_MAX_FREQUENCIES	32
+-/* Note : if you have something like 80 frequencies,
+- * don't increase this constant and don't fill the frequency list.
+- * The user will be able to set by channel anyway... */
++#define IW_MAX_FREQUENCIES	255
+ 
+ /* Maximum bit rates in the range struct */
+ #define IW_MAX_BITRATES		32
+Index: wireless_tools.29/wireless.21.h
+===================================================================
+--- wireless_tools.29.orig/wireless.21.h
++++ wireless_tools.29/wireless.21.h
+@@ -421,10 +421,7 @@
+ /* ----------------------- OTHER CONSTANTS ----------------------- */
+ 
+ /* Maximum frequencies in the range struct */
+-#define IW_MAX_FREQUENCIES	32
+-/* Note : if you have something like 80 frequencies,
+- * don't increase this constant and don't fill the frequency list.
+- * The user will be able to set by channel anyway... */
++#define IW_MAX_FREQUENCIES	255
+ 
+ /* Maximum bit rates in the range struct */
+ #define IW_MAX_BITRATES		32
+Index: wireless_tools.29/wireless.22.h
+===================================================================
+--- wireless_tools.29.orig/wireless.22.h
++++ wireless_tools.29/wireless.22.h
+@@ -427,10 +427,7 @@
+ /* ----------------------- OTHER CONSTANTS ----------------------- */
+ 
+ /* Maximum frequencies in the range struct */
+-#define IW_MAX_FREQUENCIES	32
+-/* Note : if you have something like 80 frequencies,
+- * don't increase this constant and don't fill the frequency list.
+- * The user will be able to set by channel anyway... */
++#define IW_MAX_FREQUENCIES	255
+ 
+ /* Maximum bit rates in the range struct */
+ #define IW_MAX_BITRATES		32

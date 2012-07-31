@@ -1,0 +1,6 @@
+config UBNT_FIRMWARE_VERSION
+        depends on PACKAGE_ubnt-base-files
+        string
+        prompt "Ubiquiti firmware name"
+        help
+          Firmware name, in form PRODUCT.ARCH.VER.SION (for example, XN.ar7240.v5.0).

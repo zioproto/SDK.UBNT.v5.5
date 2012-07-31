@@ -1,0 +1,673 @@
+--- a/src/lex.c
++++ b/src/lex.c
+@@ -124,15 +124,17 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { NULL,0,NULL } }, 
+ 
+ 	{ { "echo",PHPECHO,NULL },     /* 4 */
+ 	  { "else",ELSE,NULL },
+ 	  { "case",CASE,NULL },
+ 	  { "ereg",EREG,NULL },
+ 	  { "feof",INTFUNC1,Feof },
++#ifdef HAVE_LIBMSQL
+ 	  { "msql",INTFUNC2,Msql },
++#endif
+ 	  { "exit",EXIT,NULL },
+ 	  { "eval",INTFUNC1,Eval },
+ 	  { "exec",EXEC,NULL },
+ 	  { "time",INTFUNC0,UnixTime },
+ 	  { "date",DATE,NULL },
+ 	  { "next",PHPNEXT,NULL },
+ 	  { "prev",PREV,NULL },
+@@ -357,15 +359,17 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "getrandmax", INTFUNC0,GetRandMax },
+ 	  { "setlogging", INTFUNC1,SetLogging },
+ 	  { "pg_numrows", INTFUNC1,PGnumRows },
+ 	  { "pg_options", INTFUNC1,PGoptions },
+ 	  { "pg_connect", INTFUNC5,PGconnect },
+ 	  { "phpversion", INTFUNC0,PHPVersion },
+ 	  { "addslashes", INTFUNC1,_AddSlashes },
++#ifdef HAVE_LIBMSQL
+ 	  { "msql_close", INTFUNC0,MsqlClose },
++#endif
+ 	  { "solid_exec", INTFUNC2,Solid_exec },
+ 	  { "initsyslog", INTFUNC0,php_init_syslog },
+ 	  { "ora_logoff", INTFUNC1,Ora_Logoff },
+ 	  { "ora_commit", INTFUNC1,Ora_Commit },
+ #ifdef ILLUSTRA
+ 	  { "mi_connect", INTFUNC3,MIconnect },
+ 	  { "mi_numrows", INTFUNC2,MInumRows },
+@@ -375,24 +379,29 @@ static const cmd_table_t cmd_table[PHP_M
+ #endif
+ #ifdef HAVE_ODBC
+ 	  { "sqlgetdata", INTFUNC3,ODBCgetdata },
+ 	  { "sqlconnect", INTFUNC3,ODBCconnect },
+ #endif	  
+ 	  { NULL,0,NULL } },
+ 
+-	{ { "msql_result", INTFUNC3,MsqlResult }, /* 11 */
++	{ /* 11 */
++#ifdef HAVE_LIBMSQL
++	  { "msql_result", INTFUNC3,MsqlResult },
++#endif
+ 	  { "reg_replace", INTFUNC3,RegReplace },
+ 	  { "dbmfirstkey", INTFUNC1,dbmFirstKey },
+ 	  { "getlasthost", INTFUNC0,GetLastHost },
+ 	  { "imagecreate", INTFUNC2,ImageCreate },
+ 	  { "imagecharup", IMAGECHAR,NULL },
+ 	  { "imagestring", IMAGESTRING,NULL },
+ 	  { "setshowinfo", INTFUNC1,SetShowInfo },
++#ifdef HAVE_LIBMSQL
+ 	  { "msql_dbname", INTFUNC2,MsqlDBName },
+ 	  { "msql_dropdb", INTFUNC1,MsqlDropDB },
++#endif
+ 	  { "pg_fieldnum", INTFUNC2,PGfieldNum },
+ 	  { "mysql_close", INTFUNC0,MYsqlClose },
+ 	  { "solid_close", INTFUNC1,Solid_close },
+ 	  { "sybsql_seek",INTFUNC1,SybsqlSeek},
+ 	  { "sybsql_exit",INTFUNC0,SybsqlExit},
+ #ifdef ILLUSTRA
+ 	  { "mi_fieldnum", INTFUNC3,MIfieldNum },
+@@ -405,20 +414,24 @@ static const cmd_table_t cmd_table[PHP_M
+ #ifdef HAVE_ODBC
+ 	  { "sqlrowcount",INTFUNC1,ODBCrowcount },
+ #endif	  
+ 	  { NULL,0,NULL } },
+ 
+ 	{ { "getlastemail", INTFUNC0,GetLastEmail }, /* 12 */
+ 	  { "ereg_replace", INTFUNC3,ERegReplace },
++#ifdef HAVE_LIBMSQL
+ 	  { "msql_connect", INTFUNC1,MsqlConnect },
+ 	  { "msql_numrows", INTFUNC1,MsqlNumRows },
+ 	  { "msql_regcase", INTFUNC1,MsqlRegCase },
++#endif
+ 	  { "imagedestroy", INTFUNC1,ImageDestroy },
+ 	  { "imagepolygon", IMAGEPOLYGON,NULL },
++#ifdef HAVE_LIBMSQL
+ 	  { "msql_listdbs", INTFUNC0,MsqlListDBs },
++#endif
+ 	  { "pg_numfields", INTFUNC1,PGnumFields },
+ 	  { "pg_fieldname", INTFUNC2,PGfieldName },
+ 	  { "pg_fieldtype", INTFUNC2,PGfieldType },
+ 	  { "pg_fieldsize", INTFUNC2,PGfieldSize },
+ 	  { "stripslashes", INTFUNC1,_StripSlashes },
+ 	  { "mysql_result", INTFUNC3, MYsqlResult },
+ 	  { "mysql_dbname", INTFUNC2,MYsqlDBName },
+@@ -444,15 +457,17 @@ static const cmd_table_t cmd_table[PHP_M
+ 	{ { "gethostbyaddr", INTFUNC1,GetHostByAddr }, /* 13 */
+ 	  { "gethostbyname", INTFUNC1,GetHostByName },
+ 	  { "getlastaccess", INTFUNC0,GetLastAccess },
+ 	  { "eregi_replace", INTFUNC3,ERegiReplace },
+ 	  { "msql_fieldlen", MSQL_FIELDLEN,NULL },
+ 	  { "imagesetpixel", INTFUNC4,ImageSetPixel },
+ 	  { "imagestringup", IMAGESTRINGUP,NULL },
++#ifdef HAVE_LIBMSQL
+ 	  { "msql_createdb", INTFUNC1,MsqlCreateDB },
++#endif
+ 	  { "pg_freeresult", INTFUNC1,PGfreeResult },
+ 	  { "pg_getlastoid", INTFUNC0,PGgetlastoid },
+ 	  { "mysql_connect", MYSQL_CONNECT,NULL },
+ 	  { "mysql_numrows", INTFUNC1,MYsqlNumRows },
+ 	  { "mysql_listdbs", INTFUNC0,MYsqlListDBs },
+ 	  { "solid_numrows", INTFUNC1,Solid_numRows },
+ 	  { "solid_connect", INTFUNC3,Solid_connect },
+@@ -469,40 +484,49 @@ static const cmd_table_t cmd_table[PHP_M
+ #ifdef HAVE_ODBC
+ 	  { "sqlexecdirect", INTFUNC2,ODBCexecdirect },
+ 	  { "sqldisconnect", INTFUNC1,ODBCdisconnect },
+ #endif	   	  
+ 	  { NULL,0,NULL } },
+ 
+ 	{ { "getlastbrowser", INTFUNC0,GetLastBrowser }, /* 14 */
++#ifdef HAVE_LIBMSQL
+ 	  { "msql_fieldname", MSQL_FIELDNAME,NULL },
+ 	  { "msql_fieldtype", MSQL_FIELDTYPE,NULL },
+ 	  { "msql_numfields", INTFUNC1,MsqlNumFields },
++#endif
+ 	  { "imagerectangle", INTFUNC6,ImageRectangle },
+ 	  { "imageinterlace", INTFUNC2,ImageInterlace },
++#ifdef HAVE_LIBMSQL
+ 	  { "msql_tablename", INTFUNC2,MsqlTableName },
++#endif
+ 	  { "pg_fieldprtlen", INTFUNC3,PGfieldPrtLen },
+ 	  { "escapeshellcmd", INTFUNC1,EscapeShellCmd },
+ 	  { "mysql_fieldlen", MYSQL_FIELDLEN,NULL },
+ 	  { "mysql_createdb", INTFUNC1,MYsqlCreateDB },   
+ 	  { "solid_fieldnum", INTFUNC2,Solid_fieldNum },
+ 	  { "solid_fetchrow", INTFUNC1,Solid_fetchRow },
++#ifdef HAVE_LIBMSQL
+ 	  { "msql_listindex", INTFUNC3,MsqlListIndex },
++#endif
+ 	  { "sybsql_connect", INTFUNC0,SybsqlConnect }, 
+ 	  { "sybsql_nextrow", INTFUNC0,SybsqlNextRow },
+ 	  { "sybsql_numrows", INTFUNC0,SybsqlNumRows},
+ 	  { "clearstatcache", INTFUNC0,ClearStatCache},
+ #if HAVE_LIBADABAS
+ 	  { "ada_freeresult", INTFUNC1,Ada_freeResult },
+ #endif
+ 	  { NULL,0,NULL } },
+ 
+-	{ { "msql_freeresult", INTFUNC1,MsqlFreeResult }, /* 15 */
++	{  /* 15 */
++#ifdef HAVE_LIBMSQL
++	  { "msql_freeresult", INTFUNC1,MsqlFreeResult },
+ 	  { "msql_fieldflags", MSQL_FIELDFLAGS,NULL },
+ 	  { "msql_listtables", INTFUNC1,MsqlListTables },
+ 	  { "msql_listfields", INTFUNC2,MsqlListFields },
++#endif
+ 	  { "getstartlogging", INTFUNC0,GetStartLogging },
+ 	  { "pg_errormessage", INTFUNC1,PGerrorMessage },
+ 	  { "mysql_fieldname", MYSQL_FIELDNAME,NULL },
+ 	  { "mysql_fieldtype", MYSQL_FIELDTYPE,NULL },
+ 	  { "mysql_numfields", INTFUNC1,MYsqlNumFields },
+ 	  { "mysql_tablename", INTFUNC2,MYsqlTableName },
+ 	  { "mysql_insert_id", INTFUNC0,MYsqlInsertId },	  
+--- a/src/msql.c
++++ b/src/msql.c
+@@ -43,29 +43,27 @@ static char CurrentDB[128];
+ static ResultList *result_top=NULL;
+ static char *CurrentHost=NULL;
+ static char *CurrentTcpPort=NULL;
+ static char *CurrentUnixPort=NULL;
+ static int msql_ind=1;
+ #endif
+ 
+-void php_init_msql(char *defaulthost) {
+ #ifdef HAVE_LIBMSQL
++void php_init_msql(char *defaulthost) {
+ 	static char junk[1];
+ 	CurrentTcpPort=&junk[0];
+ 	CurrentUnixPort=&junk[0];
+ 	dbsock=-1;
+ 	result_top=NULL;
+ 	junk[0]='\0';
+ 	CurrentHost=defaulthost;
+ 	CurrentDB[0]='\0';
+ 	msql_ind=1;
+-#endif
+ }
+ 
+-#ifdef HAVE_LIBMSQL
+ int add_result(m_result *result) {
+ 	ResultList *new;
+ 
+ 	new = result_top;
+ 	if(!new) {
+ 		new = emalloc(0,sizeof(ResultList));
+ 		result_top = new;
+@@ -86,18 +84,16 @@ m_result *get_result(int count) {
+ 	new = result_top;
+ 	while(new) {
+ 		if(new->ind == count) return(new->result);
+ 		new=new->next;
+ 	}	
+ 	return(NULL);
+ }
+-#endif
+ 
+ void del_result(int count) {
+-#ifdef HAVE_LIBMSQL
+ 	ResultList *new, *prev, *next;
+ 
+ 	prev=NULL;
+ 	new = result_top;
+ 	while(new) {
+ 		next = new->next;
+ 		if(new->ind == count) {
+@@ -105,36 +101,32 @@ void del_result(int count) {
+ 			if(prev) prev->next = next;
+ 			else result_top = next;
+ 			break;
+ 		}
+ 		prev=new;
+ 		new=next;
+ 	}	
+-#endif
+ }
+ 
+ void MsqlClose(void) {
+-#ifdef HAVE_LIBMSQL
+ 	ResultList *new,*next;
+ 
+ 	new = result_top;	
+ 	while(new) {
+ 		next = new->next;	
+ 		msqlFreeResult(new->result);
+ 		new = next;
+ 	}
+ 	result_top = NULL;
+ 	if(dbsock>-1) msqlClose(dbsock);
+ 	dbsock=-1;
+ 	CurrentDB[0]='\0';
+-#endif
+ }
+ 	
+ void Msql(void) {
+-#ifdef HAVE_LIBMSQL
+ 	Stack *s;
+ 	char *query=NULL;
+ #ifndef APACHE
+ 	static int First=1;
+ 	char junk[1];
+ #endif
+ 	int j;
+@@ -252,46 +244,33 @@ void Msql(void) {
+ #else
+ 	/* For mSQL 2.0, the return value is already intelligent. No need for the hack */
+ 	if(result) j = add_result(result);
+ 	else j = count;
+ #endif
+ 	sprintf(temp,"%d",j);
+ 	Push(temp,LNUMBER);
+-#else
+-	Pop();
+-	Pop();
+-	Push("0",LNUMBER);
+-	Error("No mSQL support");
+-#endif
+ } 
+ 
+ void MsqlConnect(void) {
+-#ifdef HAVE_LIBMSQL
+ 	Stack *s;
+ 
+ 	s = Pop();
+ 	if(!s) {
+ 		Error("Stack error in msql_connect");
+ 		Push("-1",LNUMBER);
+ 		return;
+ 	}
+ 	MsqlClose();
+ 	if(strlen(s->strval)==0 || !strcasecmp(s->strval,"localhost")) CurrentHost=NULL;
+ 	else {
+ 		CurrentHost = (char *)estrdup(0,s->strval);
+ 	}
+-#else
+-	Pop();
+-	Push("-1",LNUMBER);
+-	Error("No mSQL support");
+-#endif	
+ }
+ 
+ void MsqlResult(void) {
+-#ifdef HAVE_LIBMSQL
+ 	Stack *s;
+ 	int i,j;
+ 	char fieldname[128];
+ 	char tablename[128];
+ 	m_row record;
+ 	m_result *result;
+ 	m_field *msql_field;
+@@ -391,46 +370,33 @@ void MsqlResult(void) {
+ 					break;
+ 				}
+ 				done=1;
+ 			}
+ 		}
+ 		i++;
+ 	}
+-#else
+-	Pop();
+-	Pop();
+-	Pop();
+-	Push("",STRING);
+-	Error("No mSQL support");
+-#endif
+ }
+ 
+ void MsqlFreeResult(void) {
+-#ifdef HAVE_LIBMSQL 
+ 	Stack *s;
+ 
+ 	s = Pop();
+ 	if(!s) {
+ 		Error("Stack error in msql_result");
+ 		return;
+ 	}
+ 	if(s->strval) {
+ 		del_result(s->intval);
+ 	} else {
+ 		Error("Invalid result index in msql_freeresult");
+ 		return;
+ 	}	
+-#else
+-	Pop();
+-	Error("No mSQL support");
+-#endif
+ }
+ 
+ void MsqlNumRows(void) {
+-#ifdef HAVE_LIBMSQL
+ 	Stack *s;
+ 	char temp[16];
+ 	m_result *result;
+ 
+ 	s = Pop();
+ 	if(!s) {
+ 		Error("Stack error in msql_numrows");
+@@ -446,23 +412,17 @@ void MsqlNumRows(void) {
+ 		sprintf(temp,"%d",msqlNumRows(result));
+ 	} else {
+ 		Error("Invalid result index in msql_numrows");
+ 		Push("-1", LNUMBER);
+ 		return;
+ 	}	
+ 	Push(temp,LNUMBER);
+-#else
+-	Pop();
+-	Error("No mSQL support");
+-	Push("-1", LNUMBER);
+-#endif
+ }
+ 
+ void MsqlNumFields(void) {
+-#ifdef HAVE_LIBMSQL
+ 	Stack *s;
+ 	char temp[16];
+ 	m_result *result;
+ 
+ 	s = Pop();
+ 	if(!s) {
+ 		Error("Stack error in msql_numfields");
+@@ -478,30 +438,24 @@ void MsqlNumFields(void) {
+ 		sprintf(temp,"%d",msqlNumFields(result));
+ 	} else {
+ 		Error("Invalid result index in msql_numfields");
+ 		Push("-1", LNUMBER);
+ 		return;
+ 	}	
+ 	Push(temp,LNUMBER);
+-#else
+-	Pop();
+-	Error("No mSQL support");
+-	Push("-1", LNUMBER);
+-#endif
+ }
+ 
+ /* checks a field
+  *
+  * type = 1   pushes fieldname
+  * type = 2   pushes fieldtype
+  * type = 3   pushes fieldlen
+  * type = 4   pushes fieldflags
+  */
+ void MsqlField(int type) {
+-#ifdef HAVE_LIBMSQL
+ 	Stack *s;
+ 	m_result *result=NULL;
+ 	int field_ind=0;
+ 	m_field *msql_field;
+ 	char temp[64];
+ 	int flg=0;
+ 
+@@ -589,19 +543,14 @@ void MsqlField(int type) {
+ 				strcat(temp," not null");
+ 			else
+ 				strcat(temp,"not null");
+ 		}
+ 		Push(temp,STRING);
+ 		break;
+ 	}
+-#else
+-	Pop();
+-	Error("No mSQL support");
+-	Push("", STRING);
+-#endif
+ } 
+ 
+ void MsqlRegCase(void) {
+ 	Stack *st;
+     char *s,*t;
+     static char *buf=NULL;
+ 
+@@ -627,17 +576,15 @@ void MsqlRegCase(void) {
+ 		*t='\0';
+ 		Push(buf,STRING);
+ 	} else {
+ 		Push("",STRING);
+ 	}
+ }
+ 
+-
+ void MsqlTableName(void){
+-#ifdef HAVE_LIBMSQL
+ 	Stack *s;
+ 	int res_index=0;
+ 	int tb_index=0;
+ 	m_result *res=NULL;
+ 	m_row	  row;
+ 
+ 	s = Pop();
+@@ -671,24 +618,17 @@ void MsqlTableName(void){
+ 	msqlDataSeek(res, tb_index);
+ 	row=msqlFetchRow(res);
+ 	if (row) {
+ 		Push((char *)row[0], STRING);
+ 		return;
+ 	}
+ 	Push("", STRING);
+-#else
+-	Pop();
+-	Pop();
+-	Push("", STRING);
+-	Error("No mSQL support");
+-#endif	
+ }
+ 
+ void MsqlListTables(void) {
+-#ifdef HAVE_LIBMSQL
+ 	char* dbname;
+ 	Stack *s;
+ 	m_result *res=NULL;
+ 	int tb_res; 
+ #ifndef APACHE
+ 	static int First=1;
+ 	char junk[1];
+@@ -763,24 +703,18 @@ void MsqlListTables(void) {
+ 	else {
+ 		Error("Unable to find any table in %s", dbname); 
+ 		return;
+ 	}
+ 
+ 	sprintf(temp, "%d", tb_res);
+ 	Push(temp, LNUMBER);
+-
+-#else
+-	Pop();
+-	Push("0", LNUMBER);
+-	Error("No mSQL support");
+-#endif
+ }
+ 
+ void MsqlListIndex(void) {
+-#if defined(HAVE_LIBMSQL) && defined(LAST_REAL_TYPE)
++#if defined(LAST_REAL_TYPE)
+ 	char *dbname, *tablename, *indexname;
+ 	Stack *s;
+ 	m_result *res=NULL;
+ 	int tb_res; 
+ #ifndef APACHE
+ 	static int First=1;
+ 	char junk[1];
+@@ -889,32 +823,25 @@ void MsqlListIndex(void) {
+ 	Pop();
+ 	Push("0", LNUMBER);
+ 	Error("No support for MsqlListIndex function");
+ #endif
+ }
+ 
+ int msqlGetDbSock() {
+-#ifdef HAVE_LIBMSQL
+ 	return(dbsock);
+-#else
+-	return(0);
+-#endif
+ }
+ 
+ void msqlSetCurrent(int sock, char *newdb) {
+-#ifdef HAVE_LIBMSQL
+ 	CurrentTcpPort = getenv("MSQL_TCP_PORT");
+ 	CurrentUnixPort = getenv("MSQL_UNIX_PORT");
+ 	dbsock = sock;
+ 	strcpy(CurrentDB,newdb);
+-#endif
+ }
+ 
+ void MsqlCreateDB(void) {
+-#ifdef HAVE_LIBMSQL
+ 	char* dbname;
+ 	Stack *s;
+ #ifndef APACHE
+ 	static int First=1;
+ 	char junk[1];
+ #endif
+ 	char *tcpPort, *unixPort;
+@@ -976,22 +903,17 @@ void MsqlCreateDB(void) {
+ 		}
+ 	}
+  
+ 	if(msqlCreateDB(dbsock,dbname)<0){
+ 		Error("Unable to create mSQL Data Base (%s)", msqlErrMsg);
+ 		return;
+ 	}
+-#else
+-	Pop();
+-	Error("No mSQL support");
+-#endif
+ }
+ 
+ void MsqlDropDB(void) {
+-#ifdef HAVE_LIBMSQL
+ 	char *dbname;
+ 	Stack *s;
+ #ifndef APACHE
+ 	static int First=1;
+ 	char junk[1];
+ #endif
+ 	char *tcpPort, *unixPort;
+@@ -1052,22 +974,17 @@ void MsqlDropDB(void) {
+ 		}
+ 	}
+ 
+ 	if(msqlDropDB(dbsock,dbname)<0){
+ 		Error("Unable to drop mSQL Data Base (%s)", msqlErrMsg);
+ 		return;
+ 	}
+-#else
+-	Pop();
+-	Error("No mSQL support");
+-#endif
+ }
+ 
+ void MsqlListDBs(void) {
+-#ifdef HAVE_LIBMSQL
+ 	char *hostname;
+ 	m_result *res=NULL;
+ 	int db_res; 
+ #ifndef APACHE
+ 	static int First=1;
+ 	char junk[1];
+ #endif
+@@ -1127,23 +1044,17 @@ void MsqlListDBs(void) {
+ 		Error("Unable to find any data bases in host: %s", hostname); 
+ 		Push("-1", LNUMBER);
+ 		return;
+ 	}
+ 
+ 	sprintf(temp, "%d", db_res);
+ 	Push(temp, LNUMBER);
+-
+-#else
+-	Push("0", LNUMBER);
+-	Error("No mSQL support");
+-#endif
+ }
+ 
+ void MsqlDBName(void){
+-#ifdef HAVE_LIBMSQL
+ 	Stack *s;
+ 	int res_index=0;
+ 	int db_index=0;
+ 	m_result *res=NULL;
+ 	m_row     row;
+ 
+ 	s = Pop();
+@@ -1181,24 +1092,17 @@ void MsqlDBName(void){
+ 	msqlDataSeek(res, db_index);
+ 	row=msqlFetchRow(res);
+ 	if (row) {
+ 		Push((char *)row[0], STRING);
+ 		return;
+ 	}
+ 	Push("", STRING);
+-#else
+-	Pop();
+-	Pop();
+-	Push("", STRING);
+-	Error("No mSQL support");
+-#endif
+ }
+ 
+ void MsqlListFields(void) {
+-#ifdef HAVE_LIBMSQL
+ 	Stack *s;
+ 	char *tablename=NULL;
+ #ifndef APACHE
+ 	static int First=1;
+ 	char junk[1];
+ #endif
+ 	int j;
+@@ -1304,14 +1208,10 @@ void MsqlListFields(void) {
+ #endif
+ 	if(result) j = add_result(result);
+ 	else {
+ 	        j=-1;
+ 	}
+ 	sprintf(temp,"%d",j);
+ 	Push(temp,LNUMBER);
+-#else
+-	Pop();
+-	Pop();
+-	Push("0",LNUMBER);
+-	Error("No mSQL support");
+-#endif
+ }  /* MsqlListFields */
++
++#endif /* HAVE_LIBMSQL */
+--- a/src/php.h
++++ b/src/php.h
+@@ -852,14 +852,15 @@ void UcFirst(void);
+ void Sprintf(int);
+ void Chr(void);
+ void Chop(void);
+ char *_StrTr(char *,char *,char *);
+ void StrTr(void);
+ 
+ /* msql.c */
++#ifdef HAVE_LIBMSQL
+ void Msql(void);
+ void MsqlResult(void);
+ void MsqlClose(void);
+ void MsqlConnect(void);
+ void MsqlFreeResult(void);
+ void MsqlNumRows(void);
+ void MsqlNumFields(void);
+@@ -872,14 +873,19 @@ void MsqlListFields(void);
+ void MsqlTableName(void);
+ void MsqlListDBs(void);
+ void MsqlDBName(void);
+ void MsqlDropDB(void);
+ void MsqlCreateDB(void);
+ void MsqlListIndex(void);
+ void php_init_msql(char *);
++#else
++#define MsqlField(a)
++#define MsqlClose()
++#define php_init_msql(a)
++#endif
+ 
+ /* sybsql.c */  /*muquit, # ma_muquit@fccc.edu, Sep-15-96 */
+ void SybsqlConnect(void);
+ void SybsqlDbuse(void);
+ void SybsqlQuery(void);
+ void SybsqlIsRow(void);
+ void SybsqlNumRows(void);

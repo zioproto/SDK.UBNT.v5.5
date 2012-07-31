@@ -1,0 +1,247 @@
+--- a/src/mod_airos.c
++++ b/src/mod_airos.c
+@@ -67,14 +67,15 @@ typedef struct {
+ 	array* allowed;
+ 	array* denied;
+ 	array* cachable;
+ 	unsigned short cachable_gz;
+ 	buffer* login_page;
+ 	buffer* nocookie_page;
+ 	buffer* sessiondb_file;
++	buffer* cookie_name;
+ 	unsigned short session_timeout;
+ 	unsigned short redirect_https_port;
+ 	void* tdb;
+ } plugin_config;
+ 
+ typedef struct {
+ 	PLUGIN_DATA;
+@@ -118,14 +119,15 @@ FREE_FUNC(mod_airos_free) {
+ 
+ 			if (!s) continue;
+ 
+ 			array_free(s->allowed);
+ 			array_free(s->denied);
+ 			buffer_free(s->login_page);
+ 			buffer_free(s->nocookie_page);
++			buffer_free(s->cookie_name);
+ 			buffer_free(s->sessiondb_file);
+ 
+ #ifdef HAVE_TDB_H
+ 			if (s->tdb)
+ 				tdb_close((struct tdb_context*)s->tdb);
+ #endif
+ 
+@@ -137,51 +139,53 @@ FREE_FUNC(mod_airos_free) {
+ 	buffer_free(p->expires_str);
+ 
+ 	free(p);
+ 	return HANDLER_GO_ON;
+ }
+ 
+ static const char SCHEME_HTTPS[] = "https://";
++static const char EQ[] = "=";
+ 
+ /* handle plugin config and check values */
+ 
+-static const char COOKIE_NAME[] = "AIROS_SESSIONID";
+-static const char COOKIE_NAME_EQ[] = "AIROS_SESSIONID=";
+ static const char COOKIE_TEST_PAGE[] = "/cookiechecker";
+ 
+ static const char CONFIG_ALLOW[] = "airos.allow";
+ static const char CONFIG_DENIED[] = "airos.deny";
+ static const char CONFIG_CACHABLE[] = "airos.cachable";
+ static const char CONFIG_CACHABLE_GZ[] = "airos.cachable-gzip";
+ static const char CONFIG_LOGIN_PAGE[] = "airos.login-page";
+ static const char CONFIG_NOCOOKIE_PAGE[] = "airos.nocookie-page";
++static const char CONFIG_COOKIE_NAME[] = "airos.cookie-name";
+ static const char CONFIG_SESSIONDB_FILE[] = "airos.sessiondb-file";
+ static const char CONFIG_SESSION_TIMEOUT[] = "airos.session-timeout";
+ 
+ static const char CONFIG_HTTPS_REDIRECT[] = "airos.redirect-https-port";
+ 
+ static const char DEFAULT_LOGIN_PAGE[] = "/login.html";
+ static const char DEFAULT_NOCOOKIE_PAGE[] = "/nocookies.html";
++static const char DEFAULT_COOKIE_NAME[] = "AIROS_SESSIONID";
+ static const unsigned short DEFAULT_SESSION_TIMEOUT = 15 * 60;
+ 
+ SETDEFAULTS_FUNC(mod_airos_set_defaults) {
+ 	plugin_data* p = p_d;
+ 	size_t i = 0;
+ 	data_string* ds = NULL;
+ 
+ 	config_values_t cv[] = {
+ 		{ CONFIG_ALLOW,             NULL, T_CONFIG_ARRAY, T_CONFIG_SCOPE_CONNECTION },  /* 0 */
+ 		{ CONFIG_DENIED,            NULL, T_CONFIG_ARRAY, T_CONFIG_SCOPE_CONNECTION },  /* 1 */
+ 		{ CONFIG_CACHABLE,          NULL, T_CONFIG_ARRAY, T_CONFIG_SCOPE_CONNECTION },  /* 2 */
+ 		{ CONFIG_CACHABLE_GZ,       NULL, T_CONFIG_BOOLEAN, T_CONFIG_SCOPE_CONNECTION },/* 3 */
+ 		{ CONFIG_LOGIN_PAGE,		NULL, T_CONFIG_STRING, T_CONFIG_SCOPE_CONNECTION }, /* 4 */
+ 		{ CONFIG_NOCOOKIE_PAGE,		NULL, T_CONFIG_STRING, T_CONFIG_SCOPE_CONNECTION }, /* 5 */
+-		{ CONFIG_SESSIONDB_FILE,	NULL, T_CONFIG_STRING, T_CONFIG_SCOPE_CONNECTION }, /* 6 */
+-		{ CONFIG_SESSION_TIMEOUT,	NULL, T_CONFIG_SHORT, T_CONFIG_SCOPE_CONNECTION },  /* 7 */
+-		{ CONFIG_HTTPS_REDIRECT,	NULL, T_CONFIG_SHORT, T_CONFIG_SCOPE_CONNECTION },  /* 8 */
++		{ CONFIG_COOKIE_NAME,		NULL, T_CONFIG_STRING, T_CONFIG_SCOPE_CONNECTION }, /* 6 */
++		{ CONFIG_SESSIONDB_FILE,	NULL, T_CONFIG_STRING, T_CONFIG_SCOPE_CONNECTION }, /* 7 */
++		{ CONFIG_SESSION_TIMEOUT,	NULL, T_CONFIG_SHORT, T_CONFIG_SCOPE_CONNECTION },  /* 8 */
++		{ CONFIG_HTTPS_REDIRECT,	NULL, T_CONFIG_SHORT, T_CONFIG_SCOPE_CONNECTION },  /* 9 */
+ 		{ NULL, NULL, T_CONFIG_UNSET, T_CONFIG_SCOPE_UNSET }
+ 	};
+ 
+ 	if (!p) return HANDLER_ERROR;
+ 
+ 	p->config_storage = calloc(1, srv->config_context->used * sizeof(specific_config *));
+ 
+@@ -192,27 +196,29 @@ SETDEFAULTS_FUNC(mod_airos_set_defaults)
+ 		s = calloc(1, sizeof(plugin_config));
+ 		s->allowed = array_init();
+ 		s->denied = array_init();
+ 		s->cachable = array_init();
+ 		s->cachable_gz = 0;
+ 		s->login_page = buffer_init();
+ 		s->nocookie_page = buffer_init();
++		s->cookie_name = buffer_init();
+ 		s->sessiondb_file = buffer_init();
+ 		s->session_timeout = DEFAULT_SESSION_TIMEOUT;
+ 		s->redirect_https_port = 0;
+ 
+ 		cv[0].destination = s->allowed;
+ 		cv[1].destination = s->denied;
+ 		cv[2].destination = s->cachable;
+ 		cv[3].destination = &(s->cachable_gz);
+ 		cv[4].destination = s->login_page;
+ 		cv[5].destination = s->nocookie_page;
+-		cv[6].destination = s->sessiondb_file;
+-		cv[7].destination = &(s->session_timeout);
+-		cv[8].destination = &(s->redirect_https_port);
++		cv[6].destination = s->cookie_name;
++		cv[7].destination = s->sessiondb_file;
++		cv[8].destination = &(s->session_timeout);
++		cv[9].destination = &(s->redirect_https_port);
+ 
+ 		p->config_storage[i] = s;
+ 
+ 		if (0 != config_insert_values_global(srv, ((data_config *)srv->config_context->data[i])->value, cv)) {
+ 			return HANDLER_ERROR;
+ 		}
+ 
+@@ -220,14 +226,18 @@ SETDEFAULTS_FUNC(mod_airos_set_defaults)
+ 			buffer_append_string_len(s->login_page,
+ 					SCONST_STR_LEN(DEFAULT_LOGIN_PAGE));
+ 		}
+ 		if (buffer_is_empty(s->nocookie_page)) {
+ 			buffer_append_string_len(s->nocookie_page,
+ 					SCONST_STR_LEN(DEFAULT_NOCOOKIE_PAGE));
+ 		}
++		if (buffer_is_empty(s->cookie_name)) {
++			buffer_append_string_len(s->cookie_name,
++					SCONST_STR_LEN(DEFAULT_COOKIE_NAME));
++		}
+ 		/* automatically include login and nocookie pages
+ 		 * to the allowed page list */
+ 		ds = data_string_init();
+ 		buffer_copy_string_buffer(ds->value, s->login_page);
+ 		buffer_copy_string_buffer(ds->key, s->login_page);
+ 		rc = array_insert_unique(s->allowed, (data_unset*)ds);
+ 		ds = data_string_init();
+@@ -259,14 +269,15 @@ static int mod_airos_patch_connection(se
+ 
+ 	PATCH(allowed);
+ 	PATCH(denied);
+ 	PATCH(cachable);
+ 	PATCH(cachable_gz);
+ 	PATCH(login_page);
+ 	PATCH(nocookie_page);
++	PATCH(cookie_name);
+ 	PATCH(sessiondb_file);
+ 	PATCH(session_timeout);
+ 	PATCH(redirect_https_port);
+ 	PATCH(tdb);
+ 
+ 	/* skip the first, the global context */
+ 	for (i = 1; i < srv->config_context->used; i++) {
+@@ -288,14 +299,16 @@ static int mod_airos_patch_connection(se
+ 				PATCH(cachable);
+ 			} else if (buffer_is_equal_string(du->key, SCONST_STR_LEN(CONFIG_CACHABLE_GZ))) {
+ 				PATCH(cachable_gz);
+ 			} else if (buffer_is_equal_string(du->key, SCONST_STR_LEN(CONFIG_LOGIN_PAGE))) {
+ 				PATCH(login_page);
+ 			} else if (buffer_is_equal_string(du->key, SCONST_STR_LEN(CONFIG_NOCOOKIE_PAGE))) {
+ 				PATCH(nocookie_page);
++			} else if (buffer_is_equal_string(du->key, SCONST_STR_LEN(CONFIG_COOKIE_NAME))) {
++				PATCH(cookie_name);
+ 			} else if (buffer_is_equal_string(du->key, SCONST_STR_LEN(CONFIG_SESSIONDB_FILE))) {
+ 				PATCH(sessiondb_file);
+ 				PATCH(tdb);
+ 			} else if (buffer_is_equal_string(du->key, SCONST_STR_LEN(CONFIG_SESSION_TIMEOUT))) {
+ 				PATCH(session_timeout);
+ 			} else if (buffer_is_equal_string(du->key, SCONST_STR_LEN(CONFIG_HTTPS_REDIRECT))) {
+ 				PATCH(redirect_https_port);
+@@ -604,15 +617,16 @@ session_init(server* srv, connection* co
+ 	MD5_Update(&Md5Ctx, (unsigned char *)hh, strlen(hh));
+ 
+ 	MD5_Final(h, &Md5Ctx);
+ 
+ 	buffer_copy_string_hex(new_id, (char*)h, 16);
+ 
+ 	buffer_copy_string_len(ds->key, CONST_STR_LEN("Set-Cookie"));
+-	buffer_copy_string_len(ds->value, SCONST_STR_LEN(COOKIE_NAME_EQ));
++	buffer_copy_string_buffer(ds->value, p->conf.cookie_name);
++	buffer_append_string_len(ds->value, SCONST_STR_LEN(EQ));
+ 	buffer_append_string_buffer(ds->value, new_id);
+ 	buffer_append_string_len(ds->value, CONST_STR_LEN("; Path=/"));
+ 	buffer_append_string_len(ds->value, CONST_STR_LEN("; Version=1"));
+ 
+ 	array_insert_unique(con->response.headers, (data_unset *)ds);
+ 
+ 	/* create and insert the session into session database */
+@@ -712,15 +726,15 @@ URIHANDLER_FUNC(mod_airos_uri_handler) {
+ 			(strcmp(con->uri.path->ptr, COOKIE_TEST_PAGE) == 0)) {
+ 		int got_cookie = 0;
+ 		buffer* redirto = buffer_init();
+ 		// if we are here, we are supposed to fetch cookie value
+ 		buffer* value = NULL;
+ 
+ 		if (ds != NULL)
+-			value = fetch_cookie_value(COOKIE_NAME, ds->value);
++			value = fetch_cookie_value(p->conf.cookie_name->ptr, ds->value);
+ 
+ 		if (value != NULL && value->used == 33) {
+ 			got_cookie = 1;
+ 		}
+ 		buffer_free(value);
+ 
+ 		// if we have no cookie, redirect to nocookie page
+@@ -738,15 +752,15 @@ URIHANDLER_FUNC(mod_airos_uri_handler) {
+ 		con->file_finished = 1;
+ 
+ 		return HANDLER_FINISHED;
+ 	}
+ 
+ 	needs_cookie = 1;
+ 	if (ds != NULL) {
+-		buffer* value = fetch_cookie_value(COOKIE_NAME, ds->value);
++		buffer* value = fetch_cookie_value(p->conf.cookie_name->ptr, ds->value);
+ 
+ 		if (value != NULL && value->used == 33) {
+ 			/* do we have this session in our DB? */
+ 			session = session_get(p->conf.tdb, value);
+ 
+ 			/* if this is login page to be accessed, but there is no session
+ 			 * for existing valid cookie, then create the session, using the
+@@ -957,15 +971,15 @@ SUBREQUEST_FUNC(mod_airos_subrequest_sta
+ 		/* assume authenticated session */
+ 		set_uri_cache(srv, con, p->expires_str, 0);
+ 	}
+ 
+ 	/* TODO: optimize - use connection plugin_ctx to store session */
+ 	ds = (data_string *)array_get_element(con->request.headers, "Cookie");
+ 	if (ds != NULL) {
+-			buffer* value = fetch_cookie_value(COOKIE_NAME, ds->value);
++			buffer* value = fetch_cookie_value(p->conf.cookie_name->ptr, ds->value);
+ 
+ 			if (value != NULL && value->used == 33) {
+ 				/* do we have this session in our DB? */
+ 				session = session_get(p->conf.tdb, value);
+ 			}
+ 			/* we no longer need cookie value, discard it */
+ 			buffer_free(value);

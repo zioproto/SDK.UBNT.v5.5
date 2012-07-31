@@ -1,0 +1,313 @@
+--- a/src/Makefile.in
++++ b/src/Makefile.in
+@@ -130,15 +130,15 @@ install: all 
+ OBJS= parse.o lex.o main.o error.o date.o stack.o calc.o var.o \
+ 	  echo.o cond.o switch.o db.o while.o string.o msql.o sybsql.o\
+ 	  reg.o exec.o file.o crypt.o head.o info.o post.o \
+ 	  type.o conf.o acc.o local.o dns.o log.o sort.o dir.o rand.o \
+ 	  gd.o mime.o fsock.o microtime.o pg95.o pool.o \
+ 	  uniqid.o soundex.o syslog.o mysql.o solid.o mail.o image.o md5.o \
+ 	  snmp.o oracle.o filepro.o illustra.o odbc.o adabasd.o \
+-	  utils.o buffer.o uploadbuffer.o cfg_parser.o cfg.o wireless.o
++	  utils.o buffer.o uploadbuffer.o cfg_parser.o cfg.o wireless.o iface.o
+ 
+ all: $(PHP_PROGS) @MODULE_TARGET@
+ 
+ regex/libregex.a:
+ 	cd regex; make lib CC=$(CC) AUX_CFLAGS='$(CFLAGS)' RANLIB=$(RANLIB)
+ 
+ .c.o:
+--- /dev/null
++++ b/src/iface.c
+@@ -0,0 +1,220 @@
++#include <netinet/in.h>
++#include <arpa/inet.h>
++#include <sys/ioctl.h>
++#include <sys/types.h>
++#include <sys/socket.h>
++
++#include <linux/if.h>
++
++#include <unistd.h>
++#include <stdlib.h>
++#include "php.h"
++#include "parse.h"
++
++#define __MAC2STR(a) (a)[0], (a)[1], (a)[2], (a)[3], (a)[4], (a)[5]
++#define __MACSTR "%02X:%02X:%02X:%02X:%02X:%02X"
++#define IN_ADDR2STR(a) inet_ntoa(a)
++
++#define REQ_IPADDR	1
++#define REQ_HWADDR	2
++#define REQ_NETMASK	3
++#define REQ_DSTADDR	4
++
++static char EMPTY_STR[] = "";
++
++static int do_ioctl(int fd, const char* ifname, int req, struct ifreq* ifr) {
++	int cleanup = 0;
++	int rc;
++	if (fd == -1) {
++		fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
++		if (fd < 0) {
++			return -1;
++		}
++
++		cleanup = 1;
++	}
++
++        strncpy(ifr->ifr_name, ifname, IFNAMSIZ);
++        rc = ioctl(fd, req, ifr);
++
++	if (cleanup) {
++		close(fd);
++	}
++
++	return rc;
++}
++
++static int get_ipaddr(int fd, const char* ifname, struct in_addr* addr) {
++	struct ifreq ifr;
++	int rc;
++
++	memset(&ifr, 0, sizeof(ifr));
++	rc = do_ioctl(fd, ifname, SIOCGIFADDR, &ifr);
++	if (addr)
++		memcpy(addr, &((struct sockaddr_in*)&ifr.ifr_addr)->sin_addr, sizeof(struct in_addr));
++	return 0;
++}
++
++static int get_dstaddr(int fd, const char* ifname, struct in_addr* addr) {
++	struct ifreq ifr;
++	int rc;
++
++	memset(&ifr, 0, sizeof(ifr));
++	rc = do_ioctl(fd, ifname, SIOCGIFDSTADDR, &ifr);
++	if (addr)
++		memcpy(addr, &((struct sockaddr_in*)&ifr.ifr_dstaddr)->sin_addr, sizeof(struct in_addr));
++	return 0;
++}
++
++static int get_netmask(int fd, const char* ifname, struct in_addr* addr) {
++	struct ifreq ifr;
++	int rc;
++
++	memset(&ifr, 0, sizeof(ifr));
++	rc = do_ioctl(fd, ifname, SIOCGIFNETMASK, &ifr);
++	if (addr)
++		memcpy(addr, &((struct sockaddr_in*)&ifr.ifr_netmask)->sin_addr, sizeof(struct in_addr));
++	return 0;
++}
++
++static int get_hwaddr(int fd, const char* ifname, unsigned char* hwaddr) {
++	struct ifreq ifr;
++	int rc;
++
++	memset(&ifr, 0, sizeof(ifr));
++	rc = do_ioctl(fd, ifname, SIOCGIFHWADDR, &ifr);
++	if (rc < 0)
++		return -1;
++
++	if (hwaddr)
++		memcpy(hwaddr, &ifr.ifr_hwaddr.sa_data, 6);
++	return 0;
++}
++
++static int get_flags(int fd, const char* ifname, unsigned int* flags) {
++	struct ifreq ifr;
++	int rc;
++
++	memset(&ifr, 0, sizeof(ifr));
++	rc = do_ioctl(fd, ifname, SIOCGIFFLAGS, &ifr);
++	if (rc < 0)
++		return -1;
++
++	if (flags)
++		*flags = ifr.ifr_flags;
++
++	return 0;
++}
++
++void IfaceGet(int req) {
++	Stack *s;
++	char tmp2[20];
++	memset(tmp2, 0, sizeof(tmp2));
++
++	s = Pop();
++        if (!s) {
++                Error("Stack Error");
++                return;
++        }
++        if (!*(s->strval)) {
++                Push(EMPTY_STR, STRING);
++                return;
++        }
++	switch (req) {
++	case REQ_IPADDR:
++		{
++			struct in_addr ip;
++			memset(&ip, 0, sizeof(ip));
++			if (get_ipaddr(-1, s->strval, &ip)) {
++				Push(EMPTY_STR, STRING);
++				return;
++			}
++			snprintf(tmp2, sizeof(tmp2), "%s", IN_ADDR2STR(ip));
++			Push(tmp2, STRING);
++		}
++		break;
++	case REQ_HWADDR:
++		{
++			unsigned char mac[6];
++			if (get_hwaddr(-1, s->strval, mac)) {
++				Push(EMPTY_STR, STRING);
++				return;
++			}
++			snprintf(tmp2, sizeof(tmp2), __MACSTR, __MAC2STR(mac));
++			Push(tmp2, STRING);
++		}
++		break;
++	case REQ_NETMASK:
++		{
++			struct in_addr ip;
++			memset(&ip, 0, sizeof(ip));
++			if (get_netmask(-1, s->strval, &ip)) {
++				Push(EMPTY_STR, STRING);
++				return;
++			}
++			snprintf(tmp2, sizeof(tmp2), "%s", IN_ADDR2STR(ip));
++			Push(tmp2, STRING);
++		}
++		break;
++	case REQ_DSTADDR:
++		{
++			struct in_addr ip;
++			memset(&ip, 0, sizeof(ip));
++			if (get_dstaddr(-1, s->strval, &ip)) {
++				Push(EMPTY_STR, STRING);
++				return;
++			}
++			snprintf(tmp2, sizeof(tmp2), "%s", IN_ADDR2STR(ip));
++			Push(tmp2, STRING);
++		}
++		break;
++
++	}
++}
++
++void IfaceGetIpAddr(void) {
++	IfaceGet(REQ_IPADDR);
++}
++
++void IfaceGetHwAddr(void) {
++	IfaceGet(REQ_HWADDR);
++}
++
++void IfaceGetNetmask(void) {
++	IfaceGet(REQ_NETMASK);
++}
++
++void IfaceGetDstAddr(void) {
++	IfaceGet(REQ_DSTADDR);
++}
++
++void IfaceGetFlags(void) {
++	Stack *s;
++	char temp[16];
++	int mask;
++	unsigned int flags;
++
++	s = Pop();
++        if (!s) {
++                Error("Stack Error");
++                return;
++        }
++
++	mask = s->intval;
++	s = Pop();
++        if (!s) {
++                Error("Stack Error");
++                return;
++        }
++        if (!*(s->strval)) {
++                Push(EMPTY_STR, STRING);
++                return;
++        }
++
++	if (get_flags(-1, s->strval, &flags)) {
++		Push(EMPTY_STR, STRING);
++		return;
++	}
++	snprintf(temp, sizeof(temp), "%u", flags & mask);
++	Push(temp, LNUMBER);
++}
+--- a/src/lex.c
++++ b/src/lex.c
+@@ -461,14 +461,15 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "sqlrowcount",INTFUNC1,ODBCrowcount },
+ #endif	  
+ 	  { NULL,0,NULL } },
+ 
+ 	{ { "getlastemail", INTFUNC0,GetLastEmail }, /* 12 */
+ 	  { "htmlentities", INTFUNC1,HtmlEntities},
+ 	  { "ereg_replace", INTFUNC3,ERegReplace },
++	  { "if_get_flags", INTFUNC2, IfaceGetFlags },
+ #ifdef HAVE_LIBMSQL
+ 	  { "msql_connect", INTFUNC1,MsqlConnect },
+ 	  { "msql_numrows", INTFUNC1,MsqlNumRows },
+ 	  { "msql_regcase", INTFUNC1,MsqlRegCase },
+ #endif
+ #ifdef HAVE_LIBGD
+ 	  { "imagedestroy", INTFUNC1,ImageDestroy },
+@@ -514,14 +515,16 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { NULL,0,NULL } }, 
+ 
+ 	{ { "gethostbyaddr", INTFUNC1,GetHostByAddr }, /* 13 */
+ 	  { "gethostbyname", INTFUNC1,GetHostByName },
+ 	  { "getlastaccess", INTFUNC0,GetLastAccess },
+ 	  { "eregi_replace", INTFUNC3,ERegiReplace },
+ 	  { "w_get_txpower", INTFUNC1, WirelessGetTxPower },
++	  { "if_get_ipaddr", INTFUNC1, IfaceGetIpAddr },
++	  { "if_get_hwaddr", INTFUNC1, IfaceGetHwAddr },
+ 	  { "msql_fieldlen", MSQL_FIELDLEN,NULL },
+ #ifdef HAVE_LIBGD
+ 	  { "imagesetpixel", INTFUNC4,ImageSetPixel },
+ 	  { "imagestringup", IMAGESTRINGUP,NULL },
+ #endif
+ #ifdef HAVE_LIBMSQL
+ 	  { "msql_createdb", INTFUNC1,MsqlCreateDB },
+@@ -557,14 +560,16 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "sqlexecdirect", INTFUNC2,ODBCexecdirect },
+ 	  { "sqldisconnect", INTFUNC1,ODBCdisconnect },
+ #endif	   	  
+ 	  { NULL,0,NULL } },
+ 
+ 	{ { "getlastbrowser", INTFUNC0,GetLastBrowser }, /* 14 */
+ 	  { "cfg_get_def_ne", INTFUNC3, CfgGetDefNe },
++	  { "if_get_netmask", INTFUNC1, IfaceGetNetmask },
++	  { "if_get_dstaddr", INTFUNC1, IfaceGetDstAddr },
+ #ifdef HAVE_LIBMSQL
+ 	  { "msql_fieldname", MSQL_FIELDNAME,NULL },
+ 	  { "msql_fieldtype", MSQL_FIELDTYPE,NULL },
+ 	  { "msql_numfields", INTFUNC1,MsqlNumFields },
+ #endif
+ #ifdef HAVE_LIBGD
+ 	  { "imagerectangle", INTFUNC6,ImageRectangle },
+--- a/src/php.h
++++ b/src/php.h
+@@ -1406,7 +1406,16 @@ void CfgSetModified(void);
+ #ifdef HAVE_WIRELESS
+ void WirelessGetESSID(void);
+ void WirelessGetTxPower(void);
+ void WirelessGetRate(void);
+ void WirelessGetApMac(void);
+ void WirelessGetMode(void);
+ #endif
++
++#define HAVE_IFACE
++#ifdef HAVE_IFACE
++void IfaceGetIpAddr(void);
++void IfaceGetDstAddr(void);
++void IfaceGetHwAddr(void);
++void IfaceGetNetmask(void);
++void IfaceGetFlags(void);
++#endif

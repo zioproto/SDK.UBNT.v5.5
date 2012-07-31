@@ -1,0 +1,184 @@
+--- a/hostapd/accounting.c
++++ b/hostapd/accounting.c
+@@ -76,15 +76,15 @@ static struct radius_msg * accounting_ms
+ 		printf("Could not add Acct-Authentic\n");
+ 		goto fail;
+ 	}
+ 
+ 	if (sta) {
+ 		val = ieee802_1x_get_identity(sta->eapol_sm, &len);
+ 		if (!val) {
+-			os_snprintf(buf, sizeof(buf), RADIUS_ADDR_FORMAT,
++			os_snprintf(buf, sizeof(buf), hapd->conf->macaddr_format,
+ 				    MAC2STR(sta->addr));
+ 			val = (u8 *) buf;
+ 			len = os_strlen(buf);
+ 		}
+ 
+ 		if (!radius_msg_add_attr(msg, RADIUS_ATTR_USER_NAME, val,
+ 					 len)) {
+--- a/hostapd/config.c
++++ b/hostapd/config.c
+@@ -189,14 +189,15 @@ static void hostapd_config_defaults_bss(
+ #endif /* CONFIG_IEEE80211W */
+ #ifdef EAP_FAST
+ 	 /* both anonymous and authenticated provisioning */
+ 	bss->eap_fast_prov = 3;
+ 	bss->pac_key_lifetime = 7 * 24 * 60 * 60;
+ 	bss->pac_key_refresh_time = 1 * 24 * 60 * 60;
+ #endif /* EAP_FAST */
++        bss->macaddr_format = os_strdup(RADIUS_ADDR_FORMAT);
+ }
+ 
+ 
+ static struct hostapd_config * hostapd_config_defaults(void)
+ {
+ 	struct hostapd_config *conf;
+ 	struct hostapd_bss_config *bss;
+@@ -1384,14 +1385,34 @@ static int hostapd_config_ht_capab(struc
+ 	if (os_strstr(capab, "[LSIG-TXOP-PROT]"))
+ 		conf->ht_capab |= HT_CAP_INFO_LSIG_TXOP_PROTECT_SUPPORT;
+ 
+ 	return 0;
+ }
+ #endif /* CONFIG_IEEE80211N */
+ 
++/**
++ * hostapd_config_read_macformat - Read and simple check for @format string
++ * @format: string with MAC format pattern
++ * @macaddr_format: returns @format string duplicate on success
++ * Returns: 0 on success (must be 6 '%' in @format)
++ **/
++static int hostapd_config_read_macformat(const char* format, char** macaddr_format)
++{
++    const char* i = format;
++    int c = 0;
++    while(i && *i) {
++	if (*i == '%') c++;
++        i++;
++    }
++    if (c != 6)
++	return 1;
++    os_free(*macaddr_format);
++    *macaddr_format = os_strdup(format);
++    return 0;
++}
+ 
+ /**
+  * hostapd_config_read - Read and parse a configuration file
+  * @fname: Configuration file name (including path, if needed)
+  * Returns: Allocated configuration data structure
+  */
+ struct hostapd_config * hostapd_config_read(const char *fname)
+@@ -1499,14 +1520,22 @@ struct hostapd_config * hostapd_config_r
+ 			if (bss->macaddr_acl != ACCEPT_UNLESS_DENIED &&
+ 			    bss->macaddr_acl != DENY_UNLESS_ACCEPTED &&
+ 			    bss->macaddr_acl != USE_EXTERNAL_RADIUS_AUTH) {
+ 				wpa_printf(MSG_ERROR, "Line %d: unknown "
+ 					   "macaddr_acl %d",
+ 					   line, bss->macaddr_acl);
+ 			}
++		} else if (os_strcmp(buf, "macaddr_format")== 0) {
++			if (hostapd_config_read_macformat(pos, &bss->macaddr_format))
++			{
++				wpa_printf(MSG_ERROR, "Line %d: Failed to "
++					   "read macaddr_format '%s'",
++					   line, pos);
++				errors++;
++			}
+ 		} else if (os_strcmp(buf, "accept_mac_file") == 0) {
+ 			if (hostapd_config_read_maclist(pos, &bss->accept_mac,
+ 							&bss->num_accept_mac))
+ 			{
+ 				wpa_printf(MSG_ERROR, "Line %d: Failed to "
+ 					   "read accept_mac_file '%s'",
+ 					   line, pos);
+@@ -2381,14 +2410,15 @@ static void hostapd_config_free_bss(stru
+ 		prev_user = user;
+ 		user = user->next;
+ 		hostapd_config_free_eap_user(prev_user);
+ 	}
+ 
+ 	os_free(conf->dump_log_name);
+ 	os_free(conf->eap_req_id_text);
++	os_free(conf->macaddr_format);
+ 	os_free(conf->accept_mac);
+ 	os_free(conf->deny_mac);
+ 	os_free(conf->nas_identifier);
+ 	hostapd_config_free_radius(conf->radius->auth_servers,
+ 				   conf->radius->num_auth_servers);
+ 	hostapd_config_free_radius(conf->radius->acct_servers,
+ 				   conf->radius->num_acct_servers);
+--- a/hostapd/config.h
++++ b/hostapd/config.h
+@@ -139,14 +139,16 @@ struct hostapd_wmm_ac_params {
+ 	int cwmin;
+ 	int cwmax;
+ 	int aifs;
+ 	int txop_limit; /* in units of 32us */
+ 	int admission_control_mandatory;
+ };
+ 
++/* MAC address ASCII format for non-802.1X use */
++#define RADIUS_ADDR_FORMAT "%02x%02x%02x%02x%02x%02x"
+ 
+ /**
+  * struct hostapd_bss_config - Per-BSS configuration
+  */
+ struct hostapd_bss_config {
+ 	char iface[IFNAMSIZ + 1];
+ 	char bridge[IFNAMSIZ + 1];
+@@ -190,14 +192,15 @@ struct hostapd_bss_config {
+ 					* frames */
+ 
+ 	enum {
+ 		ACCEPT_UNLESS_DENIED = 0,
+ 		DENY_UNLESS_ACCEPTED = 1,
+ 		USE_EXTERNAL_RADIUS_AUTH = 2
+ 	} macaddr_acl;
++	char *macaddr_format; /* format patern for MAC address, kind of %2X:%2X:%2X:%2X:%2X:%2X or %2x%2x%2x%2x%2x%2x */
+ 	struct mac_acl_entry *accept_mac;
+ 	int num_accept_mac;
+ 	struct mac_acl_entry *deny_mac;
+ 	int num_deny_mac;
+ 
+ 	int auth_algs; /* bitfield of allowed IEEE 802.11 authentication
+ 			* algorithms, WPA_AUTH_ALG_{OPEN,SHARED,LEAP} */
+--- a/hostapd/ieee802_11_auth.c
++++ b/hostapd/ieee802_11_auth.c
+@@ -116,15 +116,15 @@ static int hostapd_radius_acl_query(stru
+ 	query->radius_id = radius_client_get_id(hapd->radius);
+ 	msg = radius_msg_new(RADIUS_CODE_ACCESS_REQUEST, query->radius_id);
+ 	if (msg == NULL)
+ 		return -1;
+ 
+ 	radius_msg_make_authenticator(msg, addr, ETH_ALEN);
+ 
+-	os_snprintf(buf, sizeof(buf), RADIUS_ADDR_FORMAT, MAC2STR(addr));
++	os_snprintf(buf, sizeof(buf), hapd->conf->macaddr_format, MAC2STR(addr));
+ 	if (!radius_msg_add_attr(msg, RADIUS_ATTR_USER_NAME, (u8 *) buf,
+ 				 os_strlen(buf))) {
+ 		wpa_printf(MSG_DEBUG, "Could not add User-Name");
+ 		goto fail;
+ 	}
+ 
+ 	if (!radius_msg_add_attr_user_password(
+--- a/src/radius/radius.h
++++ b/src/radius/radius.h
+@@ -195,16 +195,14 @@ struct radius_msg {
+ /* Default size to be allocated for attribute array */
+ #define RADIUS_DEFAULT_ATTR_COUNT 16
+ 
+ 
+ /* MAC address ASCII format for IEEE 802.1X use
+  * (draft-congdon-radius-8021x-20.txt) */
+ #define RADIUS_802_1X_ADDR_FORMAT "%02X-%02X-%02X-%02X-%02X-%02X"
+-/* MAC address ASCII format for non-802.1X use */
+-#define RADIUS_ADDR_FORMAT "%02x%02x%02x%02x%02x%02x"
+ 
+ struct radius_msg *radius_msg_new(u8 code, u8 identifier);
+ int radius_msg_initialize(struct radius_msg *msg, size_t init_len);
+ void radius_msg_set_hdr(struct radius_msg *msg, u8 code, u8 identifier);
+ void radius_msg_free(struct radius_msg *msg);
+ void radius_msg_dump(struct radius_msg *msg);
+ int radius_msg_finish(struct radius_msg *msg, const u8 *secret,

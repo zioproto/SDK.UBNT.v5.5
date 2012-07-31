@@ -1,0 +1,150 @@
+Index: linux-2.6.32.48/drivers/usb/host/ehci-hcd.c
+===================================================================
+--- linux-2.6.32.48.orig/drivers/usb/host/ehci-hcd.c
++++ linux-2.6.32.48/drivers/usb/host/ehci-hcd.c
+@@ -1,5 +1,4 @@
+-/*
+- * Copyright (c) 2000-2004 by David Brownell
++/* * Copyright (c) 2000-2004 by David Brownell
+  *
+  * This program is free software; you can redistribute it and/or modify it
+  * under the terms of the GNU General Public License as published by the
+@@ -37,6 +36,11 @@
+ #include <linux/debugfs.h>
+ 
+ #include "../core/hcd.h"
++#ifdef CONFIG_MACH_AR934x
++#include "../gadget/ath_defs.h"
++#else
++#include "../gadget/ar9130_defs.h"
++#endif
+ 
+ #include <asm/byteorder.h>
+ #include <asm/io.h>
+@@ -252,6 +256,28 @@ static int ehci_reset (struct ehci_hcd *
+ 	command |= CMD_RESET;
+ 	dbg_cmd (ehci, "reset", command);
+ 	ehci_writel(ehci, command, &ehci->regs->command);
++#if !defined(CONFIG_MACH_AR7100)
++#if defined(CONFIG_MACH_AR7240) || defined(CONFIG_MACH_HORNET)
++#define ath_usb_reg_wr		ar9130_reg_wr
++#define ath_usb_reg_rd		ar9130_reg_rd
++#define ATH_USB_USB_MODE	AR9130_USB_MODE
++#endif
++	udelay(1000);
++#ifdef CONFIG_MACH_AR934x
++	ath_usb_reg_wr(ATH_USB_USB_MODE,
++			(ath_usb_reg_rd(ATH_USB_USB_MODE) | 0x13));
++#else
++	ath_usb_reg_wr(ATH_USB_USB_MODE,
++			(ath_usb_reg_rd(ATH_USB_USB_MODE) | 0x03));
++#endif
++	printk("%s Intialize USB CONTROLLER in host mode: %x\n",
++			__func__, ath_usb_reg_rd(ATH_USB_USB_MODE));
++
++	udelay(1000);
++	writel((readl(&ehci->regs->port_status[0]) | (1 << 28) ), &ehci->regs->port_status[0]);
++	printk("%s Port Status %x \n", __func__, readl(&ehci->regs->port_status[0]));
++#endif
++
+ 	ehci_to_hcd(ehci)->state = HC_STATE_HALT;
+ 	ehci->next_statechange = jiffies;
+ 	retval = handshake (ehci, &ehci->regs->command,
+@@ -779,7 +805,16 @@ static irqreturn_t ehci_irq (struct usb_
+ 
+ 		/* kick root hub later */
+ 		pcd_status = status;
++		/*Patch for USB Suspend/Resume in WASP*/
++#ifdef CONFIG_MACH_AR934x
+ 
++#define USB_PHY_CTRL5 0xb8116c94
++		if((ath_reg_rd(&ehci->regs->status) & STS_PCD) && (hcd->state != HC_STATE_SUSPENDED) && \
++			((1<<USB_PORT_FEAT_HIGHSPEED) == ehci_port_speed(ehci, ehci_readl(ehci, &ehci->regs->port_status [0])))) {
++	                ath_reg_wr (USB_PHY_CTRL5, (ath_reg_rd(USB_PHY_CTRL5)|((1<<17) | (1<<22) | (1<<23))) & (~((0x3<<18) | (0x1<<20))));
++	                ath_reg_wr (USB_PHY_CTRL5, (ath_reg_rd(USB_PHY_CTRL5)) & (~(1<<17)));
++	        }
++#endif
+ 		/* resume root hub? */
+ 		if (!(cmd & CMD_RUN))
+ 			usb_hcd_resume_root_hub(hcd);
+@@ -1155,6 +1190,21 @@ MODULE_LICENSE ("GPL");
+ #define	PLATFORM_DRIVER		ehci_atmel_driver
+ #endif
+ 
++#ifdef CONFIG_USB_EHCI_AR9130
++#include "ehci-ar9130.c"
++#define PLATFORM_DRIVER		ehci_hcd_ar9130_driver
++#endif
++
++#ifdef CONFIG_USB_EHCI_ATH
++#include "ehci-ath.c"
++#define PLATFORM_DRIVER		ath_usb_ehci_hcd_driver
++#endif
++
++#ifdef CONFIG_USB_EHCI_AR7100
++#include "ehci-ar7100.c"
++#define PLATFORM_DRIVER		ehci_hcd_ar7100_driver
++#endif
++
+ #if !defined(PCI_DRIVER) && !defined(PLATFORM_DRIVER) && \
+     !defined(PS3_SYSTEM_BUS_DRIVER) && !defined(OF_PLATFORM_DRIVER)
+ #error "missing bus glue for ehci-hcd"
+Index: linux-2.6.32.48/drivers/usb/host/Kconfig
+===================================================================
+--- linux-2.6.32.48.orig/drivers/usb/host/Kconfig
++++ linux-2.6.32.48/drivers/usb/host/Kconfig
+@@ -367,6 +367,54 @@ config USB_WHCI_HCD
+ 	  To compile this driver a module, choose M here: the module
+ 	  will be called "whci-hcd".
+ 
++config USB_OHCI_AR7100
++	bool "USB OHCI support for AR7100"
++	depends on MACH_AR7100 && USB_OHCI_HCD
++	help
++	  Support for AR7100 OHCI controller
++
++config USB_OHCI_AR7240
++	bool "USB OHCI support for AR7240"
++	depends on (MACH_AR7240 || MACH_HORNET) && USB_OHCI_HCD
++	help
++	  Support for AR7240 OHCI controller
++
++config USB_EHCI_AR7100
++	bool "USB EHCI support for AR7100"
++	depends on MACH_AR7100 && USB_EHCI_HCD
++	help
++	  Support for AR7100 EHCI controller
++
++config USB_EHCI_AR9130
++	bool "USB EHCI support for AR9130"
++	depends on (MACH_AR7100 || MACH_AR7240 || MACH_HORNET) && USB_EHCI_HCD
++	help
++	  Support for AR9130 EHCI controller
++
++config USB_AR9130_OTG
++	bool "USB EHCI-OTG support for AR9130"
++	depends on (MACH_AR7100 || MACH_AR7240) && USB_EHCI_AR9130 && USB_EHCI_HCD
++	help
++	  Support for AR9130 OTG EHCI controller
++
++config USB_OHCI_ATH
++	bool "USB OHCI support for Atheros"
++	depends on (MACH_AR724x || MACH_AR933x || MACH_AR934x) && USB_OHCI_HCD
++	help
++	  Support for Atheros OHCI controller
++
++config USB_EHCI_ATH
++	bool "USB EHCI support for Atheros"
++	depends on (MACH_AR724x || MACH_AR933x || MACH_AR934x) && USB_EHCI_HCD
++	help
++	  Support for Atheros EHCI controller
++
++config USB_ATH_OTG
++	bool "USB EHCI-OTG support for Atheros"
++	depends on (MACH_AR7100 || MACH_AR7240) && USB_EHCI_ATH && USB_EHCI_HCD
++	help
++	  Support for Atheros OTG EHCI controller
++
+ config USB_HWA_HCD
+ 	tristate "Host Wire Adapter (HWA) driver (EXPERIMENTAL)"
+ 	depends on EXPERIMENTAL

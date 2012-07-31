@@ -1,0 +1,850 @@
+--- a/drivers/usb/serial/airprime.c
++++ b/drivers/usb/serial/airprime.c
+@@ -11,56 +11,310 @@
+ #include <linux/kernel.h>
+ #include <linux/init.h>
+ #include <linux/tty.h>
+ #include <linux/module.h>
+ #include <linux/usb.h>
+ #include "usb-serial.h"
+ 
++//#define DRIVECAM_MOD
++
++static int debug;
++static int nmea = 1;
++static int truinstall;
++
++/* per port private data */
++#ifdef DRIVECAM_MOD
++/* our philips usb host controller driver has trouble with anything more than this */
++#  define N_IN_URB	1
++#  define N_OUT_URB	1
++#  define IN_BUFLEN	64
++#else
++#  define N_IN_URB	4
++#  define N_OUT_URB	4
++#  define IN_BUFLEN	4096
++#endif
++
++enum devicetype {
++	DEVICE_MODEM =		0,
++	DEVICE_INSTALLER =	1,
++};
++
++#define DEVICE_INSTALLER_EJECT 18
++
++/* Used in interface blacklisting */
++struct sierra_iface_info {
++	const u32 infolen;	/* number of interface numbers on blacklist */
++	const u8  *ifaceinfo;	/* pointer to the array holding the numbers */
++};
++
++/* static device type specific data */
++struct sierra_device_static_info {
++	const enum devicetype		dev_type;
++	const struct sierra_iface_info	iface_blacklist;
++};
++
++/* 'blacklist' of interfaces not served by this driver */
++static const u8 direct_ip_non_serial_ifaces[] = { 7, 8, 9, 10, 11 };
++static const struct sierra_device_static_info direct_ip_interface_blacklist = {
++	.dev_type = DEVICE_MODEM,
++	.iface_blacklist = {
++		.infolen = ARRAY_SIZE( direct_ip_non_serial_ifaces ),
++		.ifaceinfo = direct_ip_non_serial_ifaces,
++	},
++};
++
++
++
+ static struct usb_device_id id_table [] = {
+-	{ USB_DEVICE(0xf3d, 0x0112) },  /* AirPrime CDMA Wireless PC Card */
+-	{ USB_DEVICE(0x1410, 0x1110) }, /* Novatel Wireless Merlin CDMA */
+-	{ },
++
++
++        //All cards listed here, and then separately 
++
++        //So Sierra ROM devices eject
++        { USB_DEVICE(0x1199, 0x0FFF), .driver_info = DEVICE_INSTALLER_EJECT },
++
++        { USB_DEVICE(0x0af0, 0x7a05) }, //Option Globetrotter HSUPA - NEEDS FIXING - ROM IS SAME ID AS MODEM
++
++
++        { USB_DEVICE(0x1410, 0x6000) }, //Novatel U760
++        { USB_DEVICE(0x1199, 0x0224) }, //Sierra MC5727 #1
++        { USB_DEVICE(0x1199, 0x0024) }, //Sierra MC5727 #2
++        { USB_DEVICE(0x1199, 0x0028) }, //Sierra MC5728
++
++
++        //
++        //Modems verified working with Back channel below
++        //
++
++
++        { USB_DEVICE(0x1199, 0x0025) }, //Sierra Aircard 598U USB plug
++        { USB_DEVICE(0x1199, 0x683c) }, //Sierra MC8790
++        { USB_DEVICE(0x1199, 0x6880) }, //Sierra Aircard USB Mercury Connect
++
++        /* Sierra Wireless C888, USB 303, USB 304 */
++        { USB_DEVICE_AND_INTERFACE_INFO(0x1199, 0x6890, 0xFF, 0xFF, 0xFF)},
++
++        /* Sierra Wireless Direct IP modems */
++        //Including the Sierra USB 305 Lightning
++        { USB_DEVICE(0x1199, 0x68A3),
++          .driver_info = (kernel_ulong_t)&direct_ip_interface_blacklist 
++        },
++
++
++	{ }, //teminating
+ };
+ MODULE_DEVICE_TABLE(usb, id_table);
+ 
++
++
++
++#define URB_TRANSFER_BUFFER_SIZE        4096
++#define NUM_READ_URBS                   4
++#define NUM_WRITE_URBS                  4
++#define NUM_BULK_EPS                    3
++#define MAX_BULK_EPS                    6
++
++/* ******************************************
++        CODE TAKEN FROM sierra.c 
++******************************************
++*/
++
++#define SWIMS_USB_REQUEST_SetPower      0x00
++#define SWIMS_USB_REQUEST_SetNmea       0x07
++#define SWIMS_USB_REQUEST_SetMode       0x0B
++#define SWIMS_USB_REQUEST_TYPE_VSC_SET  0x40
++#define SWIMS_SET_MODE_Modem            0x0001
++
++struct sierra_port_private {
++	spinlock_t lock;	/* lock the structure */
++	int outstanding_urbs;	/* number of out urbs in flight */
++
++	/* Input endpoints and buffers for this port */
++	struct urb *in_urbs[N_IN_URB];
++
++	/* Settings for the port */
++	int rts_state;	/* Handshaking pins (outputs) */
++	int dtr_state;
++	int cts_state;	/* Handshaking pins (inputs) */
++	int dsr_state;
++	int dcd_state;
++	int ri_state;
++};
++
++
++
++
++int sierra_set_ms_mode(struct usb_device *udev, __u16 eSocMode)
++{
++        int result;
++        dev_dbg(&udev->dev, "%s", "DEVICE MODE SWITCH");
++        result = usb_control_msg(udev, usb_sndctrlpipe(udev, 0),
++                        SWIMS_USB_REQUEST_SetMode,      /* __u8 request      */
++                        SWIMS_USB_REQUEST_TYPE_VSC_SET, /* __u8 request type */
++                        eSocMode,                       /* __u16 value       */
++                        0x0000,                         /* __u16 index       */
++                        NULL,                           /* void *data        */
++                        0,                              /* __u16 size        */
++                        USB_CTRL_SET_TIMEOUT);          /* int timeout       */
++        return result;
++}
++
++
++
++static int is_blacklisted(const u8 ifnum,
++				const struct sierra_iface_info *blacklist)
++{
++	const u8  *info;
++	int i;
++
++	if (blacklist) {
++		info = blacklist->ifaceinfo;
++
++		for (i = 0; i < blacklist->infolen; i++) {
++			if (info[i] == ifnum)
++				return 1;
++		}
++	}
++	return 0;
++}
++
++static int sierra_calc_interface(struct usb_serial *serial)
++{
++	int interface;
++	struct usb_interface *p_interface;
++	struct usb_host_interface *p_host_interface;
++	dev_dbg(&serial->dev->dev, "%s\n", __func__);
++
++	/* Get the interface structure pointer from the serial struct */
++	p_interface = serial->interface;
++
++	/* Get a pointer to the host interface structure */
++	p_host_interface = p_interface->cur_altsetting;
++
++	/* read the interface descriptor for this active altsetting
++	 * to find out the interface number we are on
++	*/
++	interface = p_host_interface->desc.bInterfaceNumber;
++
++	return interface;
++}
++
++
++//int SierraEject_usb_serial_probe(struct usb_interface *iface, const struct usb_device_id *id)
++int SierraEject_usb_serial_probe(struct usb_serial *serial, const struct usb_device_id *id)
++{
++        int result;
++        struct usb_device *udev;
++        u8 ifnum, ifclass; 
++
++        udev = serial->dev;
++        //udev = usb_get_dev(interface_to_usbdev(iface));
++        //struct usb_interface *iface = serial->interface;
++
++        /* Check if in installer mode */
++        if (id->driver_info == DEVICE_INSTALLER_EJECT ){
++                dev_dbg(&udev->dev, "%s", "FOUND DEVICE INSTALLER\n");
++                result = sierra_set_ms_mode(udev, SWIMS_SET_MODE_Modem);
++                /*We do not want to bind to the device when in installer mode*/
++                return -EIO;
++        }
++
++        ifnum = sierra_calc_interface(serial);
++        if (serial->interface->num_altsetting == 2) {
++        //if (iface->num_altsetting == 2) {
++
++            //printk("DEBUG: selecting alternate setting for %d\n",ifnum);
++            dev_dbg(&udev->dev, "Selecting alt setting for interface %d\n",
++                ifnum);
++            /* We know the alternate setting is 1 for the MC8785 */
++            usb_set_interface(udev, ifnum, 1);
++        }
++
++        //return usb_serial_probe(iface, id);
++        return 0;
++}
++
++
++
++static int sierra_calc_num_ports(struct usb_serial *serial)
++{
++	int num_ports = 0;
++	u8 ifnum, numendpoints;
++	
++	dev_dbg(&serial->dev->dev, "%s\n", __func__);
++	
++	ifnum = serial->interface->cur_altsetting->desc.bInterfaceNumber;
++	numendpoints = serial->interface->cur_altsetting->desc.bNumEndpoints;
++	
++	/* Dummy interface present on some SKUs should be ignored */
++	if (ifnum == 0x99)
++		num_ports = 0;
++	else if (numendpoints <= 3)
++		num_ports = 1;
++	else
++		num_ports = (numendpoints-1)/2;
++	//dev_dbg(&serial->dev->dev, "%s: num_ports=%d numendpoints=%d\n", __func__, num_ports, numendpoints);
++	//printk("%s: num_ports=%d numendpoints=%d\n",  __func__, num_ports, numendpoints);
++	return num_ports;
++}
++
++
++
++/* ******************************************
++        END CODE TAKEN FROM sierra.c
++*****************************************
++*/
++
++
+ static struct usb_driver airprime_driver = {
+-	.owner =	THIS_MODULE,
+-	.name =		"airprime",
+-	.probe =	usb_serial_probe,
+-	.disconnect =	usb_serial_disconnect,
+-	.id_table =	id_table,
++	.owner =       THIS_MODULE,
++	.name =	       "airprime",
++	.probe =    usb_serial_probe,
++	.disconnect =  usb_serial_disconnect,
++	.id_table =	   id_table,
+ };
+ 
++
+ static struct usb_serial_driver airprime_device = {
+ 	.driver = {
+ 		.owner =	THIS_MODULE,
+ 		.name =		"airprime",
+ 	},
+-	.id_table =		id_table,
++	.id_table =		    id_table,
++    .probe =       SierraEject_usb_serial_probe,
+ 	.num_interrupt_in =	NUM_DONT_CARE,
+ 	.num_bulk_in =		NUM_DONT_CARE,
+ 	.num_bulk_out =		NUM_DONT_CARE,
+-	.num_ports =		1,
++    .calc_num_ports	   = sierra_calc_num_ports,
++	//.num_ports =		1,
+ };
+ 
++
++
+ static int __init airprime_init(void)
+ {
+ 	int retval;
+-
+ 	retval = usb_serial_register(&airprime_device);
+ 	if (retval)
+-		return retval;
++		goto failed_device_airprime_register;
+ 	retval = usb_register(&airprime_driver);
+ 	if (retval)
+-		usb_serial_deregister(&airprime_device);
++		goto failed_driver_register;
++
++	return 0;
++
++failed_driver_register:
++	usb_serial_deregister(&airprime_device);
++failed_device_airprime_register:
+ 	return retval;
+ }
+ 
+ static void __exit airprime_exit(void)
+ {
+-	usb_deregister(&airprime_driver);
+-	usb_serial_deregister(&airprime_device);
++        usb_deregister(&airprime_driver);
++        usb_serial_deregister(&airprime_device);
+ }
+ 
++
+ module_init(airprime_init);
+ module_exit(airprime_exit);
+ MODULE_LICENSE("GPL");
+--- a/drivers/usb/serial/option.c
++++ b/drivers/usb/serial/option.c
+@@ -72,27 +72,38 @@ static int  option_tiocmset(struct usb_s
+ 				unsigned int set, unsigned int clear);
+ static int  option_send_setup(struct usb_serial_port *port);
+ 
+ /* Vendor and product IDs */
+ #define OPTION_VENDOR_ID			0x0AF0
+ #define HUAWEI_VENDOR_ID			0x12D1
+ #define AUDIOVOX_VENDOR_ID			0x0F3D
++#define ZTE_VENDOR_ID				0x19d2
+ 
+ #define OPTION_PRODUCT_OLD		0x5000
+ #define OPTION_PRODUCT_FUSION	0x6000
+ #define OPTION_PRODUCT_FUSION2	0x6300
+ #define HUAWEI_PRODUCT_E600     0x1001
+ #define AUDIOVOX_PRODUCT_AIRCARD 0x0112
+ 
+ static struct usb_device_id option_ids[] = {
++	{ USB_DEVICE(HUAWEI_VENDOR_ID, 0x1464) },
++	{ USB_DEVICE(ZTE_VENDOR_ID, 0x0015) }, /* Omnitel ZTE MF628 */
++	{ USB_DEVICE(ZTE_VENDOR_ID, 0x0016) }, /* Vodafone ZTE K3565-2 */
++	{ USB_DEVICE(ZTE_VENDOR_ID, 0x0063) }, /* Vodafone ZTE K3565-2 */
++	{ USB_DEVICE(ZTE_VENDOR_ID, 0x0104) }, /* Vodafone ZTE K4505-2 */
+ 	{ USB_DEVICE(OPTION_VENDOR_ID, OPTION_PRODUCT_OLD) },
+ 	{ USB_DEVICE(OPTION_VENDOR_ID, OPTION_PRODUCT_FUSION) },
+ 	{ USB_DEVICE(OPTION_VENDOR_ID, OPTION_PRODUCT_FUSION2) },
+ 	{ USB_DEVICE(HUAWEI_VENDOR_ID, HUAWEI_PRODUCT_E600) },
+ 	{ USB_DEVICE(AUDIOVOX_VENDOR_ID, AUDIOVOX_PRODUCT_AIRCARD) },
++/**/
++
++	//{ USB_DEVICE(0x1199, 0x0301) }, //Sierra 250U 3G/4G
++
++
+ 	{ } /* Terminating entry */
+ };
+ 
+ MODULE_DEVICE_TABLE(usb, option_ids);
+ 
+ static struct usb_driver option_driver = {
+ 	.owner      = THIS_MODULE,
+--- a/drivers/usb/serial/usb-serial.c
++++ b/drivers/usb/serial/usb-serial.c
+@@ -30,14 +30,17 @@
+ #include <linux/list.h>
+ #include <linux/smp_lock.h>
+ #include <asm/uaccess.h>
+ #include <linux/usb.h>
+ #include "usb-serial.h"
+ #include "pl2303.h"
+ 
++
++#define SPEED_MOD 1
++
+ /*
+  * Version Information
+  */
+ #define DRIVER_AUTHOR "Greg Kroah-Hartman, greg@kroah.com, http://www.kroah.com/linux/"
+ #define DRIVER_DESC "USB Serial Driver core"
+ 
+ /* Driver structure we register with the USB core */
+@@ -51,14 +54,22 @@ static struct usb_driver usb_serial_driv
+ /* There is no MODULE_DEVICE_TABLE for usbserial.c.  Instead
+    the MODULE_DEVICE_TABLE declarations in each serial driver
+    cause the "hotplug" program to pull in whatever module is necessary
+    via modprobe, and modprobe will load usbserial because the serial
+    drivers depend on it.
+ */
+ 
++#ifdef SPEED_MOD
++//static ushort maxSize=0;
++static ushort maxRSize = 4096;
++static ushort maxWSize = 4096;
++static ushort maxISize = 0;
++#endif
++
++
+ static int debug;
+ static struct usb_serial *serial_table[SERIAL_TTY_MINORS];	/* initially all NULL */
+ static LIST_HEAD(usb_serial_driver_list);
+ 
+ struct usb_serial *usb_serial_get_by_index(unsigned index)
+ {
+ 	struct usb_serial *serial = serial_table[index];
+@@ -752,14 +763,20 @@ int usb_serial_probe(struct usb_interfac
+ 		port = serial->port[i];
+ 		port->read_urb = usb_alloc_urb (0, GFP_KERNEL);
+ 		if (!port->read_urb) {
+ 			dev_err(&interface->dev, "No free urbs available\n");
+ 			goto probe_error;
+ 		}
+ 		buffer_size = le16_to_cpu(endpoint->wMaxPacketSize);
++
++#ifdef SPEED_MOD
++                if (buffer_size < maxRSize)
++                        buffer_size = maxRSize;
++#endif
++
+ 		port->bulk_in_size = buffer_size;
+ 		port->bulk_in_endpointAddress = endpoint->bEndpointAddress;
+ 		port->bulk_in_buffer = kmalloc (buffer_size, GFP_KERNEL);
+ 		if (!port->bulk_in_buffer) {
+ 			dev_err(&interface->dev, "Couldn't allocate bulk_in_buffer\n");
+ 			goto probe_error;
+ 		}
+@@ -776,14 +793,20 @@ int usb_serial_probe(struct usb_interfac
+ 		port = serial->port[i];
+ 		port->write_urb = usb_alloc_urb(0, GFP_KERNEL);
+ 		if (!port->write_urb) {
+ 			dev_err(&interface->dev, "No free urbs available\n");
+ 			goto probe_error;
+ 		}
+ 		buffer_size = le16_to_cpu(endpoint->wMaxPacketSize);
++
++#ifdef SPEED_MOD
++                if (buffer_size < maxWSize)
++                        buffer_size = maxWSize;
++#endif
++
+ 		port->bulk_out_size = buffer_size;
+ 		port->bulk_out_endpointAddress = endpoint->bEndpointAddress;
+ 		port->bulk_out_buffer = kmalloc (buffer_size, GFP_KERNEL);
+ 		if (!port->bulk_out_buffer) {
+ 			dev_err(&interface->dev, "Couldn't allocate bulk_out_buffer\n");
+ 			goto probe_error;
+ 		}
+@@ -801,14 +824,20 @@ int usb_serial_probe(struct usb_interfac
+ 			port = serial->port[i];
+ 			port->interrupt_in_urb = usb_alloc_urb(0, GFP_KERNEL);
+ 			if (!port->interrupt_in_urb) {
+ 				dev_err(&interface->dev, "No free urbs available\n");
+ 				goto probe_error;
+ 			}
+ 			buffer_size = le16_to_cpu(endpoint->wMaxPacketSize);
++
++#ifdef SPEED_MOD
++                        if (buffer_size < maxISize)
++                                buffer_size = maxISize;
++#endif
++
+ 			port->interrupt_in_endpointAddress = endpoint->bEndpointAddress;
+ 			port->interrupt_in_buffer = kmalloc (buffer_size, GFP_KERNEL);
+ 			if (!port->interrupt_in_buffer) {
+ 				dev_err(&interface->dev, "Couldn't allocate interrupt_in_buffer\n");
+ 				goto probe_error;
+ 			}
+ 			usb_fill_int_urb (port->interrupt_in_urb, dev, 
+@@ -828,14 +857,20 @@ int usb_serial_probe(struct usb_interfac
+ 			port = serial->port[i];
+ 			port->interrupt_out_urb = usb_alloc_urb(0, GFP_KERNEL);
+ 			if (!port->interrupt_out_urb) {
+ 				dev_err(&interface->dev, "No free urbs available\n");
+ 				goto probe_error;
+ 			}
+ 			buffer_size = le16_to_cpu(endpoint->wMaxPacketSize);
++
++#ifdef SPEED_MOD
++                if (buffer_size < maxISize)
++                        buffer_size = maxISize;
++#endif
++
+ 			port->interrupt_out_size = buffer_size;
+ 			port->interrupt_out_endpointAddress = endpoint->bEndpointAddress;
+ 			port->interrupt_out_buffer = kmalloc (buffer_size, GFP_KERNEL);
+ 			if (!port->interrupt_out_buffer) {
+ 				dev_err(&interface->dev, "Couldn't allocate interrupt_out_buffer\n");
+ 				goto probe_error;
+ 			}
+@@ -1126,7 +1161,15 @@ EXPORT_SYMBOL_GPL(usb_serial_port_softin
+ /* Module information */
+ MODULE_AUTHOR( DRIVER_AUTHOR );
+ MODULE_DESCRIPTION( DRIVER_DESC );
+ MODULE_LICENSE("GPL");
+ 
+ module_param(debug, bool, S_IRUGO | S_IWUSR);
+ MODULE_PARM_DESC(debug, "Debug enabled or not");
++#ifdef SPEED_MOD
++module_param(maxRSize, ushort, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
++MODULE_PARM_DESC(maxRSize, "User specified USB input buffer size");
++module_param(maxWSize, ushort, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
++MODULE_PARM_DESC(maxWSize, "User specified USB output buffer size");
++module_param(maxISize, ushort, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
++MODULE_PARM_DESC(maxISize, "User specified USB interrupt buffer size");
++#endif
+--- a/drivers/usb/storage/unusual_devs.h
++++ b/drivers/usb/storage/unusual_devs.h
+@@ -44,14 +44,50 @@
+  *	- a copy of /proc/bus/usb/devices with your device plugged in
+  *	  running with this patch.
+  * Send your submission to either Phil Dibowitz <phil@ipom.com> or
+  * Alan Stern <stern@rowland.harvard.edu>, and don't forget to CC: the
+  * USB development list <linux-usb-devel@lists.sourceforge.net>.
+  */
+ 
++
++/*UNUSUAL_DEV(  0x1199, 0x0fff, 0x0000, 0x9999,
++                "Sierra Wireless",
++                "USB MMC Storage",
++                US_SC_DEVICE, US_PR_DEVICE, sierra_ms_init,
++                0),*/
++
++UNUSUAL_DEV(  0x1199, 0x0fff, 0x0000, 0x9999,
++                "Sierra Wireless",
++                "USB MMC Storage",
++                US_SC_DEVICE, US_PR_DEVICE, NULL,
++                US_FL_IGNORE_DEVICE),
++
++//Sierra C888 Compass
++UNUSUAL_DEV(  0x1199, 0x6890, 0x0000, 0x9999,
++                "Sierra Wireless",
++                "USB MMC Storage",
++                US_SC_DEVICE, US_PR_DEVICE, NULL,
++                US_FL_IGNORE_DEVICE),
++
++
++//From the LG USB Connect Turbo
++UNUSUAL_DEV(  0x1004, 0x613f, 0x0000, 0x9999,
++                "LG",
++                "Generic Mass Storage",
++                US_SC_DEVICE, US_PR_DEVICE, NULL,
++                US_FL_IGNORE_DEVICE),
++
++//From the Option USB connect velocity
++UNUSUAL_DEV(  0x0af0, 0x7a05, 0x0000, 0x9999,
++                "Option",
++                "Generic Mass Storage",
++                US_SC_DEVICE, US_PR_DEVICE, NULL,
++                US_FL_IGNORE_DEVICE),
++
++
+ /* patch submitted by Vivian Bregier <Vivian.Bregier@imag.fr>
+  */
+ UNUSUAL_DEV(  0x03eb, 0x2002, 0x0100, 0x0100,
+                 "ATMEL",
+                 "SND1 Storage",
+                 US_SC_DEVICE, US_PR_DEVICE, NULL,
+                 US_FL_IGNORE_RESIDUE),
+--- a/drivers/usb/storage/usb.c
++++ b/drivers/usb/storage/usb.c
+@@ -433,14 +433,104 @@ SkipForAbort:
+ 	 * the structure) -- this is necessary for the module-remove case.
+ 	 * This is important in preemption kernels, which transfer the flow
+ 	 * of execution immediately upon a complete().
+ 	 */
+ 	complete_and_exit(&threads_gone, 0);
+ }	
+ 
++
++
++//eject routine, modeled from zy driver
++static int eject_installer_drive(struct usb_interface *intf)
++{   
++
++        struct usb_device *udev = interface_to_usbdev(intf);
++        struct usb_host_interface *iface_desc = &intf->altsetting[0];
++        struct usb_endpoint_descriptor *endpoint;
++        unsigned char *cmd;
++        u8 bulk_out_ep;
++        int r;
++ 
++        /* Find bulk out endpoint */
++        endpoint = &iface_desc->endpoint[1].desc;
++        if ((endpoint->bEndpointAddress & USB_TYPE_MASK) == USB_DIR_OUT &&
++            (endpoint->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) ==
++            USB_ENDPOINT_XFER_BULK) {
++                bulk_out_ep = endpoint->bEndpointAddress;
++        } else { 
++                dev_err(&udev->dev,
++                        "zd1211rw: Could not find bulk out endpoint\n");
++                return -ENODEV;
++        }
++
++        cmd = kzalloc(31, GFP_KERNEL);
++        if (cmd == NULL)
++                return -ENODEV;
++
++        printk("Vendor: 0x%04x, Product: 0x%04x\n",
++                        //0x1234, ,
++                        le16_to_cpu(udev->descriptor.idVendor),
++                        le16_to_cpu(udev->descriptor.idProduct));
++
++	if( 0 != intf->cur_altsetting->desc.bInterfaceNumber) {
++		//If the storage device does not appear first, ignore it.  Probably already ejected.
++		return -ENODEV;
++	}
++
++
++        //default, but can get overwritten below
++        /* USB bulk command block */
++        cmd[0] = 0x55;  /* bulk command signature */
++        cmd[1] = 0x53;  /* bulk command signature */
++        cmd[2] = 0x42;  /* bulk command signature */
++        cmd[3] = 0x43;  /* bulk command signature */
++        cmd[14] = 6;    /* command length */
++        cmd[15] = 0x1b; /* SCSI command: START STOP UNIT */
++        cmd[19] = 0x2;  /* eject disc */
++
++
++         //               0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 
++	//LG USB Storage 55 53 42 43 78 56 34 12 01 00 00 00 80 00 06 01
++	if ( 0x0af0 == le16_to_cpu(udev->descriptor.idVendor)  
++	     &&
++	     0x7a05 == le16_to_cpu(udev->descriptor.idProduct)
++	    )
++	{
++		cmd[4] = 0x78;
++		cmd[5] = 0x56;
++		cmd[6] = 0x34;
++		cmd[7] = 0x12;
++		cmd[8] = 0x01;
++		cmd[9] = 0x00;
++		cmd[10] = 0x00;
++		cmd[11] = 0x00;
++		cmd[12] = 0x80;
++		cmd[13] = 0x00;
++		cmd[14] = 0x06;
++		cmd[15] = 0x01;
++
++	}
++
++
++        dev_info(&udev->dev, "Ejecting virtual installer media...\n");
++        r = usb_bulk_msg(udev, usb_sndbulkpipe(udev, bulk_out_ep),
++                cmd, 31, NULL, 2000);
++        kfree(cmd);
++        if (r)
++                return r;
++
++        /* At this point, the device disconnects and reconnects with the real
++         * ID numbers. */
++
++        usb_set_intfdata(intf, NULL);
++        return 0;
++}
++
++
++
+ /***********************************************************************
+  * Device probing and disconnecting
+  ***********************************************************************/
+ 
+ /* Associate our private data with the USB device */
+ static int associate_dev(struct us_data *us, struct usb_interface *intf)
+ {
+@@ -481,15 +571,15 @@ static int associate_dev(struct us_data
+ 		US_DEBUGP("Sense buffer allocation failed\n");
+ 		return -ENOMEM;
+ 	}
+ 	return 0;
+ }
+ 
+ /* Get the unusual_devs entries and the string descriptors */
+-static void get_device_info(struct us_data *us, int id_index)
++static int get_device_info(struct us_data *us, int id_index)
+ {
+ 	struct usb_device *dev = us->pusb_dev;
+ 	struct usb_interface_descriptor *idesc =
+ 		&us->pusb_intf->cur_altsetting->desc;
+ 	struct us_unusual_dev *unusual_dev = &us_unusual_dev_list[id_index];
+ 	struct usb_device_id *id = &storage_usb_ids[id_index];
+ 
+@@ -499,14 +589,24 @@ static void get_device_info(struct us_da
+ 			idesc->bInterfaceSubClass :
+ 			unusual_dev->useProtocol;
+ 	us->protocol = (unusual_dev->useTransport == US_PR_DEVICE) ?
+ 			idesc->bInterfaceProtocol :
+ 			unusual_dev->useTransport;
+ 	us->flags = unusual_dev->flags;
+ 
++        if (us->flags & US_FL_IGNORE_DEVICE) {
++                printk(KERN_INFO USB_STORAGE "device ignored\n");
++                return -ENODEV;
++        }
++
++        if (0xFF == idesc->bInterfaceSubClass) {
++                printk(KERN_INFO USB_STORAGE "Serial FF device ignored\n");
++                return -ENODEV;
++        }
++
+ 	/*
+ 	 * This flag is only needed when we're in high-speed, so let's
+ 	 * disable it if we're in full-speed
+ 	 */
+ 	if (dev->speed != USB_SPEED_HIGH)
+ 		us->flags &= ~US_FL_GO_SLOW;
+ 
+@@ -538,14 +638,16 @@ static void get_device_info(struct us_da
+ 				le16_to_cpu(ddesc->idVendor),
+ 				le16_to_cpu(ddesc->idProduct),
+ 				le16_to_cpu(ddesc->bcdDevice),
+ 				idesc->bInterfaceSubClass,
+ 				idesc->bInterfaceProtocol,
+ 				msgs[msg]);
+ 	}
++
++	return 0;
+ }
+ 
+ /* Get the transport settings */
+ static int get_transport(struct us_data *us)
+ {
+ 	switch (us->protocol) {
+ 	case US_PR_CB:
+@@ -953,15 +1055,19 @@ static int storage_probe(struct usb_inte
+ 	/*
+ 	 * Get the unusual_devs entries and the descriptors
+ 	 *
+ 	 * id_index is calculated in the declaration to be the index number
+ 	 * of the match from the usb_device_id table, so we can find the
+ 	 * corresponding entry in the private table.
+ 	 */
+-	get_device_info(us, id_index);
++	//get_device_info(us, id_index);
++	
++        result = get_device_info(us, id_index);
++        if (result)
++                goto EjectDevice;
+ 
+ #ifdef CONFIG_USB_STORAGE_SDDR09
+ 	if (us->protocol == US_PR_EUSB_SDDR09 ||
+ 			us->protocol == US_PR_DPCM_USB) {
+ 		/* set the configuration -- STALL is an acceptable response here */
+ 		if (us->pusb_dev->actconfig->desc.bConfigurationValue != 1) {
+ 			US_DEBUGP("active config #%d != 1 ??\n", us->pusb_dev
+@@ -977,14 +1083,15 @@ static int storage_probe(struct usb_inte
+ 			/* it's not a stall, but another error -- time to bail */
+ 			US_DEBUGP("-- Unknown error.  Rejecting device\n");
+ 			goto BadDevice;
+ 		}
+ 	}
+ #endif
+ 
++
+ 	/* Get the transport, protocol, and pipe settings */
+ 	result = get_transport(us);
+ 	if (result)
+ 		goto BadDevice;
+ 	result = get_protocol(us);
+ 	if (result)
+ 		goto BadDevice;
+@@ -1018,17 +1125,22 @@ static int storage_probe(struct usb_inte
+ 	 * start it up. */
+ 	scsi_host_get(us_to_host(us));
+ 	atomic_inc(&total_threads);
+ 	wake_up_process(th);
+ 
+ 	return 0;
+ 
++EjectDevice:
+ 	/* We come here if there are any problems */
++        US_DEBUGP("storage_probe() failed, result %d\n", result);
++        if (0 == eject_installer_drive(intf))
++                printk(KERN_INFO USB_STORAGE "Ejected Unusual Device\n");
++        else
++                printk(KERN_INFO USB_STORAGE "Eject Failed on Unusual Device\n");
+ BadDevice:
+-	US_DEBUGP("storage_probe() failed\n");
+ 	release_everything(us);
+ 	return result;
+ }
+ 
+ /* Handle a disconnect event from the USB core */
+ static void storage_disconnect(struct usb_interface *intf)
+ {
+--- a/drivers/usb/storage/usb.h
++++ b/drivers/usb/storage/usb.h
+@@ -87,14 +87,16 @@ struct us_unusual_dev {
+ 		/* Uses 32-byte CBW length */			\
+ 	US_FLAG(NOT_LOCKABLE,	0x00000080)			\
+ 		/* PREVENT/ALLOW not supported */		\
+ 	US_FLAG(GO_SLOW,	0x00000100)			\
+ 		/* Need delay after Command phase */		\
+ 	US_FLAG(NO_WP_DETECT,	0x00000200)			\
+ 		/* Don't check for write-protect */		\
++        US_FLAG(IGNORE_DEVICE,  0x00000800)                     \
++                /* Don't claim device */
+ 
+ #define US_FLAG(name, value)	US_FL_##name = value ,
+ enum { US_DO_ALL_FLAGS };
+ #undef US_FLAG
+ 
+ /* Dynamic flag definitions: used in set_bit() etc. */
+ #define US_FLIDX_URB_ACTIVE	18  /* 0x00040000  current_urb is in use  */
+--- a/include/linux/usb.h
++++ b/include/linux/usb.h
+@@ -523,14 +523,36 @@ static inline int usb_make_path (struct
+  * This macro is used to create a struct usb_device_id that matches a
+  * specific class of interfaces.
+  */
+ #define USB_INTERFACE_INFO(cl,sc,pr) \
+ 	.match_flags = USB_DEVICE_ID_MATCH_INT_INFO, .bInterfaceClass = (cl), \
+ 	.bInterfaceSubClass = (sc), .bInterfaceProtocol = (pr)
+ 
++/**
++ * USB_DEVICE_AND_INTERFACE_INFO - macro used to describe a specific usb device
++ *              with a class of usb interfaces
++ * @vend: the 16 bit USB Vendor ID
++ * @prod: the 16 bit USB Product ID
++ * @cl: bInterfaceClass value
++ * @sc: bInterfaceSubClass value
++ * @pr: bInterfaceProtocol value
++ *
++ * This macro is used to create a struct usb_device_id that matches a
++ * specific device with a specific class of interfaces.
++ *
++ * This is especially useful when explicitly matching devices that have
++ * vendor specific bDeviceClass values, but standards-compliant interfaces.
++ */
++#define USB_DEVICE_AND_INTERFACE_INFO(vend,prod,cl,sc,pr) \
++        .match_flags = USB_DEVICE_ID_MATCH_INT_INFO \
++                | USB_DEVICE_ID_MATCH_DEVICE, \
++        .idVendor = (vend), .idProduct = (prod), \
++        .bInterfaceClass = (cl), \
++        .bInterfaceSubClass = (sc), .bInterfaceProtocol = (pr)
++
+ /* ----------------------------------------------------------------------- */
+ 
+ /**
+  * struct usb_driver - identifies USB driver to usbcore
+  * @owner: Pointer to the module owner of this driver; initialize
+  *	it using THIS_MODULE.
+  * @name: The driver name should be unique among USB drivers,

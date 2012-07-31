@@ -1,0 +1,343 @@
+--- a/src/Makefile.in
++++ b/src/Makefile.in
+@@ -130,15 +130,16 @@ install: all 
+ OBJS= parse.o lex.o main.o error.o date.o stack.o calc.o var.o \
+ 	  echo.o cond.o switch.o db.o while.o string.o msql.o sybsql.o\
+ 	  reg.o exec.o file.o crypt.o head.o info.o post.o \
+ 	  type.o conf.o acc.o local.o dns.o log.o sort.o dir.o rand.o \
+ 	  gd.o mime.o fsock.o microtime.o pg95.o pool.o \
+ 	  uniqid.o soundex.o syslog.o mysql.o solid.o mail.o image.o md5.o \
+ 	  snmp.o oracle.o filepro.o illustra.o odbc.o adabasd.o \
+-	  utils.o buffer.o uploadbuffer.o cfg_parser.o cfg.o wireless.o iface.o
++	  utils.o buffer.o uploadbuffer.o cfg_parser.o cfg.o wireless.o iface.o \
++	  translate.o
+ 
+ all: $(PHP_PROGS) @MODULE_TARGET@
+ 
+ regex/libregex.a:
+ 	cd regex; make lib CC=$(CC) AUX_CFLAGS='$(CFLAGS)' RANLIB=$(RANLIB)
+ 
+ .c.o:
+--- a/src/lex.c
++++ b/src/lex.c
+@@ -316,14 +316,15 @@ static const cmd_table_t cmd_table[PHP_M
+ #endif
+ #ifdef HAVE_ODBC
+ 	  { "sqlfetch", INTFUNC1,ODBCfetch },
+ #endif	  	 
+ 	  { NULL,0,NULL } },
+ 
+ 	{ { "endswitch", ENDSWITCH,NULL }, /* 9 */
++	  { "dict_load", INTFUNC1,TranslateLoadDictionary },
+ 	  { "reg_match", REG_MATCH,NULL },
+ 	  { "dbminsert", INTFUNC3,dbmInsert },
+ 	  { "dbmexists", INTFUNC2,dbmExists },
+ 	  { "dbmdelete", INTFUNC2,dbmDelete },
+ 	  { "rewinddir", INTFUNC0,RewindDir },
+ 	  { "fileperms", FILEPERMS,NULL },
+ 	  { "fileinode", FILEINODE,NULL },
+@@ -418,14 +419,15 @@ static const cmd_table_t cmd_table[PHP_M
+ 
+ 	{ /* 11 */
+ #ifdef HAVE_LIBMSQL
+ 	  { "msql_result", INTFUNC3,MsqlResult },
+ #endif
+ 	  { "reg_replace", INTFUNC3,RegReplace },
+ 	  { "cfg_get_def", INTFUNC3, CfgGetDef },
++	  { "dict_unload", INTFUNC1, TranslateCleanDictionary },
+ 	  { "w_get_essid", INTFUNC1, WirelessGetESSID },
+ 	  { "w_get_apmac", INTFUNC1, WirelessGetApMac },
+ 	  { "dbmfirstkey", INTFUNC1,dbmFirstKey },
+ 	  { "getlasthost", INTFUNC0,GetLastHost },
+ #ifdef HAVE_LIBGD
+ 	  { "imagecreate", INTFUNC2,ImageCreate },
+ 	  { "imagecharup", IMAGECHAR,NULL },
+@@ -560,14 +562,15 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "sqlexecdirect", INTFUNC2,ODBCexecdirect },
+ 	  { "sqldisconnect", INTFUNC1,ODBCdisconnect },
+ #endif	   	  
+ 	  { NULL,0,NULL } },
+ 
+ 	{ { "getlastbrowser", INTFUNC0,GetLastBrowser }, /* 14 */
+ 	  { "cfg_get_def_ne", INTFUNC3, CfgGetDefNe },
++	  { "dict_translate", INTFUNC1, Translate },
+ 	  { "if_get_netmask", INTFUNC1, IfaceGetNetmask },
+ 	  { "if_get_dstaddr", INTFUNC1, IfaceGetDstAddr },
+ #ifdef HAVE_LIBMSQL
+ 	  { "msql_fieldname", MSQL_FIELDNAME,NULL },
+ 	  { "msql_fieldtype", MSQL_FIELDTYPE,NULL },
+ 	  { "msql_numfields", INTFUNC1,MsqlNumFields },
+ #endif
+@@ -590,26 +593,28 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "solid_fieldnum", INTFUNC2,Solid_fieldNum },
+ 	  { "solid_fetchrow", INTFUNC1,Solid_fetchRow },
+ #endif
+ #ifdef HAVE_LIBMSQL
+ 	  { "msql_listindex", INTFUNC3,MsqlListIndex },
+ #endif
+ #ifdef HAVE_SYBASE
+-	  { "sybsql_connect", INTFUNC0,SybsqlConnect }, 
++	  { "sybsql_connect", INTFUNC0,SybsqlConnect },
+ 	  { "sybsql_nextrow", INTFUNC0,SybsqlNextRow },
+ 	  { "sybsql_numrows", INTFUNC0,SybsqlNumRows},
+ #endif
+ 	  { "clearstatcache", INTFUNC0,ClearStatCache},
+ #if HAVE_LIBADABAS
+ 	  { "ada_freeresult", INTFUNC1,Ada_freeResult },
+ #endif
+ 	  { NULL,0,NULL } },
+ 
+-	{  /* 15 */
++	{ /* 15 */
+ 	  { "cfg_is_modified", INTFUNC1, CfgIsModified },
++	  { "dict_set_hilite", INTFUNC1, TranslateHiliteMissing },
++	  { "dict_dump_jsmap", INTFUNC0, TranslateDumpJSMap },
+ #ifdef HAVE_LIBMSQL
+ 	  { "msql_freeresult", INTFUNC1,MsqlFreeResult },
+ 	  { "msql_fieldflags", MSQL_FIELDFLAGS,NULL },
+ 	  { "msql_listtables", INTFUNC1,MsqlListTables },
+ 	  { "msql_listfields", INTFUNC2,MsqlListFields },
+ #endif
+ 	  { "getstartlogging", INTFUNC0,GetStartLogging },
+--- a/src/php.h
++++ b/src/php.h
+@@ -1415,7 +1415,16 @@ void WirelessGetMode(void);
+ #ifdef HAVE_IFACE
+ void IfaceGetIpAddr(void);
+ void IfaceGetDstAddr(void);
+ void IfaceGetHwAddr(void);
+ void IfaceGetNetmask(void);
+ void IfaceGetFlags(void);
+ #endif
++
++#define HAVE_TRANSLATE
++#ifdef HAVE_TRANSLATE
++void TranslateLoadDictionary(void);
++void TranslateHiliteMissing(void);
++void Translate(void);
++void TranslateCleanDictionary(void);
++void TranslateDumpJSMap(void);
++#endif /* HAVE_TRANSLATE */
+--- /dev/null
++++ b/src/translate.c
+@@ -0,0 +1,220 @@
++#include <string.h>
++#include <stdlib.h>
++#include <stdio.h>
++#include <ctype.h>
++#include "php.h"
++#include "parse.h"
++
++typedef struct dict_entry {
++        char* key;
++        char* word;
++} dict_entry_t;
++
++static dict_entry_t* dict_map = NULL;
++static int dict_size = 0;
++static int reserved_size = 0;
++static int hilite_missing = 0;
++
++static const char *find_word(const char* key, size_t key_len)
++{
++	int i;
++	for (i = 0; i < dict_size; ++i)
++	{
++		if (strlen(dict_map[i].key) == key_len &&
++			strncmp(dict_map[i].key, key, key_len) == 0)
++		{
++			return dict_map[i].word;
++		}
++	}
++	return NULL;
++}
++
++static void add_entry(const char* key, const char* word)
++{
++	void *tmp;
++	size_t tmp_len;
++	if (reserved_size <= dict_size)
++	{
++		tmp_len = sizeof(dict_entry_t) * (reserved_size + 100);
++		tmp = realloc(dict_map, tmp_len);
++		if (!tmp)
++		{
++			return;
++		}
++		dict_map = (dict_entry_t*)tmp;
++		reserved_size += 100;
++	}
++	dict_map[dict_size].key = strdup(key);
++	dict_map[dict_size].word = strdup(word);
++	dict_size++;
++}
++
++#define LINE_BUF 4096
++
++static int load_dictionary_file(const char* file)
++{
++	FILE *f;
++	char *b, *key, *value;
++	char buf[LINE_BUF];
++	int count = 0;
++
++	if ((f = fopen(file, "r")) == NULL)
++	{
++		return -1;
++	}
++
++	while (fgets(buf, sizeof(buf), f) != NULL)
++	{
++		b = buf;
++		if (*b == '#')
++			continue; /* skip comments */
++
++		while (isspace(*b))
++		{
++			b++; /* skip leading spaces */
++		}
++
++		if (!*b)
++		{
++			continue;
++		}
++
++		key = b;
++		if ((b = strstr(key, "=>")) == NULL || b == key)
++		{
++			continue; /* separator not found or key is empty string */
++		}
++
++		value = b + 2;
++		if (!*value)
++		{
++			continue;
++		}
++
++		for (b--; isspace(*b); b--)
++		; /* Note empty for */
++		b[1] = '\0'; /* remove trailing spaces */
++
++		while (isspace(*value))
++		{
++			value++; /* skip leading spaces */
++		}
++
++		if (!*value)
++		{
++			continue;
++		}
++
++		for (b = value + strlen(value) - 1; isspace(*b); b--);
++		; /* Note empty for */
++		b[1] = '\0'; /* remove trailing spaces */
++
++		add_entry(key, value);
++		++count;
++	}
++
++	fclose(f);
++	return count;
++}
++
++void TranslateCleanDictionary(void)
++{
++	int i;
++	for (i = 0; i < dict_size; ++i)
++	{
++		free(dict_map[i].key);
++		free(dict_map[i].word);
++	}
++	free(dict_map);
++	dict_size = 0;
++	reserved_size = 0;
++}
++
++void Translate(void)
++{
++	Stack *s;
++	char *def, *p;
++	const char *word;
++
++	s = Pop();
++	if (!s)
++	{
++		Error("Stack Error in Translate");
++		return;
++	}
++
++	def = s->strval;
++	if (((p = strchr(s->strval, '|')) != NULL)
++		|| ((p = strchr(s->strval, '#')) != NULL))
++	{
++		def = p + 1;
++	}
++
++	word = find_word(s->strval, (p ? p - s->strval: strlen(s->strval)));
++	if (word)
++	{
++		Push((char*)word, STRING);
++	}
++	else
++	{
++		if (hilite_missing)
++		{
++			static char missing[] = "<strong>#####MISSING#####</strong> ";
++			p = emalloc(1, sizeof(missing) + strlen(def));
++			strcpy(p, def);
++			strcat(p, missing);
++			def = p;
++		}
++		Push(def, STRING);
++	}
++}
++
++void TranslateHiliteMissing(void)
++{
++	char temp[8];
++	Stack *s;
++	s = Pop();
++	if (!s)
++	{
++		Error("Stack Error in TranslateHiliteMissing");
++		return;
++	}
++	snprintf(temp, sizeof(temp), "%d", hilite_missing);
++	hilite_missing = (s->intval ? 1 : 0);
++	Push(temp, LNUMBER);
++}
++
++void TranslateDumpJSMap(void) {
++	int i, rc;
++	dict_entry_t* entry;
++	char temp[8];
++	char buf[LINE_BUF];
++
++	PUTS("{\n");
++	for (i = 0; i < dict_size; ++i) {
++		entry = &dict_map[i];
++		rc = snprintf(buf, sizeof(buf),
++				"'%s': '%s',\n", entry->key, entry->word);
++		if (rc > 0 && rc < sizeof(buf)) {
++			PUTS(buf);
++		}
++	}
++	/* end with marker to avoid comma after last entry */
++	PUTS("'_':'_'\n}");
++	snprintf(temp, sizeof(temp), "%d", dict_size);
++	Push(temp, LNUMBER);
++}
++
++void TranslateLoadDictionary(void)
++{
++	char temp[8];
++	Stack *s;
++	s = Pop();
++	if (!s)
++	{
++		Error("Stack Error in TranslateLoadDictionary");
++		return;
++	}
++	snprintf(temp, sizeof(temp), "%d", load_dictionary_file(s->strval));
++	Push(temp, LNUMBER);
++}

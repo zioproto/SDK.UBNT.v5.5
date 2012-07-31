@@ -1,0 +1,164 @@
+--- a/fs/squashfs/inode.c
++++ b/fs/squashfs/inode.c
+@@ -1,13 +1,16 @@
+ /*
+  * Squashfs - a compressed read only filesystem for Linux
+  *
+  * Copyright (c) 2002, 2003, 2004, 2005, 2006
+  * Phillip Lougher <phillip@lougher.org.uk>
+  *
++ * LZMA decompressor support added by Oleg I. Vdovikin
++ * Copyright (c) 2005 Oleg I.Vdovikin <oleg@cs.msu.su>
++ *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License
+  * as published by the Free Software Foundation; either version 2,
+  * or (at your option) any later version.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+@@ -17,14 +20,15 @@
+  * You should have received a copy of the GNU General Public License
+  * along with this program; if not, write to the Free Software
+  * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+  *
+  * inode.c
+  */
+ 
++#define SQUASHFS_LZMA
+ #include <linux/types.h>
+ #include <linux/squashfs_fs.h>
+ #include <linux/module.h>
+ #include <linux/errno.h>
+ #include <linux/slab.h>
+ #include <linux/fs.h>
+ #include <linux/smp_lock.h>
+@@ -40,14 +44,27 @@
+ #include <linux/blkdev.h>
+ #include <linux/vmalloc.h>
+ #include <asm/uaccess.h>
+ #include <asm/semaphore.h>
+ 
+ #include "squashfs.h"
+ 
++#ifdef SQUASHFS_LZMA
++#include <linux/LzmaDecode.h>
++
++/* default LZMA settings, should be in sync with mksquashfs */
++#define LZMA_LC 3
++#define LZMA_LP 0
++#define LZMA_PB 2
++
++#define LZMA_WORKSPACE_SIZE ((LZMA_BASE_SIZE + \
++      (LZMA_LIT_SIZE << (LZMA_LC + LZMA_LP))) * sizeof(CProb))
++
++#endif
++
+ static void squashfs_put_super(struct super_block *);
+ static int squashfs_statfs(struct super_block *, struct kstatfs *);
+ static int squashfs_symlink_readpage(struct file *file, struct page *page);
+ static int squashfs_readpage(struct file *file, struct page *page);
+ static int squashfs_readpage4K(struct file *file, struct page *page);
+ static int squashfs_readdir(struct file *, void *, filldir_t);
+ static struct inode *squashfs_alloc_inode(struct super_block *sb);
+@@ -60,15 +77,19 @@ static struct inode *squashfs_iget(struc
+ static long long read_blocklist(struct inode *inode, int index,
+ 				int readahead_blks, char *block_list,
+ 				unsigned short **block_p, unsigned int *bsize);
+ static struct super_block *squashfs_get_sb(struct file_system_type *, int,
+ 				const char *, void *);
+ 
+ 
++#ifdef SQUASHFS_LZMA
++static unsigned char lzma_workspace[LZMA_WORKSPACE_SIZE];
++#else
+ static z_stream stream;
++#endif
+ 
+ static struct file_system_type squashfs_fs_type = {
+ 	.owner = THIS_MODULE,
+ 	.name = "squashfs",
+ 	.get_sb = squashfs_get_sb,
+ 	.kill_sb = kill_block_super,
+ 	.fs_flags = FS_REQUIRES_DEV
+@@ -245,29 +266,38 @@ SQSH_EXTERN unsigned int squashfs_read_d
+ 
+ 	/*
+ 	 * uncompress block
+ 	 */
+ 	if (compressed) {
+ 		int zlib_err;
+ 
++#ifdef SQUASHFS_LZMA
++		if ((zlib_err = LzmaDecode(lzma_workspace,
++			LZMA_WORKSPACE_SIZE, LZMA_LC, LZMA_LP, LZMA_PB,
++			c_buffer, c_byte, buffer, msblk->read_size, &bytes)) != LZMA_RESULT_OK)
++		{
++			ERROR("lzma returned unexpected result 0x%x\n", zlib_err);
++			bytes = 0;
++		}
++#else
+ 		stream.next_in = c_buffer;
+ 		stream.avail_in = c_byte;
+ 		stream.next_out = buffer;
+ 		stream.avail_out = msblk->read_size;
+ 
+ 		if (((zlib_err = zlib_inflateInit(&stream)) != Z_OK) ||
+ 				((zlib_err = zlib_inflate(&stream, Z_FINISH))
+ 				 != Z_STREAM_END) || ((zlib_err =
+ 				zlib_inflateEnd(&stream)) != Z_OK)) {
+ 			ERROR("zlib_fs returned unexpected result 0x%x\n",
+ 				zlib_err);
+ 			bytes = 0;
+ 		} else
+ 			bytes = stream.total_out;
+-		
++#endif
+ 		up(&msblk->read_data_mutex);
+ 	}
+ 
+ 	if (next_index)
+ 		*next_index = index + c_byte + (length ? 0 :
+ 				(SQUASHFS_CHECK_DATA(msblk->sblk.flags)
+ 				 ? 3 : 2));
+@@ -2042,34 +2072,40 @@ static int __init init_squashfs_fs(void)
+ 	int err = init_inodecache();
+ 	if (err)
+ 		goto out;
+ 
+ 	printk(KERN_INFO "squashfs: version 3.0 (2006/03/15) "
+ 		"Phillip Lougher\n");
+ 
++#ifndef SQUASHFS_LZMA
+ 	if (!(stream.workspace = vmalloc(zlib_inflate_workspacesize()))) {
+ 		ERROR("Failed to allocate zlib workspace\n");
+ 		destroy_inodecache();
+ 		err = -ENOMEM;
+ 		goto out;
+ 	}
++#endif
+ 
+ 	if ((err = register_filesystem(&squashfs_fs_type))) {
++#ifndef SQUASHFS_LZMA
+ 		vfree(stream.workspace);
++#endif
+ 		destroy_inodecache();
+ 	}
+ 
+ out:
+ 	return err;
+ }
+ 
+ 
+ static void __exit exit_squashfs_fs(void)
+ {
++#ifndef SQUASHFS_LZMA
+ 	vfree(stream.workspace);
++#endif
+ 	unregister_filesystem(&squashfs_fs_type);
+ 	destroy_inodecache();
+ }
+ 
+ 
+ static kmem_cache_t * squashfs_inode_cachep;
+ 

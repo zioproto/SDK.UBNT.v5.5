@@ -1,0 +1,28 @@
+--- a/Makefile.shared
++++ b/Makefile.shared
+@@ -91,25 +91,23 @@ CALC_VERSIONS=	\
+ 
+ LINK_APP=	\
+   ( $(SET_X);   \
+     LIBDEPS="$${LIBDEPS:-$(LIBDEPS)}"; \
+     LDCMD="$${LDCMD:-$(CC)}"; LDFLAGS="$${LDFLAGS:-$(CFLAGS)}"; \
+     LIBPATH=`for x in $$LIBDEPS; do echo $$x; done | sed -e 's/^ *-L//;t' -e d | uniq`; \
+     LIBPATH=`echo $$LIBPATH | sed -e 's/ /:/g'`; \
+-    LD_LIBRARY_PATH=$$LIBPATH:$$LD_LIBRARY_PATH \
+     $${LDCMD} $${LDFLAGS} -o $${APPNAME:=$(APPNAME)} $(OBJECTS) $${LIBDEPS} )
+ 
+ LINK_SO=	\
+   ( $(SET_X);   \
+     LIBDEPS="$${LIBDEPS:-$(LIBDEPS)}"; \
+     SHAREDCMD="$${SHAREDCMD:-$(CC)}"; \
+     SHAREDFLAGS="$${SHAREDFLAGS:-$(CFLAGS) $(SHARED_LDFLAGS)}"; \
+     LIBPATH=`for x in $$LIBDEPS; do echo $$x; done | sed -e 's/^ *-L//;t' -e d | uniq`; \
+     LIBPATH=`echo $$LIBPATH | sed -e 's/ /:/g'`; \
+-    LD_LIBRARY_PATH=$$LIBPATH:$$LD_LIBRARY_PATH \
+     $${SHAREDCMD} $${SHAREDFLAGS} \
+ 	-o $$SHLIB$$SHLIB_SOVER$$SHLIB_SUFFIX \
+ 	$$ALLSYMSFLAGS $$SHOBJECTS $$NOALLSYMSFLAGS $$LIBDEPS \
+   ) && $(SYMLINK_SO)
+ 
+ SYMLINK_SO=	\
+ 	if [ -n "$$INHIBIT_SYMLINKS" ]; then :; else \

@@ -1,0 +1,11 @@
+--- a/man/Makefile
++++ b/man/Makefile
+@@ -70,7 +70,7 @@ MAN_LNK = $(MEM_LNK) $(LOG_LNK)
+ 
+ install::
+ 	$(INSTALL) -d $(mandir)/man3
+-	set -e; for F in $(MAN); do $(INSTALL) -c -m 0644 $$F $(mandir)/man3 && gzip -9 $(mandir)/man3/$$F; done
++	set -e; for F in $(MAN); do $(INSTALL) -c -m 0644 $$F $(mandir)/man3 && gzip -f9 $(mandir)/man3/$$F; done
+ 	set -e; for F in $(MEM_LNK); do ln -sf mem_open.3debug.gz $(mandir)/man3/$$F; done
+ 	set -e; for F in $(LOG_LNK); do ln -sf log_open.3debug.gz $(mandir)/man3/$$F; done
+ 

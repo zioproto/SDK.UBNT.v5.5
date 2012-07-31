@@ -1,0 +1,42 @@
+--- linux-2.6.15-5.2/net/bridge/br_fdb.c
++++ linux-2.6.15.7/net/bridge/br_fdb.c
+@@ -22,12 +22,6 @@
+ #include <linux/jhash.h>
+ #include <asm/atomic.h>
+ #include "br_private.h"
+-
+-static int br_no_entries = 0;
+-
+-#define BR_INCR_ENTRIES() br_no_entries += 1
+-#define BR_DECR_ENTRIES() br_no_entries -= 1
+-#define BR_MAX_TABLE_ENTRIES    1024
+ 
+ static kmem_cache_t *br_fdb_cache __read_mostly;
+ static int fdb_insert(struct net_bridge *br, struct net_bridge_port *source,
+@@ -209,7 +203,6 @@
+ 	struct net_bridge_fdb_entry *ent
+ 		= container_of(head, struct net_bridge_fdb_entry, rcu);
+ 	kmem_cache_free(br_fdb_cache, ent);
+-        BR_DECR_ENTRIES();
+ }
+ 
+ /* Set entry up for deletion with RCU  */
+@@ -284,9 +277,6 @@
+ {
+ 	struct net_bridge_fdb_entry *fdb;
+ 
+-	if (br_no_entries == BR_MAX_TABLE_ENTRIES)
+-			return NULL;
+-
+ 	fdb = kmem_cache_alloc(br_fdb_cache, GFP_ATOMIC);
+ 	if (fdb) {
+ 		memcpy(fdb->addr.addr, addr, ETH_ALEN);
+@@ -297,7 +287,6 @@
+ 		fdb->is_local = is_local;
+ 		fdb->is_static = is_local;
+ 		fdb->ageing_timer = jiffies;
+-		BR_INCR_ENTRIES();
+ 	}
+ 	return fdb;
+ }
+

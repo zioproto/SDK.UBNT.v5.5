@@ -1,0 +1,712 @@
+diff -NurbB matrixssl-initial/matrixssl_helper.h matrixssl-latest/matrixssl_helper.h
+--- matrixssl-initial/matrixssl_helper.h	1970-01-01 03:00:00.000000000 +0300
++++ matrixssl-latest/matrixssl_helper.h	2007-07-18 14:37:28.000000000 +0300
+@@ -0,0 +1,61 @@
++/*
++ * MatrixSSL helper functions
++ *
++ * Copyright (C) 2007 Darius Ivanauskas <dasilt@gmail.com>
++ *
++ * Full remake of older version from Nicloas Thill. Now it is
++ * more OpenSSL compatible, including support for
++ * SSL_ERROR_WANT_READ/SSL_ERROR_WANT_WRITE functionality.
++ * Also implemented SSL_connect() and SSL_get_error() functions.
++ * It was tested with the patched boa web server version and also
++ * client utility for triggering https url.
++ * 
++ * Copyright (C) 2005 Nicolas Thill <nthill@free.fr>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++#ifndef __MATRIXSSL_HELPER_H__
++#define __MATRIXSSL_HELPER_H__
++
++#include "matrixSsl.h"
++
++#define SSL_ERROR_NONE                  0
++#define SSL_ERROR_SSL                   1
++#define SSL_ERROR_WANT_READ             2
++#define SSL_ERROR_WANT_WRITE            3
++#define SSL_ERROR_WANT_X509_LOOKUP      4
++#define SSL_ERROR_SYSCALL               5 /* look at error stack/return value/errno */
++#define SSL_ERROR_ZERO_RETURN           6
++
++typedef struct __SSL {
++  int fd;
++  ssl_t *ssl;
++  sslKeys_t *keys;
++  sslBuf_t inbuf, outbuf;
++  int status;
++  int operation;
++  int error;
++  int decode_error;
++} SSL;
++
++SSL * SSL_new(sslKeys_t *keys);
++int SSL_get_error(const SSL *ssl, int ret);
++void SSL_set_fd(SSL *ssl, int fd);
++#ifdef USE_CLIENT_SIDE_SSL
++int SSL_connect(SSL *ssl);
++#endif
++int SSL_accept(SSL *ssl);
++int SSL_read(SSL *ssl, void *buf, int len);
++int SSL_write(SSL *ssl, const void *buf, int len);
++void SSL_free(SSL *ssl);
++
++#endif /* __MATRIXSSL_HELPER_H__ */
+diff -NurbB matrixssl-initial/src/crypto/peersec/base64.c matrixssl-latest/src/crypto/peersec/base64.c
+--- matrixssl-initial/src/crypto/peersec/base64.c	2007-05-14 16:37:51.000000000 +0300
++++ matrixssl-latest/src/crypto/peersec/base64.c	2007-05-17 14:03:13.000000000 +0300
+@@ -55,7 +55,7 @@
+ 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+ 255, 255, 255, 255 };
+ 
+-int32 ps_base64_decode(const unsigned char *in,  uint32 len, 
++int32 ps_base64_decode(const char *in,  uint32 len, 
+ 					unsigned char *out, uint32 *outlen)
+ {
+ 	unsigned long	t, x, y, z;
+diff -NurbB matrixssl-initial/src/crypto/peersec/pscrypto.h matrixssl-latest/src/crypto/peersec/pscrypto.h
+--- matrixssl-initial/src/crypto/peersec/pscrypto.h	2007-05-14 16:37:51.000000000 +0300
++++ matrixssl-latest/src/crypto/peersec/pscrypto.h	2007-05-17 14:03:13.000000000 +0300
+@@ -82,7 +82,7 @@
+ /*
+  *	Private
+  */
+-extern int32 ps_base64_decode(const unsigned char *in, uint32 len, 
++extern int32 ps_base64_decode(const char *in, uint32 len, 
+ 							unsigned char *out, uint32 *outlen);
+ 
+ /*
+diff -NurbB matrixssl-initial/src/Makefile matrixssl-latest/src/Makefile
+--- matrixssl-initial/src/Makefile	2007-05-14 16:37:51.000000000 +0300
++++ matrixssl-latest/src/Makefile	2007-05-14 16:42:19.000000000 +0300
+@@ -23,6 +23,7 @@
+ 		sslDecode$(O) \
+ 		sslEncode$(O) \
+ 		sslv3$(O) \
++		matrixssl_helper$(O) \
+ 		os/debug$(O) \
+ 		os/linux/linux$(O)	\
+ 		crypto/peersec/arc4$(O) \
+@@ -61,28 +62,29 @@
+ #
+ #	Override variables for compilation on x86-64 (AMD64, Nacona, etc)
+ #
+-ifeq ($(shell uname -m),x86_64)
+-DFLAGS  += -march=k8 -fPIC -DFP_64BIT -DTFM_X86_64 -DRDTSC
+-endif
++#ifeq ($(shell uname -m),x86_64)
++#DFLAGS  += -march=k8 -fPIC -DFP_64BIT -DTFM_X86_64 -DRDTSC
++#endif
+ 
+ #
+ #	Compile options
+ #
+ SHARED	= -shared
+ CFLAGS  = $(DFLAGS) -fPIC -DLINUX -I./
+-LDFLAGS += -lc -lpthread
++LDFLAGS += -lc
++#LDFLAGS += -lc -lpthread
+ 
+ #
+ #	Override variables for compilation on Mac OS X (Darwin)
+ #
+-ifeq ($(shell uname),Darwin)
+-CC	= cc
+-SO	= .dylib
+-SHARED	= -dynamiclib
+-CFLAGS += -DOSX -isystem -I/usr/include
+-LDFLAGS += -flat_namespace -install_name @executable_path/../src/$(LIBRARY)
+-STRIP = test
+-endif
++#ifeq ($(shell uname),Darwin)
++#CC	= cc
++#SO	= .dylib
++#SHARED	= -dynamiclib
++#CFLAGS += -DOSX -isystem -I/usr/include
++#LDFLAGS += -flat_namespace -install_name @executable_path/../src/$(LIBRARY)
++#STRIP = test
++#endif
+ 
+ #
+ #	Override variables for compilation on uClinux (example only)
+@@ -99,7 +101,7 @@
+ #
+ # Manual dependencies
+ #
+-*.o: ../matrixSsl.h ../matrixCommon.h matrixInternal.h matrixConfig.h Makefile
++*.o: ../matrixssl_helper.h ../matrixSsl.h ../matrixCommon.h matrixInternal.h matrixConfig.h Makefile
+ os/*.o: matrixInternal.h matrixConfig.h Makefile os/osLayer.h os/psMalloc.h
+ os/linux/*.o: matrixInternal.h matrixConfig.h Makefile os/osLayer.h
+ crypto/peersec/*.o: matrixInternal.h matrixConfig.h Makefile \
+diff -NurbB matrixssl-initial/src/matrixConfig.h matrixssl-latest/src/matrixConfig.h
+--- matrixssl-initial/src/matrixConfig.h	2007-05-14 16:37:51.000000000 +0300
++++ matrixssl-latest/src/matrixConfig.h	2007-06-14 16:48:11.000000000 +0300
+@@ -89,7 +89,7 @@
+ 	different threads.  The library will still be single threaded,
+ 	but will serialize access to the session cache with a mutex.
+ */
+-#define USE_MULTITHREADING
++/* #define USE_MULTITHREADING */
+ 
+ /******************************************************************************/
+ /*
+diff -NurbB matrixssl-initial/src/matrixSsl.c matrixssl-latest/src/matrixSsl.c
+--- matrixssl-initial/src/matrixSsl.c	2007-05-14 16:37:51.000000000 +0300
++++ matrixssl-latest/src/matrixSsl.c	2007-05-17 14:05:37.000000000 +0300
+@@ -36,14 +36,17 @@
+ #endif
+ 
+ /******************************************************************************/
+-
++/*
+ static char copyright[]= "Copyright PeerSec Networks Inc. All rights reserved.";
++*/
+ 
+ #ifdef USE_SERVER_SIDE_SSL
+ /*
+ 	Static session table for session cache and lock for multithreaded env
+ */
++#ifdef USE_MULTITHREADING
+ static sslMutex_t			sessionTableLock;
++#endif /* USE_MULTITHREADING */
+ static sslSessionEntry_t	sessionTable[SSL_SESSION_TABLE_SIZE];
+ #endif /* USE_SERVER_SIDE_SSL */
+ 
+diff -NurbB matrixssl-initial/src/matrixssl_helper.c matrixssl-latest/src/matrixssl_helper.c
+--- matrixssl-initial/src/matrixssl_helper.c	1970-01-01 03:00:00.000000000 +0300
++++ matrixssl-latest/src/matrixssl_helper.c	2007-07-18 14:37:28.000000000 +0300
+@@ -0,0 +1,416 @@
++/*
++ * MatrixSSL helper functions
++ *
++ * Copyright (C) 2007 Darius Ivanauskas <dasilt@gmail.com>
++ *
++ * Full remake of older version from Nicloas Thill. Now it is
++ * more OpenSSL compatible, including support for
++ * SSL_ERROR_WANT_READ/SSL_ERROR_WANT_WRITE functionality.
++ * Also implemented SSL_connect() and SSL_get_error() functions.
++ * It was tested with the patched boa web server version and also
++ * client utility for triggering https url.
++ * 
++ * Copyright (C) 2005 Nicolas Thill <nthill@free.fr>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * Portions borrowed from MatrixSSL example code
++ *
++ */
++
++#include <sys/socket.h>
++#include <netinet/in.h>
++#include <netinet/tcp.h>
++#include <arpa/inet.h>
++#include <fcntl.h>
++#include <unistd.h>
++#include <stdio.h>
++#include <string.h>
++#include <stdlib.h>
++#include <errno.h>
++
++#include "../matrixssl_helper.h"
++
++#define SSL_SOCKET_EOF  0x0001
++#define SSL_SOCKET_CLOSE_NOTIFY  0x0002
++
++#define SSL_OPERATION_NONE	SSL_ERROR_NONE
++#define SSL_OPERATION_READ	SSL_ERROR_WANT_READ
++#define SSL_OPERATION_WRITE	SSL_ERROR_WANT_WRITE
++
++#ifndef min
++#define min(a, b)  ( (a) < (b) ) ? (a) : (b)
++#endif
++
++static int _ssl_buf_alloc(sslBuf_t* buf, int size)
++{
++	buf->buf = buf->start = buf->end = (unsigned char *)malloc(size);
++	if (buf->buf)
++	{
++		buf->size = size;
++		return 0;		
++	}
++	return -1;
++}
++
++static int _ssl_buf_compact(sslBuf_t* buf)
++{
++	if (buf->start != buf->buf)
++	{
++		if (buf->start == buf->end)
++		{
++			buf->start = buf->end = buf->buf;
++		}
++		else
++		{
++			memmove(buf->buf, buf->start, buf->end - buf->start);
++			buf->end -= (buf->start - buf->buf);
++			buf->start = buf->buf;
++		}	
++	}
++	return buf->end - buf->start;
++}
++
++static int _ssl_buf_grow(sslBuf_t* buf)
++{
++	int new_size = buf->size * 2;
++	unsigned char* new_buf; 
++
++	if (!(new_buf = (unsigned char *)realloc(buf->buf, new_size)))
++	{
++		return -1;
++	}
++	buf->end += (new_buf - buf->start);
++	buf->buf = buf->start = new_buf;
++	buf->size = new_size;
++	return 0;
++}
++
++static int _ssl_handle_io_error(SSL *ssl, int return_code)
++{
++	if (return_code == 0)
++	{
++		ssl->status = SSL_SOCKET_EOF;
++		return 0;
++	}
++	if (errno == EAGAIN)
++	{
++		ssl->error = ssl->operation;
++		ssl->status = 0;
++	}
++	else
++	{
++		ssl->error = SSL_ERROR_SYSCALL;
++		ssl->status = errno;
++	}
++	return -1;
++}
++
++static int _ssl_read_flush(SSL *ssl, void *buf, int len)
++{
++	int bytes = 0;
++	if (ssl->outbuf.start < ssl->outbuf.end)
++	{
++		/* which is less len or remaining? */
++		bytes = (int)min(len, (ssl->outbuf.end - ssl->outbuf.start));
++		memcpy(buf, ssl->outbuf.start, bytes);
++		ssl->outbuf.start += bytes;
++	}
++	if (ssl->outbuf.start == ssl->outbuf.end)
++	{
++		ssl->outbuf.start = ssl->outbuf.end = ssl->outbuf.buf;
++	}
++	return bytes;
++}
++
++static int _ssl_send(SSL *ssl)
++{
++	int bytes;
++	int total_bytes = (int)(ssl->outbuf.end - ssl->outbuf.start);
++	ssl->operation = SSL_OPERATION_WRITE;
++	while (ssl->outbuf.start != ssl->outbuf.end)
++	{
++		bytes = send(ssl->fd, (char *)ssl->outbuf.start, 
++			(int)(ssl->outbuf.end - ssl->outbuf.start), MSG_NOSIGNAL);
++		if (bytes <= 0)
++		{
++			return _ssl_handle_io_error(ssl, bytes);
++		}
++		ssl->outbuf.start += bytes;
++	}
++	ssl->outbuf.start = ssl->outbuf.end = ssl->outbuf.buf;
++	ssl->operation = SSL_OPERATION_NONE;
++	if (ssl->decode_error)
++	{
++		ssl->error = SSL_ERROR_SSL;
++		ssl->decode_error = 0;
++		return -1;
++	}
++	return total_bytes;
++}
++
++static int _ssl_recv(SSL *ssl)
++{
++	int bytes;
++	ssl->operation = SSL_OPERATION_READ;
++	bytes = recv(ssl->fd, (char *)ssl->inbuf.end, 
++		(int)((ssl->inbuf.buf + ssl->inbuf.size) - ssl->inbuf.end),
++		MSG_NOSIGNAL);
++	if (bytes <= 0)
++	{
++		return _ssl_handle_io_error(ssl, bytes);
++	}
++	ssl->inbuf.end += bytes;
++	ssl->operation = SSL_OPERATION_NONE;
++	return bytes;
++}
++
++static int _ssl_read(SSL *ssl, void *buf, int len)
++{
++	int rc = 0;
++	unsigned char error, alertLevel, alertDescription;
++
++	ssl->status = 0;
++	
++	if (ssl->operation == SSL_OPERATION_NONE)
++	{
++		if ((rc = _ssl_read_flush(ssl, buf, len)))
++		{
++			return rc;
++		}
++	}
++	else if(ssl->operation == SSL_OPERATION_WRITE)
++	{
++		if ((rc = _ssl_send(ssl)) <= 0)
++		{
++			return rc;
++		}
++	}
++	if (_ssl_buf_compact(&ssl->inbuf) == 0 /* If empty */
++		|| ssl->operation == SSL_OPERATION_READ)
++	{
++		if ((rc = _ssl_recv(ssl)) <= 0)
++		{
++			return rc;
++		}
++	}
++	
++	error = 0;
++	alertLevel = 0;
++	alertDescription = 0;
++
++	while ((rc = matrixSslDecode(ssl->ssl, &ssl->inbuf, &ssl->outbuf, &error,
++		&alertLevel, &alertDescription)) == SSL_FULL)
++	{
++		_ssl_buf_compact(&ssl->outbuf);
++		if (_ssl_buf_grow(&ssl->outbuf))
++		{   /* bufer grow failed */
++			ssl->error = SSL_ERROR_SYSCALL;
++			return -1;
++		}
++	}
++	
++	switch (rc)
++	{
++		case SSL_ALERT:
++			if (alertDescription == SSL_ALERT_CLOSE_NOTIFY)
++			{
++				ssl->status = SSL_SOCKET_CLOSE_NOTIFY;
++				return 0;
++			}
++			ssl->error = SSL_ERROR_SSL;
++			return -1;
++		case SSL_ERROR:
++			/* We might need to send out buffer before reporting error */
++			ssl->decode_error = 1;
++		case SSL_SEND_RESPONSE:
++			rc = _ssl_send(ssl);
++			if (rc > 0)
++			{
++				return rc = 0;
++			}
++			return rc;
++		case SSL_PARTIAL:
++			if (ssl->inbuf.end == (ssl->inbuf.buf + ssl->inbuf.size) && 
++				_ssl_buf_grow(&ssl->inbuf))
++			{   /* bufer grow failed */
++				ssl->error = SSL_ERROR_SYSCALL;
++				return -1;
++			}
++			ssl->operation = SSL_OPERATION_READ;
++			return 0;
++		case SSL_SUCCESS:
++		case SSL_PROCESS_DATA:
++			return _ssl_read_flush(ssl, buf, len);
++	}
++	/* unknown rc code - should not happen. */
++	ssl->error = SSL_ERROR_SSL;
++	return -1;
++}
++
++int _ssl_write(SSL *ssl, const void *buf, int len)
++{
++	int		rc;
++	ssl->status = 0;
++	
++	if (ssl->outbuf.end > ssl->outbuf.start) /* If not empty */
++	{
++		return _ssl_send(ssl);
++	}
++
++	_ssl_buf_compact(&ssl->outbuf);	
++	while ((rc = matrixSslEncode(ssl->ssl, (unsigned char *)buf,
++		len, &ssl->outbuf)) == SSL_FULL)
++	{
++		if (_ssl_buf_grow(&ssl->outbuf))
++		{   /* bufer grow failed */
++			ssl->error = SSL_ERROR_SYSCALL;
++			return -1;
++		}		
++	}
++	if (rc < 0)
++	{
++		ssl->error = SSL_ERROR_SSL;		
++		return -1;
++	}
++	return 0;	
++}
++
++int SSL_get_error(const SSL *ssl, int ret)
++{
++	if (ret > 0)
++	{
++		return SSL_ERROR_NONE;
++	}
++	if (ret == 0)
++	{
++		return SSL_ERROR_ZERO_RETURN;
++	}
++	return ssl->error;
++}
++
++SSL * SSL_new(sslKeys_t *keys)
++{
++	SSL * ssl;
++	ssl = (SSL *)malloc(sizeof(SSL));
++	if (!ssl) return 0;
++
++	memset(ssl, 0, sizeof(SSL));
++	ssl->fd = -1;		
++	ssl->keys = keys;
++	if (matrixSslNewSession(&(ssl->ssl), ssl->keys, NULL,
++		ssl->keys ? SSL_FLAGS_SERVER : 0) < 0)
++	{
++		SSL_free(ssl);
++		return 0;
++	}
++
++	_ssl_buf_alloc(&ssl->inbuf, 1024);	
++	_ssl_buf_alloc(&ssl->outbuf, 1024);	
++	return ssl;
++}
++
++int SSL_accept(SSL *ssl)
++{
++
++	char buf[1024];
++	int rc;
++	
++	while ((rc = _ssl_read(ssl, buf, sizeof(buf))) == 0
++			&& ssl->status != SSL_SOCKET_EOF 
++			&& ssl->status != SSL_SOCKET_CLOSE_NOTIFY)
++	{
++		if (matrixSslHandshakeIsComplete(ssl->ssl))
++		{
++			return 1;
++		}
++	}	
++	if (rc > 0)
++	{
++		ssl->error = SSL_ERROR_SSL;
++		rc = -1;
++	}
++	return rc;
++}
++
++#ifdef USE_CLIENT_SIDE_SSL
++int SSL_connect(SSL *ssl)
++{
++	int rc;
++	if (ssl->operation == SSL_OPERATION_NONE)
++	{		
++		while ((rc = matrixSslEncodeClientHello(ssl->ssl, &ssl->outbuf, 0))
++			== SSL_FULL)
++		{
++			if (_ssl_buf_grow(&ssl->outbuf))
++			{   /* bufer grow failed */
++				ssl->error = SSL_ERROR_SYSCALL;
++				return -1;
++			}
++		}
++		if (rc == SSL_ERROR)
++		{
++			ssl->error = SSL_ERROR_SSL;		
++			return -1;
++		}
++		ssl->operation = SSL_OPERATION_WRITE;
++	}
++	return SSL_accept(ssl);
++}
++#endif /* USE_CLIENT_SIDE_SSL */
++
++void SSL_set_fd(SSL *ssl, int fd)
++{
++	ssl->fd = fd;
++}
++
++int SSL_read(SSL *ssl, void *buf, int len)
++{
++	int rc;
++	while ((rc = _ssl_read(ssl, buf, len)) == 0
++			&& ssl->status != SSL_SOCKET_EOF 
++			&& ssl->status != SSL_SOCKET_CLOSE_NOTIFY)
++	; /* Nothing to do inside loop */
++	return rc;
++}
++
++
++int SSL_write(SSL *ssl, const void *buf, int len)
++{
++	int rc;
++	while ((rc = _ssl_write(ssl, buf, len)) == 0
++			&& ssl->status != SSL_SOCKET_EOF) 
++	; /* Nothing to do inside loop */
++	if (rc > 0)
++	{ /* _ssl_write returns length of encrypted data. */
++		rc = len;
++	}
++	return rc;
++}
++
++
++void SSL_free(SSL * ssl)
++{
++	if (!ssl)
++	{
++		return;
++	}
++	matrixSslDeleteSession(ssl->ssl);
++	if (ssl->inbuf.buf)
++	{
++		free(ssl->inbuf.buf);
++	}
++	if (ssl->outbuf.buf)
++	{
++		free(ssl->outbuf.buf);
++	}
++	free(ssl);
++}
+diff -NurbB matrixssl-initial/src/os/linux/linux.c matrixssl-latest/src/os/linux/linux.c
+--- matrixssl-initial/src/os/linux/linux.c	2007-05-14 16:37:51.000000000 +0300
++++ matrixssl-latest/src/os/linux/linux.c	2007-05-17 14:05:14.000000000 +0300
+@@ -68,11 +68,13 @@
+ 
+ int32 sslOpenOsdep(void)
+ {
++#if defined(USE_RDTSCLL_TIME) || defined(RDTSC)
+ 	FILE		*cpuInfo;
+ 	double		mhz;
+ 	char		line[80] = "";
+ 	char		*tmpstr;
+ 	int32 		c;
++#endif /* USE_RDTSCLL_TIME */
+ /*
+ 	Open /dev/random access non-blocking.
+ */
+diff -NurbB matrixssl-initial/src/os/osLayer.h matrixssl-latest/src/os/osLayer.h
+--- matrixssl-initial/src/os/osLayer.h	2007-05-14 16:37:51.000000000 +0300
++++ matrixssl-latest/src/os/osLayer.h	2007-05-14 16:50:48.000000000 +0300
+@@ -58,6 +58,10 @@
+ extern int32	sslCloseOsdep(void);
+ extern int32	sslGetEntropy(unsigned char *bytes, int32 size);
+ 
++#ifndef CLK_TCK
++#define CLK_TCK		CLOCKS_PER_SEC
++#endif /* CLK_TCK */
++
+ /*
+ 	Defines to make library multithreading safe
+ */
+@@ -79,10 +83,6 @@
+ /*
+ 	On some *NIX versions such as MAC OS X 10.4, CLK_TCK has been deprecated
+ */
+-#ifndef CLK_TCK
+-#define CLK_TCK		CLOCKS_PER_SEC
+-#endif /* CLK_TCK */
+-
+ typedef pthread_mutex_t sslMutex_t;
+ extern int32	sslCreateMutex(sslMutex_t *mutex);
+ extern int32	sslLockMutex(sslMutex_t *mutex);
+diff -NurbB matrixssl-initial/src/pki/pkiInternal.h matrixssl-latest/src/pki/pkiInternal.h
+--- matrixssl-initial/src/pki/pkiInternal.h	2007-05-14 16:37:51.000000000 +0300
++++ matrixssl-latest/src/pki/pkiInternal.h	2007-05-14 16:53:28.000000000 +0300
+@@ -226,7 +226,7 @@
+ extern int32 readCertChain(psPool_t *pool, const char *certFiles,
+ 						   sslLocalCert_t *lkeys);
+ extern int32 psGetFileBin(psPool_t *pool, const char *fileName,
+-							unsigned char **bin, int32 *binLen);
++							char **bin, int32 *binLen);
+ extern int32 base64encodeAndWrite(psPool_t *pool, const char *fileName,
+ 							unsigned char *bin, int32 binLen, int32 fileType,
+ 							char *hexCipherIV, int32 hexCipherIVLen);
+diff -NurbB matrixssl-initial/src/pki/rsaPki.c matrixssl-latest/src/pki/rsaPki.c
+--- matrixssl-initial/src/pki/rsaPki.c	2007-05-14 16:37:51.000000000 +0300
++++ matrixssl-latest/src/pki/rsaPki.c	2007-05-17 14:03:38.000000000 +0300
+@@ -93,7 +93,7 @@
+ 	actually doing a 'binary' file read.  Only using the 'r' attribute since
+ 	all the cert and key files are text.
+ */
+-int32 psGetFileBin(psPool_t *pool, const char *fileName, unsigned char **bin,
++int32 psGetFileBin(psPool_t *pool, const char *fileName, char **bin,
+ 				 int32 *binLen)
+ {
+ 	FILE	*fp;
+@@ -133,7 +133,8 @@
+ int32 matrixRsaReadPrivKey(psPool_t *pool, const char *fileName,
+ 				const char *password, unsigned char **keyMem, int32 *keyMemLen)
+ {
+-	unsigned char	*keyBuf, *DERout, *start, *end;
++	unsigned char	*DERout;
++	char			*keyBuf, *start, *end;
+ 	int32			keyBufLen, rc, DERlen, PEMlen = 0;
+ #ifdef USE_3DES
+ 	sslCipherContext_t	ctx;
+diff -NurbB matrixssl-initial/src/pki/x509.c matrixssl-latest/src/pki/x509.c
+--- matrixssl-initial/src/pki/x509.c	2007-05-14 16:37:51.000000000 +0300
++++ matrixssl-latest/src/pki/x509.c	2007-05-17 14:04:28.000000000 +0300
+@@ -324,7 +324,7 @@
+ 			rc = -1;
+ 			goto err;
+ 		}
+-		if ((rc = psGetFileBin(pool, certFile, (unsigned char**)&certBuf,
++		if ((rc = psGetFileBin(pool, certFile, &certBuf,
+ 				&certBufLen)) < 0) {
+ 			matrixStrDebugMsg("Couldn't open file %s\n", certFile);
+ 			goto err;
+@@ -340,7 +340,8 @@
+ 				start += strlen("CERTIFICATE-----");
+ 				(*chain)[i] = (int32)(end - start);
+ 				end += strlen("-----END CERTIFICATE-----");
+-				while (*end == '\r' || *end == '\n' || *end == '\t' || *end == ' ') {
++				while ((certBufLen >  (end - certBuf)) && (*end == '\r' ||
++					*end == '\n' || *end == '\t' || *end == ' ')) {
+ 					end++;
+ 				}
+ 			} else {
+@@ -353,7 +354,7 @@
+ 			certBuf = end;
+ 			memset(oneCert[i], '\0', (*chain)[i]);
+ 
+-			if (ps_base64_decode((unsigned char*)start, (*chain)[i], oneCert[i],
++			if (ps_base64_decode(start, (*chain)[i], oneCert[i],
+ 					&(*chain)[i]) != 0) {
+ 				psFree(certPtr);
+ 				matrixStrDebugMsg("Unable to base64 decode certificate\n", NULL);

@@ -1,0 +1,32 @@
+<tr>
+<? if (strlen($error_msg) > 0) { ?>
+<td valign="top" colspan="2"><?	echo $error_msg; ?></td>
+<? } else { ?>
+<td valign="top">
+<table>
+<tr><td class="f"><? echo dict_translate("Name:");></td><td><? echo $name; ></td></tr>
+<tr><td class="f"><? echo dict_translate("Local IP Address:");></td><td><? echo $ipaddr; ></td></tr>
+<tr><td class="f"><? echo dict_translate("Remote IP Address:");></td><td><? echo $ipremote; ></td></tr>
+<tr><td class="f"><? echo dict_translate("Primary DNS IP:");></td><td><? echo $dns1; ></td></tr>
+<? if (strlen($dns2) > 0) { ?>
+<tr><td class="f"><? echo dict_translate("Secondary DNS IP:");></td><td><? echo $dns2; ></td></tr>
+<? } ?>
+</table>
+</td><td valign="top"><table>
+<tr><td class="f"><? echo dict_translate("Connection Time:");></td><td><? echo $duration; ></td></tr>
+<tr><td class="f"><? echo dict_translate("Bytes Transmitted:");></td>
+	<td><? echo $out_bytes_str; ></td>
+</tr>
+<tr><td class="f"><? echo dict_translate("Bytes Received:");></td>
+	<td><? echo $in_bytes_str; ></td>
+</tr>
+<tr><td class="f"><? echo dict_translate("TX/RX Packets:"); ></td>
+        <td><? echo $out_packets + " / " + $in_packets;></td>
+</tr>
+<tr><td class="f"><? echo dict_translate("TX/RX Compression Ratio:");></td>
+        <td><? echo $out_ratio + " / " + $in_ratio;></td>
+</tr>
+</table>
+</td>
+<? } ?>
+</tr>

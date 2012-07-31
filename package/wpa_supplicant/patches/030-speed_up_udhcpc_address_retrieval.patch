@@ -1,0 +1,89 @@
+--- a/wpa_supplicant/wpa_supplicant.c
++++ b/wpa_supplicant/wpa_supplicant.c
+@@ -35,14 +35,16 @@
+ #include "pmksa_cache.h"
+ #include "wpa_ctrl.h"
+ #include "mlme.h"
+ #include "ieee802_11_defs.h"
+ #include "blacklist.h"
+ #include "wpas_glue.h"
+ #include "wps_supplicant.h"
++#include <sys/types.h>
++#include <dirent.h>
+ 
+ const char *wpa_supplicant_version =
+ "wpa_supplicant v" VERSION_STR "\n"
+ "Copyright (c) 2003-2009, Jouni Malinen <j@w1.fi> and contributors";
+ 
+ const char *wpa_supplicant_license =
+ "This program is free software. You can distribute it and/or modify it\n"
+@@ -463,14 +465,24 @@ const char * wpa_supplicant_state_txt(in
+ 	case WPA_COMPLETED:
+ 		return "COMPLETED";
+ 	default:
+ 		return "UNKNOWN";
+ 	}
+ }
+ 
++static void send_signal(const char* pidfile, int sig) {
++        FILE* f = fopen(pidfile, "r");
++        if (f) {
++                pid_t pid = 0;
++                fscanf(f, "%u", &pid);
++                fclose(f);
++                if (pid)
++                        kill(pid, sig);
++        }
++}
+ 
+ /**
+  * wpa_supplicant_set_state - Set current connection state
+  * @wpa_s: Pointer to wpa_supplicant data
+  * @state: The new connection state
+  *
+  * This function is called whenever the connection state changes, e.g.,
+@@ -494,14 +506,44 @@ void wpa_supplicant_set_state(struct wpa
+ 		wpa_msg(wpa_s, MSG_INFO, WPA_EVENT_CONNECTED "- Connection to "
+ 			MACSTR " completed %s [id=%d id_str=%s]",
+ 			MAC2STR(wpa_s->bssid), wpa_s->reassociated_connection ?
+ 			"(reauth)" : "(auth)",
+ 			ssid ? ssid->id : -1,
+ 			ssid && ssid->id_str ? ssid->id_str : "");
+ #endif /* CONFIG_CTRL_IFACE || !CONFIG_NO_STDOUT_DEBUG */
++// speed up DHCPC/PPP(oE) address receival and NTP time update
++#if 1
++		if (!wpa_s->reassociated_connection) {
++			DIR* dir = opendir("/var/run");
++			if (dir) {
++				struct dirent* entry = 0;
++				while ((entry = readdir(dir)) != NULL) {
++					char fullpath[NAME_MAX];
++					int matches = 0;
++					if (strncmp("udhcpc.", entry->d_name, 7) == 0) {
++						matches = 1;
++					} else if (strncmp("ppp", entry->d_name, 3) == 0) {
++						/* check if it's really pid file, not tdb */
++						int len = strlen(entry->d_name);
++						if (len > 5 && strncmp("pid", entry->d_name + len - 3, 3) == 0) {
++							matches = 1;
++						}
++					} else if (strncmp("ntpclient", entry->d_name, 9) == 0) {
++       						matches = 1;
++					}
++					if (matches) {
++						snprintf(fullpath, sizeof(fullpath) - 1, "%s/%s",
++								"/var/run", entry->d_name);
++						send_signal(fullpath, 9);
++					}
++				}
++				closedir(dir);
++			}
++		}
++#endif
+ 		wpa_s->new_connection = 0;
+ 		wpa_s->reassociated_connection = 1;
+ 		wpa_drv_set_operstate(wpa_s, 1);
+ 	} else if (state == WPA_DISCONNECTED || state == WPA_ASSOCIATING ||
+ 		   state == WPA_ASSOCIATED) {
+ 		wpa_s->new_connection = 1;
+ 		wpa_drv_set_operstate(wpa_s, 0);

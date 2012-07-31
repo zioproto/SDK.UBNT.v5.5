@@ -1,0 +1,15 @@
+PATH="/usr/bin:/bin:/usr/sbin:/sbin"
+PS1=`cat /etc/version`'# '
+
+export PATH PS1
+
+# habits from ubuntu...
+alias sudo=''
+alias save='cfgmtd -w -p /etc/'
+alias restart='/usr/etc/rc.d/rc.softrestart save'
+
+umask 022
+
+if [ -e /etc/persistent/profile ]; then
+	. /etc/persistent/profile
+fi

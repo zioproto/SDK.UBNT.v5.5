@@ -1,0 +1,299 @@
+--- a/src/Makefile.in
++++ b/src/Makefile.in
+@@ -130,15 +130,15 @@ install: all 
+ OBJS= parse.o lex.o main.o error.o date.o stack.o calc.o var.o \
+ 	  echo.o cond.o switch.o db.o while.o string.o msql.o sybsql.o\
+ 	  reg.o exec.o file.o crypt.o head.o info.o post.o \
+ 	  type.o conf.o acc.o local.o dns.o log.o sort.o dir.o rand.o \
+ 	  gd.o mime.o fsock.o microtime.o pg95.o pool.o \
+ 	  uniqid.o soundex.o syslog.o mysql.o solid.o mail.o image.o md5.o \
+ 	  snmp.o oracle.o filepro.o illustra.o odbc.o adabasd.o \
+-	  utils.o buffer.o uploadbuffer.o cfg_parser.o cfg.o
++	  utils.o buffer.o uploadbuffer.o cfg_parser.o cfg.o wireless.o
+ 
+ all: $(PHP_PROGS) @MODULE_TARGET@
+ 
+ regex/libregex.a:
+ 	cd regex; make lib CC=$(CC) AUX_CFLAGS='$(CFLAGS)' RANLIB=$(RANLIB)
+ 
+ .c.o:
+--- a/src/lex.c
++++ b/src/lex.c
+@@ -370,14 +370,16 @@ static const cmd_table_t cmd_table[PHP_M
+ #endif
+ 	  { NULL,0,NULL } },
+ 
+ 	{ { "clearstack", INTFUNC0,ClearStack }, /* 10 */
+ 	  { "strtoupper", INTFUNC1,StrToUpper },
+ 	  { "strtolower", INTFUNC1,StrToLower },
+ 	  { "reg_search", REG_SEARCH,NULL },
++	  { "w_get_rate", INTFUNC1, WirelessGetRate },
++	  { "w_get_mode", INTFUNC1, WirelessGetMode },
+ 	  { "cfg_rename", INTFUNC3,CfgRename },
+ 	  { "dbmreplace", INTFUNC3,dbmReplace },
+ 	  { "dbmnextkey", INTFUNC2,dbmNextKey },
+ 	  { "getlogfile", INTFUNC0,GetLogFile },
+ 	  { "getlastref", INTFUNC0,GetLastRef },
+ 	  { "getlastmod", INTFUNC0,GetLastMod },
+ 	  { "getmyinode", INTFUNC0,GetMyInode },
+@@ -416,14 +418,16 @@ static const cmd_table_t cmd_table[PHP_M
+ 
+ 	{ /* 11 */
+ #ifdef HAVE_LIBMSQL
+ 	  { "msql_result", INTFUNC3,MsqlResult },
+ #endif
+ 	  { "reg_replace", INTFUNC3,RegReplace },
+ 	  { "cfg_get_def", INTFUNC3, CfgGetDef },
++	  { "w_get_essid", INTFUNC1, WirelessGetESSID },
++	  { "w_get_apmac", INTFUNC1, WirelessGetApMac },
+ 	  { "dbmfirstkey", INTFUNC1,dbmFirstKey },
+ 	  { "getlasthost", INTFUNC0,GetLastHost },
+ #ifdef HAVE_LIBGD
+ 	  { "imagecreate", INTFUNC2,ImageCreate },
+ 	  { "imagecharup", IMAGECHAR,NULL },
+ 	  { "imagestring", IMAGESTRING,NULL },
+ #endif
+@@ -509,14 +513,15 @@ static const cmd_table_t cmd_table[PHP_M
+ #endif
+ 	  { NULL,0,NULL } }, 
+ 
+ 	{ { "gethostbyaddr", INTFUNC1,GetHostByAddr }, /* 13 */
+ 	  { "gethostbyname", INTFUNC1,GetHostByName },
+ 	  { "getlastaccess", INTFUNC0,GetLastAccess },
+ 	  { "eregi_replace", INTFUNC3,ERegiReplace },
++	  { "w_get_txpower", INTFUNC1, WirelessGetTxPower },
+ 	  { "msql_fieldlen", MSQL_FIELDLEN,NULL },
+ #ifdef HAVE_LIBGD
+ 	  { "imagesetpixel", INTFUNC4,ImageSetPixel },
+ 	  { "imagestringup", IMAGESTRINGUP,NULL },
+ #endif
+ #ifdef HAVE_LIBMSQL
+ 	  { "msql_createdb", INTFUNC1,MsqlCreateDB },
+--- a/src/php.h
++++ b/src/php.h
+@@ -1397,7 +1397,16 @@ void CfgSet(void);
+ void CfgDel(void);
+ void CfgGetDef(void);
+ void CfgGetDefNe(void);
+ void CfgRename(void);
+ void CfgIsModified(void);
+ void CfgSetModified(void);
+ #endif
++
++#define HAVE_WIRELESS
++#ifdef HAVE_WIRELESS
++void WirelessGetESSID(void);
++void WirelessGetTxPower(void);
++void WirelessGetRate(void);
++void WirelessGetApMac(void);
++void WirelessGetMode(void);
++#endif
+--- /dev/null
++++ b/src/wireless.c
+@@ -0,0 +1,206 @@
++#include <netinet/in.h>
++#include <arpa/inet.h>
++#include <sys/ioctl.h>
++#include <sys/types.h>
++#include <sys/socket.h>
++
++#include <linux/wireless.h>
++
++#include <stdlib.h>
++#include <unistd.h>
++#include "php.h"
++#include "parse.h"
++
++static char EMPTY_STR[] = "";
++
++static int do_ioctl(int fd, const char* ifname, int req, struct iwreq* wrq) {
++	int cleanup = 0;
++	int rc;
++	if (fd == -1) {
++		fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
++		if (fd < 0) {
++			return -1;
++		}
++
++		cleanup = 1;
++	}
++
++        strncpy(wrq->ifr_name, ifname, IFNAMSIZ);
++        rc = ioctl(fd, req, wrq);
++
++	if (cleanup) {
++		close(fd);
++	}
++
++	return rc;
++}
++
++static int get_essid(int fd, const char* ifname, char** essid, int essid_len) {
++	struct iwreq wrq;
++	int rc;
++
++	memset(&wrq, 0, sizeof(wrq));
++	wrq.u.essid.pointer = (caddr_t)essid;
++        wrq.u.essid.length = essid_len;
++        wrq.u.essid.flags = 0;
++        rc = do_ioctl(fd, ifname, SIOCGIWESSID, &wrq);
++        if (rc < 0) {
++                essid[0] = '\0';
++        }
++
++	return 0;
++}
++
++static int get_txpower(int fd, const char* ifname, int* txpower) {
++	struct iwreq          wrq;
++	int rc;
++	memset(&wrq, 0, sizeof(wrq));
++
++        rc = do_ioctl(fd, ifname, SIOCGIWTXPOW, &wrq);
++	if (rc < 0) {
++		return -1;
++	}
++	if (txpower)
++		*txpower = wrq.u.txpower.value;
++	return 0;
++}
++
++static int get_bitrate(int fd, const char* ifname, int* val) {
++	struct iwreq          wrq;
++	int rc;
++	memset(&wrq, 0, sizeof(wrq));
++
++        rc = do_ioctl(fd, ifname, SIOCGIWRATE, &wrq);
++	if (rc < 0) {
++		return -1;
++	}
++	if (val)
++		*val = wrq.u.bitrate.value;
++	return 0;
++}
++
++static int get_apmac(int fd, const char* ifname, unsigned char* val) {
++	struct iwreq          wrq;
++	int rc;
++	memset(&wrq, 0, sizeof(wrq));
++
++        rc = do_ioctl(fd, ifname, SIOCGIWAP, &wrq);
++	if (rc < 0) {
++		return -1;
++	}
++	if (val)
++		memcpy(val, wrq.u.ap_addr.sa_data, 6);
++	return 0;
++
++}
++
++static int get_mode(int fd, const char* ifname, int* val) {
++	struct iwreq          wrq;
++	int rc;
++	memset(&wrq, 0, sizeof(wrq));
++
++        rc = do_ioctl(fd, ifname, SIOCGIWMODE, &wrq);
++	if (rc < 0) {
++		return -1;
++	}
++	if (val)
++	    	*val = wrq.u.mode;
++	return 0;
++}
++
++#define ESSID 		1
++#define TXPOWER 	2
++#define RATE		3
++#define APMAC		4
++#define MODE            5
++
++#define __MAC2STR(a) (a)[0], (a)[1], (a)[2], (a)[3], (a)[4], (a)[5]
++#define __MACSTR "%02X:%02X:%02X:%02X:%02X:%02X"
++
++static void WirelessGet(int req) {
++	Stack *s;
++	char temp[8];
++	int value = 0;
++
++	s = Pop();
++        if (!s) {
++                Error("Stack Error");
++                return;
++        }
++        if (!*(s->strval)) {
++                Push(EMPTY_STR, STRING);
++                return;
++        }
++
++	switch (req) {
++	case ESSID:
++		{
++			char essid[40];
++			memset(essid, 0, sizeof(essid));
++			get_essid(-1, s->strval, (char**)(&essid), sizeof(essid));
++			Push(essid, STRING);
++		}
++		break;
++	case TXPOWER:
++		{
++			if (get_txpower(-1, s->strval, &value)) {
++				Push(EMPTY_STR, STRING);
++				return;
++			}
++			snprintf(temp, sizeof(temp), "%d", value);
++			Push(temp, LNUMBER);
++		}
++		break;
++	case RATE:
++		{
++			if (get_bitrate(-1, s->strval, &value)) {
++				Push(EMPTY_STR, STRING);
++				return;
++			}
++			snprintf(temp, sizeof(temp), "%d", value);
++			Push(temp, LNUMBER);
++		}
++		break;
++	case APMAC:
++		{
++			unsigned char mac[6];
++			char apmac[20];
++			if (get_apmac(-1, s->strval, mac)) {
++				Push(EMPTY_STR, STRING);
++				return;
++			}
++			snprintf(apmac, sizeof(apmac), __MACSTR, __MAC2STR(mac));
++			Push(apmac, STRING);
++		}
++		break;
++	case MODE:
++		{
++			if (get_mode(-1, s->strval, &value)) {
++				Push(EMPTY_STR, STRING);
++				return;
++			}
++			snprintf(temp, sizeof(temp), "%d", value);
++			Push(temp, LNUMBER);
++		}
++		break;
++	}
++}
++
++void WirelessGetESSID(void) {
++	WirelessGet(ESSID);
++}
++
++void WirelessGetTxPower(void) {
++	WirelessGet(TXPOWER);
++}
++void WirelessGetRate(void) {
++	WirelessGet(RATE);
++}
++
++void WirelessGetApMac(void) {
++	WirelessGet(APMAC);
++}
++
++void WirelessGetMode(void) {
++	WirelessGet(MODE);
++}

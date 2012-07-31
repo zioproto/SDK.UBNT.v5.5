@@ -1,0 +1,1139 @@
+Index: linux-2.6.32.48/arch/mips/ar7240/gpio.c
+===================================================================
+--- linux-2.6.32.48.orig/arch/mips/ar7240/gpio.c
++++ linux-2.6.32.48/arch/mips/ar7240/gpio.c
+@@ -2,7 +2,7 @@
+ #define EXPORT_SYMTAB
+ #endif
+ 
+-//#include <linux/config.h>
++#include <linux/version.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/signal.h>
+@@ -12,6 +12,7 @@
+ #include <linux/resource.h>
+ #include <linux/proc_fs.h>
+ #include <linux/miscdevice.h>
++#include <linux/sched.h>
+ #include <asm/types.h>
+ #include <asm/irq.h>
+ #include <asm/delay.h>
+@@ -25,7 +26,7 @@ static atomic_t ar7240_fr_status = ATOMI
+ static volatile int ar7240_fr_opened=0;
+ static wait_queue_head_t ar7240_fr_wq;
+ static u_int32_t push_time=0;
+-struct timer_list  os_timer_t;
++static struct timer_list  os_timer_t;
+ 
+ #define frdbg printk
+ 
+@@ -85,7 +86,11 @@ typedef enum {
+ /* 
+ ** Simple Config stuff
+ */
++#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,18)
++typedef irqreturn_t(*sc_callback_t)(int, void *, void *);
++#else
+ typedef irqreturn_t(*sc_callback_t)(int, void *, struct pt_regs *, void *);
++#endif
+ 
+ /*
+ ** Multiple Simple Config callback support
+@@ -117,7 +122,7 @@ static struct proc_dir_entry *simulate_p
+ static struct proc_dir_entry *simple_config_led_entry = NULL;
+ static int wps_led_blinking = 0;
+ 
+-void ar7240_gpio_config_int(int gpio, 
++static void ar7240_gpio_config_int(int gpio,
+                        ar7240_gpio_int_type_t type,
+                        ar7240_gpio_int_pol_t polarity)
+ {
+@@ -149,7 +154,7 @@ void ar7240_gpio_config_int(int gpio, 
+     ar7240_reg_rmw_set(AR7240_GPIO_INT_ENABLE, (1 << gpio));
+ }
+ 
+-void
++static void
+ ar7240_gpio_config_output(int gpio)
+ {
+ #ifdef CONFIG_WASP_SUPPORT
+@@ -169,7 +174,7 @@ ar7240_gpio_config_input(int gpio)
+ #endif
+ }
+ 
+-void
++static void
+ ar7240_gpio_out_val(int gpio, int val)
+ {
+     if (val & 0x1) {
+@@ -226,15 +231,26 @@ ar7240_gpio_intr_end(unsigned int irq)
+ 		ar7240_gpio_intr_enable(irq);
+ }
+ 
++#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30)
++static int
++#else
+ static void
++#endif
++#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,28)
++ar7240_gpio_intr_set_affinity(unsigned int irq, const struct cpumask *dest)
++#else
+ ar7240_gpio_intr_set_affinity(unsigned int irq, cpumask_t mask)
++#endif
+ {
+ 	/* 
+      * Only 1 CPU; ignore affinity request
+      */
++#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30)
++	return 0;
++#endif
+ }
+ 
+-struct irq_chip /* hw_interrupt_type */ ar7240_gpio_intr_controller = {
++static struct irq_chip /* hw_interrupt_type */ ar7240_gpio_intr_controller = {
+ 	.name		= "AR7240 GPIO",
+ 	.startup	= ar7240_gpio_intr_startup,
+ 	.shutdown	= ar7240_gpio_intr_shutdown,
+@@ -261,7 +277,6 @@ ar7240_gpio_irq_init(int irq_base)
+ 	}
+ }
+ 
+-
+ int32_t register_simple_config_callback (char *cbname, void *callback, void *arg1, void *arg2)
+ {
+ 	printk("SC Callback Registration for %s\n",cbname);
+@@ -325,9 +340,12 @@ static OS_TIMER_FUNC(wps_led_blink)
+    }
+ }
+ 
+-
+-int ar7240_simple_config_invoke_cb(int simplecfg_only, int irq_enable, 
++#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,18)
++static int ar7240_simple_config_invoke_cb(int simplecfg_only, int irq_enable, int cpl)
++#else
++static int ar7240_simple_config_invoke_cb(int simplecfg_only, int irq_enable,
+                                    int cpl, struct pt_regs *regs)
++#endif
+ {
+     printk ("\nar7240: simple_config callback..sc %d, irq %d, ignorepb %d, jiffies %lu\n",
+             simplecfg_only, irq_enable, ignore_pushbutton, jiffies);
+@@ -355,13 +373,21 @@ int ar7240_simple_config_invoke_cb(int s
+         if (SCcallback[0].cb_arg2) {
+             *(u_int32_t *)SCcallback[0].cb_arg2 = push_time/HZ;
+         }
++#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,18)
++        SCcallback[0].registered_cb (cpl, SCcallback[0].cb_arg1, SCcallback[0].cb_arg2);
++#else
+         SCcallback[0].registered_cb (cpl, SCcallback[0].cb_arg1, regs, SCcallback[0].cb_arg2);
++#endif
+     }
+     if (SCcallback[1].registered_cb) {
+         if (SCcallback[1].cb_arg2) {
+             *(u_int32_t *)SCcallback[1].cb_arg2 = push_time/HZ;
+         }
++#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,18)
++        SCcallback[1].registered_cb (cpl, SCcallback[1].cb_arg1, SCcallback[1].cb_arg2);
++#else
+         SCcallback[1].registered_cb (cpl, SCcallback[1].cb_arg1, regs, SCcallback[1].cb_arg2);
++#endif
+     }
+ 
+     return IRQ_HANDLED;
+@@ -370,7 +396,11 @@ int ar7240_simple_config_invoke_cb(int s
+  * Irq for front panel SW jumpstart switch
+  * Connected to XSCALE through GPIO4
+  */
+-irqreturn_t jumpstart_irq(int cpl, void *dev_id, struct pt_regs *regs)
++#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,18)
++static irqreturn_t jumpstart_irq(int cpl, void *dev_id)
++#else
++static irqreturn_t jumpstart_irq(int cpl, void *dev_id, struct pt_regs *regs)
++#endif
+ {
+     unsigned int delay;
+ 
+@@ -410,11 +440,19 @@ irqreturn_t jumpstart_irq(int cpl, void 
+             local_irq_enable();
+             return IRQ_HANDLED;
+         } else {
++#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,18)
++            return (ar7240_simple_config_invoke_cb(0, 1, cpl));
++#else
+             return (ar7240_simple_config_invoke_cb(0, 1, cpl, regs));
++#endif
+         }
+     }
+     else
++#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,18)
++        return (ar7240_simple_config_invoke_cb(1, 0, cpl));
++#else
+         return (ar7240_simple_config_invoke_cb(1, 0, cpl, regs));
++#endif
+ }
+ 
+ static int push_button_read (char *page, char **start, off_t off,
+@@ -427,10 +465,18 @@ static int push_button_write (struct fil
+                                         unsigned long count, void *data)
+ {
+     if (SCcallback[0].registered_cb) {
++#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,18)
++        SCcallback[0].registered_cb (0, SCcallback[0].cb_arg1, SCcallback[0].cb_arg2);
++#else
+         SCcallback[0].registered_cb (0, SCcallback[0].cb_arg1, 0, SCcallback[0].cb_arg2);
++#endif
+     }
+     if (SCcallback[1].registered_cb) {
++#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,18)
++        SCcallback[1].registered_cb (0, SCcallback[1].cb_arg1, SCcallback[1].cb_arg2);
++#else
+         SCcallback[1].registered_cb (0, SCcallback[1].cb_arg1, 0, SCcallback[1].cb_arg2);
++#endif
+     }
+     return count;
+ }
+@@ -453,10 +499,10 @@ static int gpio_simple_config_led_read (
+ static int gpio_simple_config_led_write (struct file *file, const char *buf,
+                                         unsigned long count, void *data)
+ {
+-    u_int32_t val, green_led_onoff = 0, yellow_led_onoff = 0;
++	u_int32_t val;
+ 
+-    if (sscanf(buf, "%d", &val) != 1)
+-        return -EINVAL;
++	if (sscanf(buf, "%d", &val) != 1)
++		return -EINVAL;
+ 
+ 
+ 	if ((val == SIMPLE_CONFIG_BLINK) && !wps_led_blinking)  /* wps LED blinking */
+@@ -485,24 +531,22 @@ static int gpio_simple_config_led_write 
+     return count;
+ }
+ 
++#ifdef AP_USB_LED_GPIO
+ void ap_usb_led_on(void)
+ {
+-#ifdef AP_USB_LED_GPIO
+ 	ar7240_gpio_out_val(AP_USB_LED_GPIO, USB_LED_ON);
+-#endif
+ }
+ EXPORT_SYMBOL(ap_usb_led_on);
+ 
+ void ap_usb_led_off(void)
+ {
+-#ifdef AP_USB_LED_GPIO
+ 	ar7240_gpio_out_val(AP_USB_LED_GPIO, USB_LED_OFF);
+-#endif
+ }
+ EXPORT_SYMBOL(ap_usb_led_off);
++#endif /* AP_USB_LED_GPIO */
+ 
+ #ifdef ATH_SUPPORT_LED
+-void ap_wlan_led_off(void)
++static void ap_wlan_led_off(void)
+ {
+     if( is_ar933x()) {
+         /* turn off all the led by default */
+@@ -631,7 +675,7 @@ static struct file_operations ar7240fr_f
+ static struct miscdevice ar7240fr_miscdev = 
+ { FACTORY_RESET_MINOR, "Factory reset", &ar7240fr_fops };
+ 
+-int __init ar7240_simple_config_init(void)
++static int __init ar7240_simple_config_init(void)
+ {
+ #ifdef CONFIG_CUS100
+ 	u32 mask = 0;
+@@ -706,3 +750,4 @@ int __init ar7240_simple_config_init(voi
+ #if !defined(CONFIG_I2S) && !defined(CONFIG_AR7240_EMULATION)
+ late_initcall(ar7240_simple_config_init);
+ #endif
++
+Index: linux-2.6.32.48/Makefile
+===================================================================
+--- linux-2.6.32.48.orig/Makefile
++++ linux-2.6.32.48/Makefile
+@@ -155,11 +155,7 @@ export srctree objtree VPATH
+ # then ARCH is assigned, getting whatever value it gets normally, and 
+ # SUBARCH is subsequently ignored.
+ 
+-SUBARCH := $(shell uname -m | sed -e s/i.86/i386/ -e s/sun4u/sparc64/ \
+-				  -e s/arm.*/arm/ -e s/sa110/arm/ \
+-				  -e s/s390x/s390/ -e s/parisc64/parisc/ \
+-				  -e s/ppc.*/powerpc/ -e s/mips.*/mips/ \
+-				  -e s/sh[234].*/sh/ )
++SUBARCH := mips
+ 
+ # Cross compiling and selecting different set of gcc/bin-utils
+ # ---------------------------------------------------------------------------
+@@ -557,6 +553,23 @@ ifdef CONFIG_DEBUG_SECTION_MISMATCH
+ KBUILD_CFLAGS += $(call cc-option, -fno-inline-functions-called-once)
+ endif
+ 
++# Advanced mips 24kc optimization
++ifdef CONFIG_MIPS_24K_KERNEL_OPTIMIZATION
++KBUILD_CFLAGS	+= $(call cc-option,-funit-at-a-time)
++KBUILD_CFLAGS	+= $(call cc-option,-pipe)
++KBUILD_CFLAGS	+= $(call cc-option,-mips32r2)
++KBUILD_CFLAGS	+= $(call cc-option,-mtune=mips32r2)
++KBUILD_CFLAGS	+= $(call cc-option,-Os)
++endif
++
++# Advanced mips 74kc optimization
++ifdef CONFIG_MIPS_74K_KERNEL_OPTIMIZATION
++KBUILD_CFLAGS	+= $(call cc-option,-funit-at-a-time)
++KBUILD_CFLAGS	+= $(call cc-option,-pipe)
++KBUILD_CFLAGS	+= $(call cc-option,-mtune=74kc)
++KBUILD_CFLAGS	+= $(call cc-option,-Os)
++endif
++
+ # arch Makefile may override CC so keep this after arch Makefile is included
+ NOSTDINC_FLAGS += -nostdinc -isystem $(shell $(CC) -print-file-name=include)
+ CHECKFLAGS     += $(NOSTDINC_FLAGS)
+Index: linux-2.6.32.48/arch/mips/Kconfig
+===================================================================
+--- linux-2.6.32.48.orig/arch/mips/Kconfig
++++ linux-2.6.32.48/arch/mips/Kconfig
+@@ -2,12 +2,8 @@ config MIPS
+ 	bool
+ 	default y
+ 	select HAVE_GENERIC_DMA_COHERENT
+-	select HAVE_IDE
+-	select HAVE_OPROFILE
+-	select HAVE_ARCH_KGDB
+ 	# Horrible source of confusion.  Die, die, die ...
+ 	select EMBEDDED
+-	select RTC_LIB if !LEMOTE_FULOONG2E
+ 
+ mainmenu "Linux/MIPS Kernel Configuration"
+ 
+@@ -671,9 +667,85 @@ config CAVIUM_OCTEON_REFERENCE_BOARD
+ 		Hikari
+ 	  Say Y here for most Octeon reference boards.
+ 
++config  MACH_AR7240
++	bool "Support for Atheros ar7240 based board"
++	select DMA_NONCOHERENT
++	select IRQ_CPU
++	select CEVT_R4K
++	select CSRC_R4K
++	select SYS_HAS_CPU_MIPS32_R1
++	select SYS_HAS_CPU_MIPS32_R2
++	select SYS_SUPPORTS_32BIT_KERNEL
++	select SYS_SUPPORTS_BIG_ENDIAN
++	select HW_HAS_PCI
++	select HAVE_KERNEL_LZMA
++
++config  MACH_AR724x
++	bool "Support for Atheros ar724x based board"
++	select DMA_NONCOHERENT
++	select IRQ_CPU
++	select CEVT_R4K
++	select CSRC_R4K
++	select SYS_HAS_CPU_MIPS32_R1
++	select SYS_HAS_CPU_MIPS32_R2
++	select SYS_SUPPORTS_32BIT_KERNEL
++	select SYS_SUPPORTS_BIG_ENDIAN
++	select HW_HAS_PCI
++	select HAVE_KERNEL_LZMA
++
++config  MACH_AR933x
++	bool "Support for Atheros ar933x based board"
++	select HAVE_KERNEL_LZMA
++	select DMA_NONCOHERENT
++	select IRQ_CPU
++	select CEVT_R4K
++	select CSRC_R4K
++	select SYS_HAS_CPU_MIPS32_R1
++	select SYS_HAS_CPU_MIPS32_R2
++	select SYS_SUPPORTS_32BIT_KERNEL
++	select SYS_SUPPORTS_BIG_ENDIAN
++	select HAVE_KERNEL_LZMA
++
++config  MACH_AR934x
++	bool "Support for Atheros ar934x based board"
++	select DMA_NONCOHERENT
++	select IRQ_CPU
++	select CEVT_R4K
++	select CSRC_R4K
++	select SYS_HAS_CPU_MIPS32_R1
++	select SYS_HAS_CPU_MIPS32_R2
++	select SYS_SUPPORTS_32BIT_KERNEL
++	select SYS_SUPPORTS_BIG_ENDIAN
++	select HW_HAS_PCI
++	select HAVE_KERNEL_LZMA
++
++config MACH_HORNET
++    bool "Support for Atheros HORNET based board"
++    select DMA_NONCOHERENT
++	select IRQ_CPU
++	select CEVT_R4K
++	select CSRC_R4K
++	select SYS_HAS_CPU_MIPS32_R1
++	select SYS_HAS_CPU_MIPS32_R2
++	select SYS_SUPPORTS_32BIT_KERNEL
++	select SYS_SUPPORTS_BIG_ENDIAN
++    select HAVE_KERNEL_LZMA
++
++config  MACH_AR7100
++    bool "Support for Atheros ar7100 based boards"
++    select DMA_NONCOHERENT
++    select IRQ_CPU
++    select CEVT_R4K
++    select CSRC_R4K
++    select SYS_HAS_CPU_MIPS32_R2
++    select SYS_SUPPORTS_32BIT_KERNEL
++    select SYS_SUPPORTS_BIG_ENDIAN
++    select HW_HAS_PCI
++
+ endchoice
+ 
+ source "arch/mips/alchemy/Kconfig"
++source "arch/mips/atheros/Kconfig"
+ source "arch/mips/basler/excite/Kconfig"
+ source "arch/mips/bcm63xx/Kconfig"
+ source "arch/mips/jazz/Kconfig"
+@@ -729,7 +801,7 @@ config GENERIC_TIME
+ 
+ config GENERIC_CMOS_UPDATE
+ 	bool
+-	default y
++	default n
+ 
+ config SCHED_OMIT_FRAME_POINTER
+ 	bool
+@@ -886,6 +958,19 @@ config GENERIC_ISA_DMA_SUPPORT_BROKEN
+ config GENERIC_GPIO
+ 	bool
+ 
++config CPU_HAS_DSP_ASE
++	bool "MIPS DSP Extension"
++	default n
++	help
++	  Enable this option for the mips dsp application specific extension.
++	  support in the cpu
++
++config ENABLE_DSP_ASE
++	bool
++	option env="ENABLE_DSP_ASE"
++	default n
++	select CPU_HAS_DSP_ASE
++
+ #
+ # Endianess selection.  Sufficiently obscure so many users don't know what to
+ # answer,so we try hard to limit the available choices.  Also the use of a
+@@ -1109,7 +1194,7 @@ config CPU_MIPS32_R2
+ 	depends on SYS_HAS_CPU_MIPS32_R2
+ 	select CPU_HAS_PREFETCH
+ 	select CPU_SUPPORTS_32BIT_KERNEL
+-	select CPU_SUPPORTS_HIGHMEM
++#	select CPU_SUPPORTS_HIGHMEM
+ 	help
+ 	  Choose this option to build a kernel for release 2 or later of the
+ 	  MIPS32 architecture.  Most modern embedded systems with a 32-bit
+@@ -2191,7 +2276,7 @@ config ARCH_HIBERNATION_POSSIBLE
+ 	depends on SYS_SUPPORTS_HOTPLUG_CPU || !SMP
+ 
+ config ARCH_SUSPEND_POSSIBLE
+-	def_bool y
++	def_bool n
+ 	depends on SYS_SUPPORTS_HOTPLUG_CPU || !SMP
+ 
+ source "kernel/power/Kconfig"
+Index: linux-2.6.32.48/arch/mips/Makefile
+===================================================================
+--- linux-2.6.32.48.orig/arch/mips/Makefile
++++ linux-2.6.32.48/arch/mips/Makefile
+@@ -129,8 +129,13 @@ cflags-$(CONFIG_CPU_LOONGSON2E) += \
+ 
+ cflags-$(CONFIG_CPU_MIPS32_R1)	+= $(call cc-option,-march=mips32,-mips32 -U_MIPS_ISA -D_MIPS_ISA=_MIPS_ISA_MIPS32) \
+ 			-Wa,-mips32 -Wa,--trap
++ifndef  CONFIG_MIPS_74K_KERNEL_OPTIMIZATION
+ cflags-$(CONFIG_CPU_MIPS32_R2)	+= $(call cc-option,-march=mips32r2,-mips32r2 -U_MIPS_ISA -D_MIPS_ISA=_MIPS_ISA_MIPS32) \
+ 			-Wa,-mips32r2 -Wa,--trap
++else
++cflags-$(CONFIG_CPU_MIPS32_R2)	+= $(call cc-option,-march=74kc, -mtune=74kc, -U_MIPS_ISA -D_MIPS_ISA=_MIPS_ISA_MIPS32) \
++			-Wa,-march=74kc -Wa,--trap
++endif
+ cflags-$(CONFIG_CPU_MIPS64_R1)	+= $(call cc-option,-march=mips64,-mips64 -U_MIPS_ISA -D_MIPS_ISA=_MIPS_ISA_MIPS64) \
+ 			-Wa,-mips64 -Wa,--trap
+ cflags-$(CONFIG_CPU_MIPS64_R2)	+= $(call cc-option,-march=mips64r2,-mips64r2 -U_MIPS_ISA -D_MIPS_ISA=_MIPS_ISA_MIPS64) \
+@@ -626,7 +631,50 @@ else
+ load-$(CONFIG_CPU_CAVIUM_OCTEON) 	+= 0xffffffff81100000
+ endif
+ 
++#Atheros Ar7240
++#
++core-$(CONFIG_MACH_AR7240)		+=	arch/mips/ar7240/
++cflags-$(CONFIG_MACH_AR7240)	+= -I$(srctree)/arch/mips/include/asm/mach-ar7240
++load-$(CONFIG_MACH_AR7240)		+=	0xffffffff80002000
++#load-$(CONFIG_MACH_AR7240)		+=	0xffffffffa0002000
++#
++
++#Atheros Ar9330(Hornet)
++#
++core-$(CONFIG_MACH_HORNET)		+=	arch/mips/ar7240/
++load-$(CONFIG_MACH_HORNET)		+=	0xffffffff80002000
++cflags-$(CONFIG_MACH_HORNET)	+= -I$(srctree)/arch/mips/include/asm/mach-ar7240
++
++# Atheros Ar724x (Virian, Python)
++#
++core-$(CONFIG_MACH_AR724x)	+= arch/mips/atheros/
++cflags-$(CONFIG_MACH_AR724x)	+= -I$(srctree)/arch/mips/include/asm/mach-atheros
++load-$(CONFIG_MACH_AR724x)	+= 0xffffffff80002000
++#load-$(CONFIG_MACH_AR724x)	+= 0xffffffffa0002000
++#
++
++# Atheros Ar933x (Hornet)
++#
++core-$(CONFIG_MACH_AR933x)	+= arch/mips/atheros/
++load-$(CONFIG_MACH_AR933x)	+= 0xffffffff80002000
++cflags-$(CONFIG_MACH_AR933x)	+= -I$(srctree)/arch/mips/include/asm/mach-atheros
++#
++
++# Atheros Ar934x (Wasp)
++#
++core-$(CONFIG_MACH_AR934x)	+= arch/mips/atheros/
++cflags-$(CONFIG_MACH_AR934x)	+= -I$(srctree)/arch/mips/include/asm/mach-atheros
++load-$(CONFIG_MACH_AR934x)	+= 0xffffffff80002000
++#
++
++##Atheros Ar7100 ( Hydra )
++#
++core-$(CONFIG_MACH_AR7100)    += arch/mips/ar7100/
++load-$(CONFIG_MACH_AR7100)    += 0x80002000
++cflags-$(CONFIG_MACH_AR7100)  += -I$(srctree)/arch/mips/include/asm/mach-ar7100
++
+ cflags-y			+= -I$(srctree)/arch/mips/include/asm/mach-generic
++
+ drivers-$(CONFIG_PCI)		+= arch/mips/pci/
+ 
+ #
+@@ -673,7 +721,10 @@ head-y := arch/mips/kernel/head.o arch/m
+ 
+ libs-y			+= arch/mips/lib/
+ 
+-core-y			+= arch/mips/kernel/ arch/mips/mm/ arch/mips/math-emu/
++core-y			+= arch/mips/kernel/ arch/mips/mm/
++ifneq ($(CONFIG_ATH_2X8),y)
++	core-y		+= arch/mips/math-emu/
++endif
+ 
+ drivers-$(CONFIG_OPROFILE)	+= arch/mips/oprofile/
+ 
+Index: linux-2.6.32.48/arch/mips/atheros/gpio.c
+===================================================================
+--- linux-2.6.32.48.orig/arch/mips/atheros/gpio.c
++++ linux-2.6.32.48/arch/mips/atheros/gpio.c
+@@ -24,7 +24,7 @@ static atomic_t ath_fr_status = ATOMIC_I
+ static volatile int ath_fr_opened = 0;
+ static wait_queue_head_t ath_fr_wq;
+ static u_int32_t push_time = 0;
+-struct timer_list os_timer_t;
++static struct timer_list os_timer_t;
+ 
+ #define frdbg printk
+ 
+@@ -103,7 +103,7 @@ static struct proc_dir_entry *simulate_p
+ static struct proc_dir_entry *simple_config_led_entry = NULL;
+ static int wps_led_blinking = 0;
+ 
+-void ath_gpio_config_int(int gpio,
++static void ath_gpio_config_int(int gpio,
+ 			 ath_gpio_int_type_t type,
+ 			 ath_gpio_int_pol_t polarity)
+ {
+@@ -133,7 +133,7 @@ void ath_gpio_config_int(int gpio,
+ 	ath_reg_rmw_set(ATH_GPIO_INT_ENABLE, (1 << gpio));
+ }
+ 
+-void ath_gpio_config_output(int gpio)
++static void ath_gpio_config_output(int gpio)
+ {
+ #ifdef CONFIG_MACH_AR934x
+ 	ath_reg_rmw_clear(ATH_GPIO_OE, (1 << gpio));
+@@ -152,7 +152,7 @@ void ath_gpio_config_input(int gpio)
+ #endif
+ }
+ 
+-void ath_gpio_out_val(int gpio, int val)
++static void ath_gpio_out_val(int gpio, int val)
+ {
+ 	if (val & 0x1) {
+ 		ath_reg_rmw_set(ATH_GPIO_OUT, (1 << gpio));
+@@ -162,6 +162,7 @@ void ath_gpio_out_val(int gpio, int val)
+ }
+ EXPORT_SYMBOL(ath_gpio_out_val);
+ 
++
+ int ath_gpio_in_val(int gpio)
+ {
+ 	return ((1 << gpio) & (ath_reg_rd(ATH_GPIO_IN)));
+@@ -216,7 +217,7 @@ ath_gpio_intr_set_affinity(unsigned int 
+ 	return 0;
+ }
+ 
+-struct irq_chip /* hw_interrupt_type */ ath_gpio_intr_controller = {
++static struct irq_chip /* hw_interrupt_type */ ath_gpio_intr_controller = {
+ 	.name = "ATH GPIO",
+ 	.startup = ath_gpio_intr_startup,
+ 	.shutdown = ath_gpio_intr_shutdown,
+@@ -303,7 +304,7 @@ static OS_TIMER_FUNC(wps_led_blink)
+ 	}
+ }
+ 
+-int ath_simple_config_invoke_cb(int simplecfg_only, int irq_enable, int cpl)
++static int ath_simple_config_invoke_cb(int simplecfg_only, int irq_enable, int cpl)
+ {
+ 	printk("%s: sc %d, irq %d, ignorepb %d, jiffies %lu\n", __func__,
+ 		simplecfg_only, irq_enable, ignore_pushbutton, jiffies);
+@@ -349,7 +350,7 @@ int ath_simple_config_invoke_cb(int simp
+  * Irq for front panel SW jumpstart switch
+  * Connected to XSCALE through GPIO4
+  */
+-irqreturn_t jumpstart_irq(int cpl, void *dev_id)
++static irqreturn_t jumpstart_irq(int cpl, void *dev_id)
+ {
+ 	unsigned int delay;
+ 
+@@ -446,6 +447,7 @@ static int gpio_simple_config_led_write(
+ 	return count;
+ }
+ 
++#ifdef AP_USB_LED_GPIO
+ void ap_usb_led_on(void)
+ {
+ #ifdef CONFIG_MACH_AR934x
+@@ -471,7 +473,6 @@ void ap_usb_led_on(void)
+ 	ath_gpio_out_val(AP_USB_LED_GPIO, USB_LED_ON);
+ #endif
+ }
+-
+ EXPORT_SYMBOL(ap_usb_led_on);
+ 
+ void ap_usb_led_off(void)
+@@ -485,6 +486,7 @@ void ap_usb_led_off(void)
+ #endif
+ }
+ EXPORT_SYMBOL(ap_usb_led_off);
++#endif /* AP_USB_LED_GPIO */
+ 
+ static int create_simple_config_led_proc_entry(void)
+ {
+@@ -592,7 +594,7 @@ static struct miscdevice athfr_miscdev =
+ 	&athfr_fops
+ };
+ 
+-int __init ath_simple_config_init(void)
++static int __init ath_simple_config_init(void)
+ {
+ #ifdef CONFIG_CUS100
+ 	u32 mask = 0;
+@@ -652,3 +654,4 @@ int __init ath_simple_config_init(void)
+ #if !defined(CONFIG_ATH_EMULATION)
+ late_initcall(ath_simple_config_init);
+ #endif
++
+Index: linux-2.6.32.48/arch/mips/include/asm/bootinfo.h
+===================================================================
+--- linux-2.6.32.48.orig/arch/mips/include/asm/bootinfo.h
++++ linux-2.6.32.48/arch/mips/include/asm/bootinfo.h
+@@ -69,6 +69,21 @@
+ #define MACH_DEXXON_GDIUM2F10  5
+ #define MACH_LOONGSON_END      6
+ 
++/*
++ * Atheros ar7240
++ */
++#define MACH_GROUP_AR7240       24
++#define MACH_ATHEROS_AR7240     1
++
++#define MACH_GROUP_ATHEROS	24 /* Look for ATH_MACH_TYPE in arch/mips/Kconfig */
++
++/*
++ * Atheros ar7100 ( hydra )
++ */
++#define MACH_GROUP_AR7100       23
++#define MACH_ATHEROS_AR7100     1
++
++
+ #define CL_SIZE			COMMAND_LINE_SIZE
+ 
+ extern char *system_type;
+Index: linux-2.6.32.48/arch/mips/include/asm/mach-ar7240/ar7240.h
+===================================================================
+--- linux-2.6.32.48.orig/arch/mips/include/asm/mach-ar7240/ar7240.h
++++ linux-2.6.32.48/arch/mips/include/asm/mach-ar7240/ar7240.h
+@@ -1141,6 +1141,11 @@ int ar7240_local_write_config(int where,
+ int ar7240_check_error(int verbose);
+ unsigned char __ar7240_readb(const volatile void __iomem *p);
+ unsigned short __ar7240_readw(const volatile void __iomem *p);
++#ifdef AP_USB_LED_GPIO
+ void ap_usb_led_on(void);
+ void ap_usb_led_off(void);
++#else
++#define ap_usb_led_on()
++#define ap_usb_led_off()
++#endif
+ #endif
+Index: linux-2.6.32.48/arch/mips/include/asm/mach-atheros/atheros.h
+===================================================================
+--- linux-2.6.32.48.orig/arch/mips/include/asm/mach-atheros/atheros.h
++++ linux-2.6.32.48/arch/mips/include/asm/mach-atheros/atheros.h
+@@ -322,8 +322,13 @@ int ath_local_write_config(int where, in
+ int ath_check_error(int verbose);
+ unsigned char __ath_readb(const volatile void __iomem *p);
+ unsigned short __ath_readw(const volatile void __iomem *p);
++#ifdef AP_USB_LED_GPIO
+ void ap_usb_led_on(void);
+ void ap_usb_led_off(void);
++#else
++#define ap_usb_led_on()
++#define ap_usb_led_off()
++#endif
+ 
+ #ifdef CONFIG_PCI
+ void ath_pci_irq_init(int);
+Index: linux-2.6.32.48/arch/mips/kernel/cevt-r4k.c
+===================================================================
+--- linux-2.6.32.48.orig/arch/mips/kernel/cevt-r4k.c
++++ linux-2.6.32.48/arch/mips/kernel/cevt-r4k.c
+@@ -172,7 +172,18 @@ int __cpuinit r4k_clockevent_init(void)
+ 		return -ENXIO;
+ 
+ 	if (!c0_compare_int_usable())
++#if defined(CONFIG_MACH_AR934x) || defined(CONFIG_MACH_AR7100)
++		/*
++		 * The above test seems to randomly fail on Wasp. This
++		 * results in timer isr not getting registered. Later,
++		 * when the cpu receives a timer interrupt and tries
++		 * to handle it, the corresponding data structures are
++		 * not initialzed properly resulting in a panic
++		 */
++		printk("%s: Ignoring int_usable failure\n", __func__);
++#else
+ 		return -ENXIO;
++#endif
+ 
+ 	/*
+ 	 * With vectored interrupts things are getting platform specific.
+Index: linux-2.6.32.48/arch/mips/pci/Makefile
+===================================================================
+--- linux-2.6.32.48.orig/arch/mips/pci/Makefile
++++ linux-2.6.32.48/arch/mips/pci/Makefile
+@@ -18,6 +18,17 @@ obj-$(CONFIG_PCI_TX4927)	+= ops-tx4927.o
+ obj-$(CONFIG_BCM47XX)		+= pci-bcm47xx.o
+ obj-$(CONFIG_BCM63XX)		+= pci-bcm63xx.o fixup-bcm63xx.o \
+ 					ops-bcm63xx.o
++obj-$(CONFIG_MACH_AR7240)	+= fixup-ar7240.o ops-ar7240.o pci-ar7240.o
++
++ifeq ($(strip ${ATH_LOW_POWER_ENABLE}),1)
++CFLAGS_pci-ath.o += -DATH_LOW_POWER_ENABLE=1
++else
++CFLAGS_pci-ath.o += -DATH_LOW_POWER_ENABLE=0
++endif
++
++obj-$(CONFIG_MACH_AR724x)	+= fixup-ath.o ops-ath.o pci-ath.o
++obj-$(CONFIG_MACH_AR934x)	+= fixup-ath.o ops-ath.o pci-ath.o
++obj-$(CONFIG_MACH_AR7100)   += fixup-ar7100.o ops-ar7100.o pci-ar7100.o
+ 
+ #
+ # These are still pretty much in the old state, watch, go blind.
+Index: linux-2.6.32.48/drivers/net/Kconfig
+===================================================================
+--- linux-2.6.32.48.orig/drivers/net/Kconfig
++++ linux-2.6.32.48/drivers/net/Kconfig
+@@ -2485,6 +2485,173 @@ config S6GMAC
+ 
+ source "drivers/net/stmmac/Kconfig"
+ 
++config AG7240
++	tristate "Atheros AR7240 GigE"
++	depends on MACH_AR7240 || MACH_HORNET || \
++		MACH_AR724x || MACH_AR933x || MACH_AR934x
++	help
++	  This enables the building of Atheros AR7240 gigE driver module.
++
++config AR7240_PLC_FILTER
++    bool "Support power line filter"
++    depends on AG7240
++
++config FLOWMAC
++    tristate "Atheros Flowcontrol For GigE and Wifi"
++    depends on MACH_AR7240 || MACH_HORNET
++    help
++        This enables the building of Flow control between AG7100 and Wifi.
++
++config AR7240_S26_VLAN_IGMP
++	bool "Support vlan and igmp functions in AR7240-S26 switch"
++	depends on AG7240
++
++config AR7240_S27_VLAN_IGMP
++	bool "Support vlan and igmp functions in AR7240-S27 switch"
++
++config ATHEROS_HEADER_EN
++	bool "Add two bytes atheros header before the ethernet packet."
++	depends on AG7240
++
++config AG7240_GE0_IS_CONNECTED
++	bool "port 0 is connected to a PHY"
++	depends on AG7240
++
++choice
++	prompt "port 0 interface"
++	depends on AG7240_GE0_IS_CONNECTED
++	default AG7240_GE0_GMII
++
++config AG7240_GE0_MII
++	bool "MII mode"
++
++config AG7240_GE0_GMII
++	bool "GMII mode"
++
++config AG7240_GE0_RGMII
++	bool "RGMII mode"
++
++endchoice
++
++config AG7240_GE1_IS_CONNECTED
++	bool "port 1 is connected to a PHY"
++	depends on AG7240
++
++choice
++	prompt "port 1 interface"
++	depends on AG7240_GE1_IS_CONNECTED
++	default AG7240_GE1_GMII
++
++config AG7240_GE1_MII
++	bool "MII mode"
++
++config AG7240_GE1_GMII
++	bool "GMII mode"
++
++config AG7240_GE1_RGMII
++	bool "RGMII mode"
++endchoice
++
++menu "Phy or Switches used"
++	depends on AG7240_GE0_IS_CONNECTED || AG7240_GE1_IS_CONNECTED
++
++config ATHRF1_PHY
++	bool "Atheros F1 GigE Phy"
++	depends on AG7240_GE0_IS_CONNECTED
++	default n
++
++config AR7240_S26_PHY
++	bool "Atheros 7240 S26 internal Phy"
++	depends on AG7240_GE0_IS_CONNECTED || AG7240_GE1_IS_CONNECTED
++	default n
++
++config ATHRS27_PHY
++	bool "Atheros S27 Phy"
++	depends on AG7240_GE0_IS_CONNECTED
++	default n
++
++config AR8021_PHY
++	bool "Atheros AR8021 Phy"
++	depends on AG7240_GE0_IS_CONNECTED || AG7240_GE1_IS_CONNECTED
++	default n
++
++config ATHRS16_PHY
++	bool "Atheros S16 Phy"
++	depends on AG7240_GE0_IS_CONNECTED || AG7240_GE1_IS_CONNECTED
++	default n
++endmenu
++
++config AG7240_QOS
++	bool "Enable MAC 0 QOS "
++	depends on AG7240
++
++config ATHRS_HW_NAT
++	bool "Enable MAC 0 Egress and Ingress NAT engine "
++	depends on (MACH_AR934x && NF_NAT)
++
++config ATHRS_HW_ACL
++	bool "Enable MAC 0 Egress and Ingress ACL engine "
++	depends on (MACH_AR934x && IP_NF_FILTER)
++
++config ATHRS_HW_CSUM
++	bool "Enable WASP H/W Checksum Engine"
++	depends on MACH_AR934x
++
++config AG7100_LEN_PER_TX_DS
++	int "Len per tx descriptor"
++	default "1536"
++	depends on (REALTEK_PHY || ADM6996FC_PHY || ICPLUS_PHY) && AG7100
++
++config AG7100_LEN_PER_TX_DS
++	int "Len per tx descriptor"
++	default "512"
++	depends on !(REALTEK_PHY || ADM6996FC_PHY || ICPLUS_PHY) && AG7100
++
++config AG7100_MAC_LOCATION
++	hex "Memory location of MAC addresses (in flash)"
++	default "0xbfff1000"
++	help
++	  This is the physical address in memory that contains
++	  the MAC addresses for the board Ethernet interfaces.  They
++	  are stored sequentially in 6 byte groups, for the total number
++	  of interfaces supported on the board.
++	depends on AG7100
++
++config AG7240_LEN_PER_TX_DS
++	int "Len per tx descriptor"
++	default "1536"
++	depends on AG7240
++
++config  AG7240_NUMBER_TX_PKTS
++        int "Number tx pkts for intf 0"
++        default "100"
++        depends on AG7240
++
++config  AG7240_NUMBER_RX_PKTS
++        int "Number rx pkts for intf 0"
++        default "252"
++        depends on AG7240
++
++config  AG7240_NUMBER_TX_PKTS_1
++        int "Number tx pkts for intf 1"
++        default "40"
++        depends on AG7240_GE1_IS_CONNECTED
++
++config  AG7240_NUMBER_RX_PKTS_1
++        int "Number rx pkts for intf 1"
++        default "252"
++        depends on AG7240_GE1_IS_CONNECTED
++
++config  AG7240_MAC_LOCATION
++	hex "Memory location of MAC addresses (in flash)"
++	default "0xbfff0000"
++	help
++	  This is the physical address in memory that contains
++	  the MAC addresses for the board Ethernet interfaces. They
++	  are stored sequentially in 6 byte groups, for the total number
++	  of interfaces supported on the board.
++	depends on AG7240
++
+ endif # NETDEV_1000
+ 
+ #
+Index: linux-2.6.32.48/drivers/pci/Kconfig
+===================================================================
+--- linux-2.6.32.48.orig/drivers/pci/Kconfig
++++ linux-2.6.32.48/drivers/pci/Kconfig
+@@ -32,6 +32,18 @@ config PCI_LEGACY
+ 	  option serves to include/exclude only a few drivers that are
+ 	  still using this API.
+ 
++config PCI_INIT_IN_MONITOR
++	bool "PCI Initialized in bootrom"
++	depends on PCI
++	help
++	  This flag indicates that the PCI bus was initialized in the bootrom
++	  monitor, and that further hardware initialization should not be
++	  performed.  Examples are when u-boot's PCI functions are used to
++	  pre-initialize hardware at bootup time.
++
++	  Note that bus scan should still be performed to configure the PCI
++	  devices as required for the Linux system.
++
+ config PCI_DEBUG
+ 	bool "PCI Debugging"
+ 	depends on PCI && DEBUG_KERNEL
+Index: linux-2.6.32.48/drivers/usb/core/hub.c
+===================================================================
+--- linux-2.6.32.48.orig/drivers/usb/core/hub.c
++++ linux-2.6.32.48/drivers/usb/core/hub.c
+@@ -27,6 +27,14 @@
+ #include <asm/uaccess.h>
+ #include <asm/byteorder.h>
+ 
++#ifdef CONFIG_MACH_AR7240
++#include <ar7240.h>
++#endif
++
++#ifdef CONFIG_MACH_AR934x
++#include <atheros.h>
++#endif
++
+ #include "usb.h"
+ #include "hcd.h"
+ #include "hub.h"
+@@ -1576,6 +1584,7 @@ void usb_disconnect(struct usb_device **
+ 
+ 	usb_lock_device(udev);
+ 
++	ap_usb_led_off();
+ 	/* Free up all the children before we remove this device */
+ 	for (i = 0; i < USB_MAXCHILDREN; i++) {
+ 		if (udev->children[i])
+@@ -2787,6 +2796,7 @@ hub_port_init (struct usb_hub *hub, stru
+ 			retval = hub_port_reset(hub, port1, udev, delay);
+ 			if (retval < 0)		/* error or disconnect */
+ 				goto fail;
++			ap_usb_led_on();
+ 			if (oldspeed != udev->speed) {
+ 				dev_dbg(&udev->dev,
+ 					"device reset changed speed!\n");
+@@ -3108,6 +3118,15 @@ static void hub_port_connect_change(stru
+ 		if (udev->quirks & USB_QUIRK_DELAY_INIT)
+ 			msleep(1000);
+ 
++#ifdef CONFIG_USB_WARNING_WAR
++        if (udev->descriptor.bDeviceClass == USB_CLASS_HUB && udev->level > USB_MAX_HUB_TIERS)
++        {
++            dev_warn(&udev->dev, "Too long Hub tiers level is %d\n", udev->level);
++            status =-ENXIO;
++            goto loop_disable;
++        }
++#endif
++
+ 		/* consecutive bus-powered hubs aren't reliable; they can
+ 		 * violate the voltage drop budget.  if the new child has
+ 		 * a "powered" LED, users should notice we didn't enable it
+Index: linux-2.6.32.48/drivers/usb/gadget/f_ecm.c
+===================================================================
+--- linux-2.6.32.48.orig/drivers/usb/gadget/f_ecm.c
++++ linux-2.6.32.48/drivers/usb/gadget/f_ecm.c
+@@ -245,7 +245,11 @@ static struct usb_endpoint_descriptor hs
+ 
+ 	.bEndpointAddress =	USB_DIR_IN,
+ 	.bmAttributes =		USB_ENDPOINT_XFER_BULK,
++#ifdef	CONFIG_MACH_AR934x
++	.wMaxPacketSize =	cpu_to_le16(256),
++#else
+ 	.wMaxPacketSize =	cpu_to_le16(512),
++#endif
+ };
+ 
+ static struct usb_endpoint_descriptor hs_ecm_out_desc __initdata = {
+@@ -254,7 +258,11 @@ static struct usb_endpoint_descriptor hs
+ 
+ 	.bEndpointAddress =	USB_DIR_OUT,
+ 	.bmAttributes =		USB_ENDPOINT_XFER_BULK,
++#ifdef	CONFIG_MACH_AR934x
++	.wMaxPacketSize =	cpu_to_le16(256),
++#else
+ 	.wMaxPacketSize =	cpu_to_le16(512),
++#endif
+ };
+ 
+ static struct usb_descriptor_header *ecm_hs_function[] __initdata = {
+Index: linux-2.6.32.48/include/linux/miscdevice.h
+===================================================================
+--- linux-2.6.32.48.orig/include/linux/miscdevice.h
++++ linux-2.6.32.48/include/linux/miscdevice.h
+@@ -13,8 +13,11 @@
+ #define PC110PAD_MINOR		9
+ /*#define ADB_MOUSE_MINOR	10	FIXME OBSOLETE */
+ #define CRYPTODEV_MINOR		70	/* /dev/crypto */
++#define FACTORY_RESET_MINOR     129     /* Factory reset minor */
+ #define WATCHDOG_MINOR		130	/* Watchdog timer     */
+ #define TEMP_MINOR		131	/* Temperature Sensor */
++#define ATH_OTP_MINOR		132	/* Atheros OTP */
++#define ATH_CLKSW_MINOR		133	/* Atheros OTP */
+ #define RTC_MINOR		135
+ #define EFI_RTC_MINOR		136	/* EFI Time services */
+ #define SUN_OPENPROM_MINOR	139
+Index: linux-2.6.32.48/arch/mips/include/asm/checksum.h
+===================================================================
+--- linux-2.6.32.48.orig/arch/mips/include/asm/checksum.h
++++ linux-2.6.32.48/arch/mips/include/asm/checksum.h
+@@ -91,6 +91,14 @@ static inline __sum16 csum_fold(__wsum s
+ 	return (__force __sum16)sum;
+ }
+ 
++#ifdef CONFIG_ATHRS_HW_CSUM
++typedef struct
++{
++    __sum16 (*compute_csum_hw)(const void *buff, int len);
++} csum_hw_ops;
++extern csum_hw_ops *csum_hw;
++#endif
++
+ /*
+  *	This is a version of ip_compute_csum() optimized for IP headers,
+  *	which always checksum on 4 octet boundaries.
+@@ -104,6 +112,19 @@ static inline __sum16 ip_fast_csum(const
+ 	const unsigned int *stop = word + ihl;
+ 	unsigned int csum;
+ 	int carry;
++#if 0
++#ifdef CONFIG_ATHRS_HW_CSUM
++        __sum16 (*compute_csum)(const void *buff, int len);
++        __sum16 csum;
++        if (csum_hw) {
++                compute_csum = rcu_dereference(csum_hw->compute_csum_hw);
++                if (compute_csum) {
++                        csum = compute_csum(iph, ihl);
++                        printk("hw checksum = 0x%x\n", csum);
++                }
++        }
++#endif
++#endif
+ 
+ 	csum = word[0];
+ 	csum += word[1];
+Index: linux-2.6.32.48/arch/mips/kernel/head.S
+===================================================================
+--- linux-2.6.32.48.orig/arch/mips/kernel/head.S
++++ linux-2.6.32.48/arch/mips/kernel/head.S
+@@ -98,6 +98,9 @@
+ 	mfc0	t0, CP0_STATUS
+ 	or	t0, ST0_CU0|\set|0x1f|\clr
+ 	xor	t0, 0x1f|\clr
++#ifdef CONFIG_CPU_HAS_DSP_ASE
++	or      t0, ST0_MX
++#endif
+ 	mtc0	t0, CP0_STATUS
+ 	.set	noreorder
+ 	sll	zero,3				# ehb
+Index: linux-2.6.32.48/arch/mips/include/asm/mipsregs.h
+===================================================================
+--- linux-2.6.32.48.orig/arch/mips/include/asm/mipsregs.h
++++ linux-2.6.32.48/arch/mips/include/asm/mipsregs.h
+@@ -403,6 +403,7 @@
+ #define ST0_SR			0x00100000
+ #define ST0_TS			0x00200000
+ #define ST0_BEV			0x00400000
++#define ST0_MX                  0x01000000
+ #define ST0_RE			0x02000000
+ #define ST0_FR			0x04000000
+ #define ST0_CU			0xf0000000
+Index: linux-2.6.32.48/drivers/usb/core/Kconfig
+===================================================================
+--- linux-2.6.32.48.orig/drivers/usb/core/Kconfig
++++ linux-2.6.32.48/drivers/usb/core/Kconfig
+@@ -9,6 +9,15 @@ config USB_DEBUG
+ 	  of debug messages to the system log. Select this if you are having a
+ 	  problem with USB support and want to see more of what is going on.
+ 
++config USB_WARNING_WAR
++    bool "USB warning messages"
++    depends on USB
++    help
++     Say Y if your host side USB need to support USB-IF Embedded Host
++     Compliance Plan section C.2 Interoperability 3.a and 4.a items.
++     Which will support the corresponding messages when plug-in
++     unsupported USB device or attach too many USB hubs.
++
+ config USB_ANNOUNCE_NEW_DEVICES
+ 	bool "USB announce new devices"
+ 	depends on USB
+Index: linux-2.6.32.48/net/bridge/br_fdb.c
+===================================================================
+--- linux-2.6.32.48.orig/net/bridge/br_fdb.c
++++ linux-2.6.32.48/net/bridge/br_fdb.c
+@@ -66,9 +66,13 @@ static inline int has_expired(const stru
+ 
+ static inline int br_mac_hash(const unsigned char *mac)
+ {
++#ifdef CONFIG_ATH_PERF
++	return jhash(mac, ETH_ALEN, 0) & (BR_HASH_SIZE - 1);
++#else
+ 	/* use 1 byte of OUI cnd 3 bytes of NIC */
+ 	u32 key = get_unaligned((u32 *)(mac + 2));
+ 	return jhash_1word(key, fdb_salt) & (BR_HASH_SIZE - 1);
++#endif
+ }
+ 
+ static void fdb_rcu_free(struct rcu_head *head)

@@ -1,0 +1,695 @@
+--- a/src/lex.c
++++ b/src/lex.c
+@@ -175,15 +175,17 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "chgrp",INTFUNC2,ChGrp },
+ 	  { "mkdir",INTFUNC2,MkDir },
+ 	  { "rmdir",INTFUNC1,RmDir },
+ #ifdef LIBM
+ 	  { "log10",INTFUNC1,mathLog10 },
+ #endif
+ 	  { "unset",UNSET,NULL },
++#ifdef HAVE_LIBMYSQL
+ 	  { "mysql",INTFUNC2,MYsql },
++#endif
+ 	  { "asort",PHPASORT,NULL },
+ 	  { "umask",UMASK,NULL },
+ 	  { "logas", INTFUNC1,LogAs },
+ 	  { "rsort",PHPRSORT,NULL },
+ 	  { "strtr",INTFUNC3,StrTr },
+ #ifdef LIBM
+ 	  { "floor",INTFUNC1,Floor },
+@@ -395,15 +397,17 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "imagestring", IMAGESTRING,NULL },
+ 	  { "setshowinfo", INTFUNC1,SetShowInfo },
+ #ifdef HAVE_LIBMSQL
+ 	  { "msql_dbname", INTFUNC2,MsqlDBName },
+ 	  { "msql_dropdb", INTFUNC1,MsqlDropDB },
+ #endif
+ 	  { "pg_fieldnum", INTFUNC2,PGfieldNum },
++#ifdef HAVE_LIBMYSQL
+ 	  { "mysql_close", INTFUNC0,MYsqlClose },
++#endif
+ 	  { "solid_close", INTFUNC1,Solid_close },
+ 	  { "sybsql_seek",INTFUNC1,SybsqlSeek},
+ 	  { "sybsql_exit",INTFUNC0,SybsqlExit},
+ #ifdef ILLUSTRA
+ 	  { "mi_fieldnum", INTFUNC3,MIfieldNum },
+ #endif
+ 	  { "phpshowpool",INTFUNC0,ShowPool },
+@@ -429,17 +433,19 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "msql_listdbs", INTFUNC0,MsqlListDBs },
+ #endif
+ 	  { "pg_numfields", INTFUNC1,PGnumFields },
+ 	  { "pg_fieldname", INTFUNC2,PGfieldName },
+ 	  { "pg_fieldtype", INTFUNC2,PGfieldType },
+ 	  { "pg_fieldsize", INTFUNC2,PGfieldSize },
+ 	  { "stripslashes", INTFUNC1,_StripSlashes },
++#ifdef HAVE_LIBMYSQL
+ 	  { "mysql_result", INTFUNC3, MYsqlResult },
+ 	  { "mysql_dbname", INTFUNC2,MYsqlDBName },
+ 	  { "mysql_dropdb", INTFUNC1,MYsqlDropDB },
++#endif
+ 	  { "solid_result", INTFUNC2,Solid_result },
+ 	  { "sybsql_dbuse", INTFUNC1,SybsqlDbuse },
+ 	  { "sybsql_query", INTFUNC1,SybsqlQuery },
+ 	  { "sybsql_isrow", INTFUNC0,SybsqlIsRow }, 
+ 	  { "getimagesize", INTFUNC1,GetImageSize },
+ 	  { "ora_commiton", INTFUNC1,Ora_CommitOn },
+ 	  { "ora_rollback", INTFUNC1,Ora_Rollback },
+@@ -462,17 +468,19 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "imagesetpixel", INTFUNC4,ImageSetPixel },
+ 	  { "imagestringup", IMAGESTRINGUP,NULL },
+ #ifdef HAVE_LIBMSQL
+ 	  { "msql_createdb", INTFUNC1,MsqlCreateDB },
+ #endif
+ 	  { "pg_freeresult", INTFUNC1,PGfreeResult },
+ 	  { "pg_getlastoid", INTFUNC0,PGgetlastoid },
++#ifdef HAVE_LIBMYSQL
+ 	  { "mysql_connect", MYSQL_CONNECT,NULL },
+ 	  { "mysql_numrows", INTFUNC1,MYsqlNumRows },
+ 	  { "mysql_listdbs", INTFUNC0,MYsqlListDBs },
++#endif
+ 	  { "solid_numrows", INTFUNC1,Solid_numRows },
+ 	  { "solid_connect", INTFUNC3,Solid_connect },
+ 	  { "sybsql_result", INTFUNC1,SybsqlResult}, 
+ 	  { "ora_commitoff", INTFUNC1,Ora_CommitOff },
+ 	  { "ora_getcolumn", INTFUNC2,Ora_GetColumn },
+ 	  { "getallheaders", INTFUNC0,GetAllHeaders },
+ #if HAVE_LIBADABAS
+@@ -496,16 +504,18 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "imagerectangle", INTFUNC6,ImageRectangle },
+ 	  { "imageinterlace", INTFUNC2,ImageInterlace },
+ #ifdef HAVE_LIBMSQL
+ 	  { "msql_tablename", INTFUNC2,MsqlTableName },
+ #endif
+ 	  { "pg_fieldprtlen", INTFUNC3,PGfieldPrtLen },
+ 	  { "escapeshellcmd", INTFUNC1,EscapeShellCmd },
++#ifdef HAVE_LIBMYSQL
+ 	  { "mysql_fieldlen", MYSQL_FIELDLEN,NULL },
+-	  { "mysql_createdb", INTFUNC1,MYsqlCreateDB },   
++	  { "mysql_createdb", INTFUNC1,MYsqlCreateDB },
++#endif
+ 	  { "solid_fieldnum", INTFUNC2,Solid_fieldNum },
+ 	  { "solid_fetchrow", INTFUNC1,Solid_fetchRow },
+ #ifdef HAVE_LIBMSQL
+ 	  { "msql_listindex", INTFUNC3,MsqlListIndex },
+ #endif
+ 	  { "sybsql_connect", INTFUNC0,SybsqlConnect }, 
+ 	  { "sybsql_nextrow", INTFUNC0,SybsqlNextRow },
+@@ -521,30 +531,34 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "msql_freeresult", INTFUNC1,MsqlFreeResult },
+ 	  { "msql_fieldflags", MSQL_FIELDFLAGS,NULL },
+ 	  { "msql_listtables", INTFUNC1,MsqlListTables },
+ 	  { "msql_listfields", INTFUNC2,MsqlListFields },
+ #endif
+ 	  { "getstartlogging", INTFUNC0,GetStartLogging },
+ 	  { "pg_errormessage", INTFUNC1,PGerrorMessage },
++#ifdef HAVE_LIBMYSQL
+ 	  { "mysql_fieldname", MYSQL_FIELDNAME,NULL },
+ 	  { "mysql_fieldtype", MYSQL_FIELDTYPE,NULL },
+ 	  { "mysql_numfields", INTFUNC1,MYsqlNumFields },
+ 	  { "mysql_tablename", INTFUNC2,MYsqlTableName },
+-	  { "mysql_insert_id", INTFUNC0,MYsqlInsertId },	  
++	  { "mysql_insert_id", INTFUNC0,MYsqlInsertId },
++#endif
+ 	  { "solid_numfields", INTFUNC1,Solid_numFields },
+ 	  { "solid_fieldname", INTFUNC2,Solid_fieldName },
+ 	  { "sybsql_getfield", INTFUNC1,SybsqlGetField},
+ 	  { NULL,0,NULL } },
+ 
+ 	{ { "htmlspecialchars", INTFUNC1,HtmlSpecialChars }, /* 16 */
+ 	  { "imagecopyresized", IMAGECOPYRESIZED,NULL },
++#ifdef HAVE_LIBMYSQL
+ 	  { "mysql_freeresult", INTFUNC1,MYsqlFreeResult },
+ 	  { "mysql_fieldflags", MYSQL_FIELDFLAGS,NULL },
+ 	  { "mysql_listtables", INTFUNC1,MYsqlListTables },
+ 	  { "mysql_listfields", INTFUNC2,MYsqlListFields },
++#endif
+ 	  { "solid_freeresult", INTFUNC1,Solid_freeResult },
+ 	  { "sybsql_numfields", INTFUNC0,SybsqlNumFields},
+ 	  { "sybsql_fieldname", INTFUNC1,SybsqlFieldName},
+ #if HAVE_FILEPRO
+ 	  { "filepro_rowcount", INTFUNC0,filePro_rowcount},
+ 	  { "filepro_retrieve", INTFUNC2,filePro_retrieve},
+ #endif
+@@ -564,15 +578,18 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "imagecreatefromgif", INTFUNC1,ImageCreateFromGif },
+ #if HAVE_FILEPRO
+ 	  { "filepro_fieldcount", INTFUNC0,filePro_fieldcount},
+ 	  { "filepro_fieldwidth", INTFUNC1,filePro_fieldwidth},
+ #endif
+ 	  { NULL,0,NULL } },
+ 	  
+-	{ { "mysql_affected_rows", INTFUNC0, MYsqlAffectedRows }, /* 19 */
++	{
++#ifdef HAVE_LIBMYSQL
++	  { "mysql_affected_rows", INTFUNC0, MYsqlAffectedRows }, /* 19 */
++#endif
+ 	  { "sybsql_checkconnect", INTFUNC0, SybsqlCheckConnect }, /* 19 */
+ 	  { NULL,0,NULL } },
+ 
+ 	{ { "imagefilledrectangle", INTFUNC6,ImageFilledRectangle }, /* 20 */
+ 	  { NULL,0,NULL } }, 
+ 
+ 	{ { "imagecolortransparent", INTFUNC2,ImageColorTransparent }, /* 21 */
+--- a/src/mysql.c
++++ b/src/mysql.c
+@@ -57,16 +57,16 @@ static char *CurrentHost=NULL;
+ static char *CurrentUser=NULL;
+ static char *CurrentPassword=NULL;
+ static char *CurrentTcpPort=NULL;
+ static char *CurrentUnixPort=NULL;
+ static int mysql_ind=1;
+ #endif
+ 
+-void php_init_mysql(char *defaulthost) {
+ #ifdef HAVE_LIBMYSQL
++void php_init_mysql(char *defaulthost) {
+ #ifdef HAVE_PWD_H
+ 	struct passwd *pwd;
+ #endif
+ 	char * name;
+ 	static char junk[1];
+ 	CurrentTcpPort=&junk[0];
+ 	CurrentUnixPort=&junk[0];
+@@ -96,16 +96,16 @@ void php_init_mysql(char *defaulthost) {
+ 	}
+ #endif
+ #endif
+ 	CurrentHost=defaulthost;
+ 	CurrentPassword=NULL;
+ 	CurrentDB[0]='\0';
+ 	mysql_ind=1;
+-#endif
+ }
++#endif
+ 
+ #ifdef HAVE_LIBMYSQL
+ int mysql_add_result(MYSQL_RES *result) {
+ 	ResultList *new;
+ 
+ 	new = result_top;
+ 	if(!new) {
+@@ -128,18 +128,16 @@ MYSQL_RES *mysql_get_result(int count) {
+ 	new = result_top;
+ 	while(new) {
+ 		if(new->ind == count) return(new->result);
+ 		new=new->next;
+ 	}	
+ 	return(NULL);
+ }
+-#endif
+ 
+ void mysql_del_result(int count) {
+-#ifdef HAVE_LIBMYSQL
+ 	ResultList *new, *prev, *next;
+ 
+ 	prev=NULL;
+ 	new = result_top;
+ 	while(new) {
+ 		next = new->next;
+ 		if(new->ind == count) {
+@@ -147,36 +145,36 @@ void mysql_del_result(int count) {
+ 			if(prev) prev->next = next;
+ 			else result_top = next;
+ 			break;
+ 		}
+ 		prev=new;
+ 		new=next;
+ 	}	
+-#endif
+ }
++#endif
+ 
+-void MYsqlClose(void) {
+ #ifdef HAVE_LIBMYSQL
++void MYsqlClose(void) {
+ 	ResultList *new,*next;
+ 
+ 	new = result_top;	
+ 	while(new) {
+ 		next = new->next;	
+ 		mysql_free_result(new->result);
+ 		new = next;
+ 	}
+ 	result_top = NULL;
+ 	if(dbsock != NULL) mysql_close(dbsock);
+ 	dbsock=NULL;
+ 	CurrentDB[0]='\0';
+-#endif
+ }
+-	
+-void MYsql(void) {
++#endif
++
+ #ifdef HAVE_LIBMYSQL
++void MYsql(void) {
+ 	Stack *s;
+ 	char *query=NULL;
+ #ifndef APACHE
+ 	static int First=1;
+ 	char junk[1];
+ #endif
+ 	int j;
+@@ -285,21 +283,16 @@ void MYsql(void) {
+ 		if(!strncasecmp(query,"insert",6) || !strncasecmp(query,"update",6) || !strncasecmp(query,"create",6) || !strncasecmp(query,"drop",4) || !strncasecmp(query,"delete",6))
+ 			j=0;
+ 		else
+ 			j=-1;
+ 	}
+ 	sprintf(temp,"%d",j);
+ 	Push(temp,LNUMBER);
+-#else
+-	Pop();
+-	Pop();
+-	Push("0",LNUMBER);
+-	Error("No mySQL support");
+-#endif
+ } 
++#endif
+ 
+ void MYsqlConnect(int t) {
+ #ifdef HAVE_LIBMYSQL
+ 	Stack *s;
+ 
+ 	if(t>1) {
+ 		s = Pop();
+@@ -345,16 +338,16 @@ void MYsqlConnect(int t) {
+ #else
+ 	Pop();
+ 	Push("-1",LNUMBER);
+ 	Error("No mySQL support");
+ #endif	
+ }
+ 
+-void MYsqlResult(void) {
+ #ifdef HAVE_LIBMYSQL
++void MYsqlResult(void) {
+ 	Stack *s;
+ 	int i,j;
+ 	char fieldname[128];
+ 	char tablename[128];
+ 	MYSQL_ROW record;
+ 	MYSQL_RES *result;
+ 	MYSQL_FIELD *mysql_field;
+@@ -459,45 +452,37 @@ void MYsqlResult(void) {
+ 					break;
+ 				}
+ 				done=1;
+ 			}
+ 		}
+ 		i++;
+ 	}
+-#else
+-	Pop();
+-	Pop();
+-	Push("",STRING);
+-	Error("No mySQL support");
+-#endif
+ }
++#endif
+ 
+-void MYsqlFreeResult(void) {
+ #ifdef HAVE_LIBMYSQL 
++void MYsqlFreeResult(void) {
+ 	Stack *s;
+ 
+ 	s = Pop();
+ 	if(!s) {
+ 		Error("Stack error in mysql_result");
+ 		return;
+ 	}
+ 	if(s->strval) {
+ 		mysql_del_result(s->intval);
+ 	} else {
+ 		Error("Invalid result index in mysql_freeresult");
+ 		return;
+ 	}	
+-#else
+-	Pop();
+-	Error("No mySQL support");
+-#endif
+ }
++#endif
+ 
+-void MYsqlNumRows(void) {
+ #ifdef HAVE_LIBMYSQL
++void MYsqlNumRows(void) {
+ 	Stack *s;
+ 	char temp[16];
+ 	MYSQL_RES *result;
+ 
+ 	s = Pop();
+ 	if(!s) {
+ 		Error("Stack error in mysql_numrows");
+@@ -513,23 +498,19 @@ void MYsqlNumRows(void) {
+ 		sprintf(temp,"%ld",mysql_num_rows(result));
+ 	} else {
+ 		Error("Invalid result index in mysql_numrows");
+ 		Push("-1", LNUMBER);
+ 		return;
+ 	}	
+ 	Push(temp,LNUMBER);
+-#else
+-	Pop();
+-	Push("-1", LNUMBER);
+-	Error("No mySQL support");
+-#endif
+ }
++#endif
+ 
+-void MYsqlNumFields(void) {
+ #ifdef HAVE_LIBMYSQL
++void MYsqlNumFields(void) {
+ 	Stack *s;
+ 	char temp[16];
+ 	MYSQL_RES *result;
+ 
+ 	s = Pop();
+ 	if(!s) {
+ 		Error("Stack error in mysql_numfields");
+@@ -545,20 +526,16 @@ void MYsqlNumFields(void) {
+ 		sprintf(temp,"%d",mysql_num_fields(result));
+ 	} else {
+ 		Error("Invalid result index in mysql_numfields");
+ 		Push("-1", LNUMBER);
+ 		return;
+ 	}	
+ 	Push(temp,LNUMBER);
+-#else
+-	Pop();
+-	Error("No mySQL support");
+-	Push("-1", LNUMBER);
+-#endif
+ }
++#endif
+ 
+ /* checks a field
+  *
+  * type = 1   pushes fieldname
+  * type = 2   pushes fieldtype
+  * type = 3   pushes fieldlen
+  * type = 4   pushes fieldflags
+@@ -679,16 +656,16 @@ void MYsqlField(int type) {
+ #else
+ 	Pop();
+ 	Error("No mySQL support");
+ 	Push("", STRING);
+ #endif
+ } 
+ 
+-void MYsqlTableName(void){
+ #ifdef HAVE_LIBMYSQL
++void MYsqlTableName(void){
+ 	Stack *s;
+ 	int res_index=0;
+ 	int tb_index=0;
+ 	MYSQL_RES *res=NULL;
+ 	MYSQL_ROW	  row;
+ 
+ 	s = Pop();
+@@ -722,24 +699,19 @@ void MYsqlTableName(void){
+ 	mysql_data_seek(res, tb_index);
+ 	row=mysql_fetch_row(res);
+ 	if (row) {
+ 		Push((char *)row[0], STRING);
+ 		return;
+ 	}
+ 	Push("", STRING);
+-#else
+-	Pop();
+-	Pop();
+-	Push("", STRING);
+-	Error("No mySQL support");
+-#endif	
+ }
++#endif
+ 
+-void MYsqlListTables(void) {
+ #ifdef HAVE_LIBMYSQL
++void MYsqlListTables(void) {
+ 	char* dbname;
+ 	Stack *s;
+ 	MYSQL_RES *res=NULL;
+ 	int tb_res; 
+ #ifndef APACHE
+ 	static int First=1;
+ 	char junk[1];
+@@ -817,49 +789,40 @@ void MYsqlListTables(void) {
+ 		Error("Unable to find any table in %s", dbname); 
+ 		Push("-1", LNUMBER);
+ 		return;
+ 	}
+ 
+ 	sprintf(temp, "%d", tb_res);
+ 	Push(temp, LNUMBER);
+-
+-#else
+-	Pop();
+-	Push("0", LNUMBER);
+-	Error("No mySQL support");
+-#endif
+ }
++#endif
+ 
+-MYSQL *mysqlGetDbSock() {
+ #ifdef HAVE_LIBMYSQL
++MYSQL *mysqlGetDbSock() {
+ 	return(dbsock);
+-#else
+-	return(0);
+-#endif
+ }
++#endif
+ 
+-MYSQL *mysqlGetPtr() {
+ #ifdef HAVE_LIBMYSQL
++MYSQL *mysqlGetPtr() {
+ 	return(&mysql);
+-#else
+-	return(0);
+-#endif
+ }
++#endif
+ 
+-void mysqlSetCurrent(MYSQL *sock, char *newdb) {
+ #ifdef HAVE_LIBMYSQL
++void mysqlSetCurrent(MYSQL *sock, char *newdb) {
+ 	CurrentTcpPort = getenv("MYSQL_TCP_PORT");
+ 	CurrentUnixPort = getenv("MYSQL_UNIX_PORT");
+ 	dbsock = sock;
+ 	strcpy(CurrentDB, newdb);
+-#endif
+ }
++#endif
+ 
+-void MYsqlCreateDB(void) {
+ #ifdef HAVE_LIBMYSQL
++void MYsqlCreateDB(void) {
+ 	char* dbname;
+ 	Stack *s;
+ #ifndef APACHE
+ 	static int First=1;
+ 	char junk[1];
+ #endif
+ 	char *tcpPort, *unixPort;
+@@ -920,22 +883,19 @@ void MYsqlCreateDB(void) {
+ 		}
+ 	}
+  
+ 	if(mysql_create_db(dbsock,dbname)<0) {
+ 		Error("Unable to create mySQL Data Base (%s)", mysql_error(&mysql));
+ 		return;
+ 	}
+-#else
+-	Pop();
+-	Error("No mySQL support");
+-#endif
+ }
++#endif
+ 
+-void MYsqlDropDB(void) {
+ #ifdef HAVE_LIBMYSQL
++void MYsqlDropDB(void) {
+ 	char *dbname;
+ 	Stack *s;
+ #ifndef APACHE
+ 	static int First=1;
+ 	char junk[1];
+ #endif
+ 	char *tcpPort, *unixPort;
+@@ -996,22 +956,19 @@ void MYsqlDropDB(void) {
+ 		}
+ 	}
+ 
+ 	if(mysql_drop_db(dbsock,dbname)<0){
+ 		Error("Unable to drop mySQL Data Base (%s)", mysql_error(&mysql));
+ 		return;
+ 	}
+-#else
+-	Pop();
+-	Error("No mySQL support");
+-#endif
+ }
++#endif
+ 
+-void MYsqlListDBs(void) {
+ #ifdef HAVE_LIBMYSQL
++void MYsqlListDBs(void) {
+ 	char *hostname;
+ 	MYSQL_RES *res=NULL;
+ 	int db_res; 
+ #ifndef APACHE
+ 	static int First=1;
+ 	char junk[1];
+ #endif
+@@ -1071,23 +1028,19 @@ void MYsqlListDBs(void) {
+ 		Error("Unable to find any data bases in host: %s", hostname); 
+ 		Push("-1", LNUMBER);
+ 		return;
+ 	}
+ 
+ 	sprintf(temp, "%d", db_res);
+ 	Push(temp, LNUMBER);
+-
+-#else
+-	Push("0", LNUMBER);
+-	Error("No mySQL support");
+-#endif
+ }
++#endif
+ 
+-void MYsqlDBName(void){
+ #ifdef HAVE_LIBMYSQL
++void MYsqlDBName(void){
+ 	Stack *s;
+ 	int res_index=0;
+ 	int db_index=0;
+ 	MYSQL_RES *res=NULL;
+ 	MYSQL_ROW     row;
+ 
+ 	s = Pop();
+@@ -1125,24 +1078,19 @@ void MYsqlDBName(void){
+ 	mysql_data_seek(res, db_index);
+ 	row=mysql_fetch_row(res);
+ 	if (row) {
+ 		Push((char *)row[0], STRING);
+ 		return;
+ 	}
+ 	Push("", STRING);
+-#else
+-	Pop();
+-	Pop();
+-	Push("", STRING);
+-	Error("No mySQL support");
+-#endif
+ }
++#endif
+ 
+-void MYsqlListFields(void) {
+ #ifdef HAVE_LIBMYSQL
++void MYsqlListFields(void) {
+ 	Stack *s;
+ 	char *tablename=NULL;
+ #ifndef APACHE
+ 	static int First=1;
+ 	char junk[1];
+ #endif
+ 	int j;
+@@ -1248,54 +1196,43 @@ void MYsqlListFields(void) {
+ #endif
+ 	if(result) j = mysql_add_result(result);
+ 	else {
+ 	        j=-1;
+ 	}
+ 	sprintf(temp,"%d",j);
+ 	Push(temp,LNUMBER);
+-#else
+-	Pop();
+-	Pop();
+-	Push("0",LNUMBER);
+-	Error("No mySQL support");
+-#endif
+ }  /* MsqlListFields */
++#endif
+ 
+-void MYsqlInsertId(void) {
+ #ifdef HAVE_LIBMYSQL
++void MYsqlInsertId(void) {
+ 	char temp[16];
+ 	MYSQL *res;
+ 	
+ 	res = mysqlGetDbSock();
+ 	if(res != NULL) 
+ 		sprintf(temp,"%ld",mysql_insert_id(res));
+ 	else {
+ 		Error("Invalid result index in mysql_insert_id");
+ 		Push("-1", LNUMBER);
+ 		return;
+ 	}	
+ 	Push(temp,LNUMBER);
+-#else
+-	Error("No mySQL support");
+-	Push("0", LNUMBER);
+-#endif
+ }
++#endif
+ 
+-void MYsqlAffectedRows(void) {
+ #ifdef HAVE_LIBMYSQL
++void MYsqlAffectedRows(void) {
+ 	char temp[16];
+ 	MYSQL *res;
+ 
+ 	res = mysqlGetDbSock();
+ 	if(res) {
+ 		sprintf(temp,"%ld",mysql_affected_rows(res));
+ 	} else {
+ 		Error("Invalid database identifier in mysql_affected_rows");
+ 		Push("-1", LNUMBER);
+ 		return;
+ 	}	
+ 	Push(temp,LNUMBER);
+-#else
+-	Error("No mySQL support");
+-	Push("0", LNUMBER);
+-#endif
+ }
++#endif
+--- a/src/php.h
++++ b/src/php.h
+@@ -1222,14 +1222,15 @@ int strncasecmp(char *, char *, int);
+ char *strdup(char *);
+ #endif
+ #ifndef HAVE_STRERROR
+ char *strerror(int);
+ #endif
+ 
+ /* mysql.c */
++#ifdef HAVE_LIBMYSQL
+ void php_init_mysql(char *);
+ void MYsql(void);
+ void MYsqlResult(void);
+ void MYsqlClose(void);
+ void MYsqlConnect(int);
+ void MYsqlFreeResult(void);
+ void MYsqlNumRows(void);
+@@ -1241,14 +1242,18 @@ void MYsqlTableName(void);
+ void MYsqlListDBs(void);
+ void MYsqlDBName(void);
+ void MYsqlDropDB(void);
+ void MYsqlCreateDB(void);
+ void MYsqlInsertId(void);
+ void MYsqlAffectedRows(void);
+ void mysqlSetCurrent();
++#else
++#define php_init_mysql(a)
++#define MYsqlClose()
++#endif
+ 
+ /* adabasd.c */
+ #ifdef HAVE_LIBADABAS
+ void Ada_exec(void);
+ void Ada_close(void);
+ void Ada_result(void);
+ void Ada_resultAll(int);

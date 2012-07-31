@@ -1,0 +1,252 @@
+--- a/src/calc.c
++++ b/src/calc.c
+@@ -588,27 +588,30 @@ void Abs(void) {
+ 	}
+ 	if(s->type==DNUMBER) sprintf(temp,"%f",fabs(s->douval));	
+ 	else sprintf(temp,"%ld",labs(s->intval));
+ 	Push(temp,s->type);
+ }
+ 
+ void Exp(void) {
++#ifdef LIBM
+ 	Stack *s;
+ 	char temp[64];
+ 
+ 	s = Pop();
+ 	if(!s) {
+ 		Error("Stack error in exp");
+ 		return;
+ 	}
+ 	sprintf(temp,"%f",exp(s->douval));	
+ 	Push(temp,DNUMBER);
++#endif
+ }
+ 
+ void Pow(void) {
++#ifdef LIBM
+ 	Stack *s;
+ 	char temp[64];
+ 	double power;
+ 
+ 	s = Pop();
+ 	if(!s) {
+ 		Error("Stack error in pow");
+@@ -618,82 +621,94 @@ void Pow(void) {
+ 	s = Pop();
+ 	if(!s) {
+ 		Error("Stack error in pow");
+ 		return;
+ 	}
+ 	sprintf(temp,"%f",pow(s->douval,power));	
+ 	Push(temp,DNUMBER);
++#endif
+ }
+ 
+ void mathLog(void) {
++#ifdef LIBM
+ 	Stack *s;
+ 	char temp[64];
+ 
+ 	s = Pop();
+ 	if(!s) {
+ 		Error("Stack error in log");
+ 		return;
+ 	}
+ 	sprintf(temp,"%f",log(s->douval));	
+ 	Push(temp,DNUMBER);
++#endif
+ }
+ 
+ void mathLog10(void) {
++#ifdef LIBM
+ 	Stack *s;
+ 	char temp[64];
+ 
+ 	s = Pop();
+ 	if(!s) {
+ 		Error("Stack error in log10");
+ 		return;
+ 	}
+ 	sprintf(temp,"%f",log10(s->douval));	
+ 	Push(temp,DNUMBER);
++#endif
+ }
+ 
+ void Sin(void) {
++#ifdef LIBM
+ 	Stack *s;
+ 	char temp[64];
+ 
+ 	s = Pop();
+ 	if(!s) {
+ 		Error("Stack error in sin");
+ 		return;
+ 	}
+ 	sprintf(temp,"%f",sin(s->douval));	
+ 	Push(temp,DNUMBER);
++#endif
+ }
+ 
+ void Cos(void) {
++#ifdef LIBM
+ 	Stack *s;
+ 	char temp[64];
+ 
+ 	s = Pop();
+ 	if(!s) {
+ 		Error("Stack error in cos");
+ 		return;
+ 	}
+ 	sprintf(temp,"%f",cos(s->douval));	
+ 	Push(temp,DNUMBER);
++#endif
+ }
+ 
+ void Tan(void) {
++#ifdef LIBM
+ 	Stack *s;
+ 	char temp[64];
+ 
+ 	s = Pop();
+ 	if(!s) {
+ 		Error("Stack error in tan");
+ 		return;
+ 	}
+ 	sprintf(temp,"%f",tan(s->douval));	
+ 	Push(temp,DNUMBER);
++#endif
+ }
+ 
+ void Sqrt(void) {
++#ifdef LIBM
+ 	Stack *s;
+ 	char temp[64];
+ 
+ 	s = Pop();
+ 	if(!s) {
+ 		Error("Stack error in sqrt");
+ 		return;
+@@ -701,35 +716,40 @@ void Sqrt(void) {
+ 	/* Square root of a negative number will result in 0 */
+ 	if(s->douval < 0) {
+ 		Push("0",DNUMBER);
+ 		return;
+ 	}
+ 	sprintf(temp,"%f",sqrt(s->douval));	
+ 	Push(temp,DNUMBER);
++#endif
+ }
+ 
+ void Ceil(void) {
++#ifdef LIBM
+ 	Stack *s;
+ 	char temp[64];
+ 
+ 	s = Pop();
+ 	if(!s) {
+ 		Error("Stack error in ceil");
+ 		return;
+ 	}
+ 	sprintf(temp,"%f",ceil(s->douval));
+ 	Push(temp,DNUMBER);
++#endif
+ }
+ 
+ void Floor(void) {
++#ifdef LIBM
+ 	Stack *s;
+ 	char temp[64];
+ 
+ 	s = Pop();
+ 	if(!s) {
+ 		Error("Stack error in floor");
+ 		return;
+ 	}
+ 	sprintf(temp,"%f",floor(s->douval));
+ 	Push(temp,DNUMBER);
++#endif
+ }
+ 
+--- a/src/lex.c
++++ b/src/lex.c
+@@ -100,23 +100,27 @@ static cmd_table_t cmd_table[PHP_MAX_CMD
+ 	{ { "if", IF, NULL },        /* 2 */
+ 	  { NULL,0,NULL } }, 
+ 
+ 	{ { "max", INTFUNC1,ArrayMax }, /* 3 */
+ 	  { "min", INTFUNC1,ArrayMin },
+ 	  { "key", KEY,NULL },
+ 	  { "end", END,NULL },
++#ifdef LIBM
+ 	  { "sin", INTFUNC1,Sin },
+ 	  { "cos", INTFUNC1,Cos },
+ 	  { "tan", INTFUNC1,Tan },
+ 	  { "exp", INTFUNC1,Exp },
+ 	  { "log", INTFUNC1,mathLog },
++#endif
+ 	  { "abs", INTFUNC1,Abs },
+ 	  { "ord", INTFUNC1,Ord },
+ 	  { "chr", INTFUNC1,Chr },
++#ifdef LIBM
+ 	  { "pow", INTFUNC2,Pow },
++#endif
+ 	  { "pos", INTFUNC1,Pos },
+ 	  { "md5", INTFUNC1,Md5 },
+ 	  { "shl", INTFUNC2,shl },
+ 	  { "shr", INTFUNC2,shr },
+ 	  { NULL,0,NULL } }, 
+ 
+ 	{ { "echo",PHPECHO,NULL },     /* 4 */
+@@ -130,20 +134,24 @@ static cmd_table_t cmd_table[PHP_MAX_CMD
+ 	  { "exec",EXEC,NULL },
+ 	  { "time",INTFUNC0,UnixTime },
+ 	  { "date",DATE,NULL },
+ 	  { "next",PHPNEXT,NULL },
+ 	  { "prev",PREV,NULL },
+ 	  { "sort",PHPSORT,NULL },
+ 	  { "rand",INTFUNC0,Rand },
++#ifdef LIBM
+ 	  { "sqrt",INTFUNC1,Sqrt },
++#endif
+ 	  { "file",INTFUNC1,PHPFile },
+ 	  { "link",INTFUNC2,Link },
+ 	  { "mail",PHPMAIL,NULL },
+ 	  { "chop",INTFUNC1,Chop },
++#ifdef LIBM
+ 	  { "ceil",INTFUNC1,Ceil },
++#endif
+ 	  { NULL,0,NULL } }, 
+ 
+ 	{ { "endif",ENDIF,NULL },   /* 5 */
+ 	  { "while",WHILE,NULL },
+ 	  { "break",BREAK,NULL },
+ 	  { "isset",ISSET,NULL },
+ 	  { "count",INTFUNC1,Count },
+@@ -161,23 +169,27 @@ static cmd_table_t cmd_table[PHP_MAX_CMD
+ 	  { "reset",RESET,NULL },
+ 	  { "chdir",INTFUNC1,ChDir },
+ 	  { "chmod",INTFUNC2,ChMod },
+ 	  { "chown",INTFUNC2,ChOwn },
+ 	  { "chgrp",INTFUNC2,ChGrp },
+ 	  { "mkdir",INTFUNC2,MkDir },
+ 	  { "rmdir",INTFUNC1,RmDir },
++#ifdef LIBM
+ 	  { "log10",INTFUNC1,mathLog10 },
++#endif
+ 	  { "unset",UNSET,NULL },
+ 	  { "mysql",INTFUNC2,MYsql },
+ 	  { "asort",PHPASORT,NULL },
+ 	  { "umask",UMASK,NULL },
+ 	  { "logas", INTFUNC1,LogAs },
+ 	  { "rsort",PHPRSORT,NULL },
+ 	  { "strtr",INTFUNC3,StrTr },
++#ifdef LIBM
+ 	  { "floor",INTFUNC1,Floor },
++#endif
+ 	  { NULL,0,NULL } }, 
+ 
+ 	{ { "elseif",ELSEIF,NULL }, /* 6 */
+ 	  { "switch",SWITCH,NULL }, 
+ 	  { "strlen",INTFUNC1,StrLen }, 
+ 	  { "strval",INTFUNC1,StrVal }, 
+ 	  { "intval",INTFUNC1,IntVal }, 

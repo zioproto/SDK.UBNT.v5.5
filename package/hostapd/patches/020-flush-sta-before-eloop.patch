@@ -1,0 +1,31 @@
+--- a/hostapd/hostapd.c
++++ b/hostapd/hostapd.c
+@@ -1982,14 +1982,28 @@ int main(int argc, char *argv[])
+ 		goto out;
+ 	}
+ 
+ #ifndef CONFIG_NATIVE_WINDOWS
+ 	openlog("hostapd", 0, LOG_DAEMON);
+ #endif /* CONFIG_NATIVE_WINDOWS */
+ 
++	/**
++	 * This flush was already done in hostapd_setup_interface
++	 * But sometimes STAs manage to reassociate after that flush, and before
++	 * entering eloop.
++	 * So to be sure I'm flushing old sta's again
++	 **/
++	for (i = 0; i < interfaces.count; i++) {
++		for (j = 0; j < interfaces.iface[i]->num_bss; j++) {
++			struct hostapd_data *hapd = interfaces.iface[i]->bss[j];
++			hostapd_flush_old_stations(hapd);
++		}
++	}
++
++
+ 	eloop_run();
+ 
+ 	/* Disconnect associated stations from all interfaces and BSSes */
+ 	for (i = 0; i < interfaces.count; i++) {
+ 		for (j = 0; j < interfaces.iface[i]->num_bss; j++) {
+ 			struct hostapd_data *hapd =
+ 				interfaces.iface[i]->bss[j];

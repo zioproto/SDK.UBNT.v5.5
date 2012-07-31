@@ -1,0 +1,11 @@
+--- a/vars.mk
++++ b/vars.mk
+@@ -64,8 +64,6 @@ endif	# ifeq ($(PROFILE),"yes")
+ 
+ ifndef CROSS
+ COLOR = color
+-else	# ifndef CROSS
+-CFLAGS += -mapcs-32 -march=armv4 -mtune=strongarm1100 -mshort-load-bytes
+ endif	# ifndef CROSS
+ 
+ CC = $(CROSS)$(COLOR)gcc

@@ -1,0 +1,192 @@
+--- a/agent/Makefile
++++ b/agent/Makefile
+@@ -44,7 +44,7 @@ DIR =
+ # names of object files
+ OBJ = cmdline.o config.o agent.o module.o	\
+ 	snmp.o network.o odb.o module-snmp.o	\
+-	module-system.o main.o
++	module-system.o ifcache.o main.o
+ 
+ # program name (leave as is if there is no program)
+ PRG = tinysnmpd
+--- /dev/null
++++ b/agent/ifcache.c
+@@ -0,0 +1,126 @@
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <net/if.h>
++#include <sys/queue.h>
++
++#include <abz/error.h>
++
++#include <tinysnmp/agent/ifcache.h>
++
++#define IFCOUNT	32
++
++LIST_HEAD(ifcache_head, ifcache_entry);
++
++struct ifcache_head head;
++
++struct ifcache_entry
++{
++	char ifname[IFNAMSIZ];
++	unsigned int index;
++	LIST_ENTRY(ifcache_entry) entries;
++};
++
++void ifcache_init()
++{
++	char buf[512];
++	int ifindex = 0;
++	struct ifcache_entry *last = 0;
++
++	FILE *fp = fopen("/proc/net/dev", "r");
++
++	if (fp == NULL)
++		return;
++
++	fgets(buf, sizeof(buf), fp);
++	fgets(buf, sizeof(buf), fp);
++
++	while (fgets(buf, sizeof(buf), fp))
++	{
++		struct ifcache_entry *elem;
++
++		char *p = strrchr(buf, ':');
++		if (!p)
++			continue;
++
++		*p = '\0';
++		for (p = buf; isspace(*p); ++p);
++
++		elem = (struct ifcache_entry*) malloc(sizeof(struct ifcache_entry));
++		if (elem == 0)
++		{
++			abz_set_error("out of memory");
++			break;
++		}
++
++		strncpy(elem->ifname, p, sizeof(elem->ifname));
++		elem->index = ++ifindex;
++
++		if (last)
++			LIST_INSERT_AFTER(last, elem, entries);
++		else
++			LIST_INSERT_HEAD(&head, elem, entries);
++
++		last = elem;
++	}
++
++	fclose(fp);
++}
++
++void ifcache_cleanup()
++{
++	while (head.lh_first != 0)
++	{
++		struct ifcache_entry* elem = head.lh_first;
++		LIST_REMOVE(head.lh_first, entries);
++		free(elem);
++	}
++}
++
++int ifcache_get_ifindex(const char* const ifname)
++{
++	struct ifcache_entry *elem;
++
++	if (LIST_EMPTY(&head))
++	{
++		elem = (struct ifcache_entry*) malloc(sizeof(struct ifcache_entry));
++		if (elem == 0)
++		{
++			abz_set_error("out of memory");
++			return 0;
++		}
++
++		strncpy(elem->ifname, ifname, sizeof(elem->ifname));
++		elem->index = 1;
++
++		LIST_INSERT_HEAD(&head, elem, entries);
++	}
++	else
++	{
++		struct ifcache_entry *np, *last;
++		for (np = LIST_FIRST(&head); np != NULL; np = LIST_NEXT(np, entries))
++		{
++			if (strncmp(np->ifname, ifname, sizeof(np->ifname)) == 0)
++			{
++				return np->index;
++			}
++
++			last = np;
++		}
++
++		elem = (struct ifcache_entry*) malloc(sizeof(struct ifcache_entry));
++		if (elem == 0)
++		{
++			abz_set_error("out of memory");
++			return 0;
++		}
++
++		strncpy(elem->ifname, ifname, sizeof(elem->ifname));
++		elem->index = last->index + 1;
++
++		LIST_INSERT_AFTER(last, elem, entries);
++	}
++
++	return elem->index;
++}
++
+--- a/agent/main.c
++++ b/agent/main.c
+@@ -40,6 +40,8 @@
+ #include <abz/error.h>
+ #include <abz/pidfile.h>
+ 
++#include <tinysnmp/agent/ifcache.h>
++
+ #include "cmdline.h"
+ #include "agent.h"
+ #include "config.h"
+@@ -189,6 +191,9 @@ int main (int argc,char *argv[])
+    atexit (module_close);
+    atexit (agent_close);
+ 
++   ifcache_init ();
++   atexit (ifcache_cleanup);
++
+    if (config_parse (&agent,cmdline->configfile))
+ 	 {
+ 		log_printf (LOG_ERROR,"%s: %s\n",cmdline->configfile,abz_get_error ());
+--- /dev/null
++++ b/include/tinysnmp/agent/ifcache.h
+@@ -0,0 +1,9 @@
++#ifndef _IFCACHE_H_
++#define _IFCACHE_H_
++
++extern int ifcache_get_ifindex(const char* const ifname);
++
++void ifcache_init();
++void ifcache_cleanup();
++
++#endif // _IFCACHE_H_
+--- a/modules/interfaces/main.c
++++ b/modules/interfaces/main.c
+@@ -44,6 +44,7 @@
+ #include <tinysnmp/tinysnmp.h>
+ #include <tinysnmp/agent/odb.h>
+ #include <tinysnmp/agent/module.h>
++#include <tinysnmp/agent/ifcache.h>
+ 
+ #include "proc.h"
+ 
+@@ -404,7 +405,7 @@ static int iface_update (struct odb **od
+ 
+    for (i = 0; i < n; i++)
+ 	 {
+-		if (!(ifIndex = if_nametoindex (stats[i].dev)))
++		if (!(ifIndex = ifcache_get_ifindex (stats[i].dev)))
+ 		  {
+ 			 abz_set_error ("failed to map %s to an interface index",stats[i].dev);
+ 			 mem_free (stats);

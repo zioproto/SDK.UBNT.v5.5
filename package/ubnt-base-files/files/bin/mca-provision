@@ -1,0 +1,218 @@
+#!/bin/sh
+
+PDIR=/etc/persistent
+USER=mcuser
+USERHOME=$PDIR/$USER
+SSHDIR=$PDIR/$USER/.ssh
+AUTHKEYS=$SSHDIR/authorized_keys
+
+usage_main() {
+	echo "Usage: $0 <consoleurl> <ssh-public-key> [<id> [<comment>]]"
+}
+
+usage_rm() {
+	echo "Usage: $0 [-n|-f] <consoleurl>|<id>|<key>"
+}
+
+usage_list() {
+	echo "Usage: $0"
+}
+
+usage_startup() {
+	echo "Usage: $0 [-d delay] [-f keyfile]"
+}
+
+cfg_save() {
+	cfgmtd -w -p /etc/
+}
+
+mca_provision() {
+	if [ $# -lt 2 ]; then
+		usage_main
+		exit 254 
+	fi
+
+	MC=$1
+	KEYFILE=$2
+	ID=$3
+	if [ ! -z "$ID" ]; then
+		shift; shift; shift;
+		COMMENT=$*
+	fi
+
+	if [ ! -f "$KEYFILE" ]; then
+		echo "SSH public key not found at '"$KEYFILE"'. Exiting."
+		exit 253
+	fi
+
+	KEYCOUNT=$(grep -c ^ssh- $KEYFILE)
+	KEY=$(grep ^ssh- $KEYFILE)
+	KEYVAL=$(echo $KEY | cut -d ' ' -f 2)
+	if [ "$KEYCOUNT" != "1" ]; then
+		echo "'"$KEYFILE"' doesn't look like a valid SSH public key. Exiting."
+		exit 252
+	fi
+
+	mkdir -p $SSHDIR
+	touch $AUTHKEYS
+
+	# TODO: need to check ID/IP
+	KEYEXISTS=$(grep -c "$KEYVAL" $AUTHKEYS)
+	if [ "$KEYEXISTS" != "0" ]; then
+		echo "SSH public key is already registered!"
+		exit 1
+	fi
+
+	echo "Provisioning $ID @ $MC..."
+	echo "$KEY { $MC $ID $COMMENT" >> $AUTHKEYS
+	cfg_save
+
+	# check /etc/passwd for MC user presence, if it's not there - insert it
+	PWDOK=$(grep -c "$USER" /etc/passwd)
+	if [ "$PWDOK" = "0" ]; then
+		echo "$USER:!VvDE8C2EB1:0:0::$USERHOME:/bin/sh" >> /etc/passwd
+	fi
+	# check whether MCAD is in inittab, if it's not - insert it and restart init
+	MCADOK=$(grep -c "mcad" /etc/inittab)
+	if [ "$MCADOK" = "0" ]; then
+		echo "null::respawn:/bin/mcad" >> /etc/inittab
+		kill -1 1
+	fi
+
+	# print device public key & fingerprint
+	dropbearkey -y -f /etc/persistent/dropbear_rsa_host_key
+
+	echo "Done."
+	exit 0
+}
+
+mca_provision_rm() {
+	if [ $# -lt 1 ]; then
+		usage_rm
+		exit 254
+	fi
+	PAT=$1
+	COUNT=$(grep -c "$PAT" "$AUTHKEYS")
+	if [ "$COUNT" = "0" ]; then
+		echo "No entries matching '$PAT'"
+		exit 200
+	else
+		echo "Found $COUNT entries matching '$PAT':"
+		echo "$(grep "$PAT" "$AUTHKEYS")" | while read line;
+		do
+			echo $line | while read ALGO KEY REST
+			do
+				PDATA=$(echo $REST | cut -s -d '{' -f 2)
+				URL=$(echo $PDATA | cut -d ' ' -f 1)
+				ID=$(echo $PDATA | cut -s -d ' ' -f 2)
+				if [ ! -z "$ID" ]; then
+					COMMENT=$(echo $PDATA | sed "s/^.*$ID //")
+				fi
+				ID=${ID:-"unknown"}
+				if [ ! -z "$COMMENT" ]; then
+					echo "Removing: $ID @ $URL - $COMMENT ..."
+				else
+					echo "Removing: $ID @ $URL ..."
+				fi
+			done
+		done
+		sed -i "\#$PAT#d" $AUTHKEYS
+		cfg_save
+		echo "done."
+	fi
+	exit 0
+} 
+
+mca_provision_list() {
+	FILE="$AUTHKEYS"
+	if [ $# -gt 0 ]; then
+		FILE="$1"
+	fi
+	if [ ! -f "$FILE" ]; then
+		echo "No entries found."
+		exit 100
+	fi
+	cat $FILE | while read ALGO KEY REST
+	do
+		KEYCOMMENT=${REST%%{*}
+		PDATA=$(echo $REST | cut -s -d '{' -f 2)
+		URL=$(echo $PDATA | cut -d ' ' -f 1)
+		ID=$(echo $PDATA | cut -s -d ' ' -f 2)
+		if [ ! -z "$ID" ]; then
+			COMMENT=$(echo $PDATA | sed "s/^.*$ID //")
+		fi
+		if [ ! -z "$URL" ]; then
+			ID=${ID:-"unknown"}
+			echo "$ID @ $URL - $COMMENT"
+		else
+			echo "Unknown entry '$KEYCOMMENT'"
+		fi
+	done
+	exit 0
+}
+
+mca_startup() {
+	if [ $(($# % 2)) -ne 0 ]; then
+		usage_startup
+		exit 254
+	fi
+
+	FILE="$AUTHKEYS"
+	DELAY=0
+
+	while [ $# -gt 0 ]; do
+		case "$1" in
+			-f) FILE=$2; shift;;
+			-d) DELAY=$2; shift;;
+			*) usage_startup; exit 254;;
+		esac
+		shift
+	done
+
+	if [ ! -f "$FILE" ]; then
+		echo "File '$FILE' does not exist"
+		exit 100
+	fi
+
+	TESTINT=$(echo $DELAY | sed 's/[0-9]//g')
+	if [ ".$TESTINT" != "." ]; then
+		usage_startup
+		exit 254
+	fi
+
+	sleep $DELAY
+	cat $FILE | while read ALGO KEY REST
+	do
+		KEYCOMMENT=${REST%%{*}
+		PDATA=$(echo $REST | cut -s -d '{' -f 2)
+		URL=$(echo $PDATA | cut -d ' ' -f 1)
+		if [ ! -z "$URL" ]; then
+			mca-ctrl -t ping -s $URL 2>&1 | logger -t ac-agent
+		fi
+	done
+	exit 0
+}
+
+TNAME=${0##*/}
+# or, alternatively:
+# TNAME=$(basename $0)
+
+case $TNAME in
+	mca-provision)
+		mca_provision $*
+		;;
+	mca-provision-rm)
+		mca_provision_rm $*
+		;;
+	mca-provision-list)
+		mca_provision_list $*
+		;;
+	mca-startup)
+		mca_startup $*
+		;;
+	*)
+		echo "Unknown command: $0"
+		exit 200
+esac
+
+exit 0

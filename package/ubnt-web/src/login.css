@@ -1,0 +1,67 @@
+#loginform {
+text-align: center;
+}
+
+#loginform table {
+width:250px;
+margin: 0px auto;
+text-align: left;
+}
+
+#loginform table tr {
+}
+
+table.loginsubtable {
+margin: 80px auto;
+}
+
+table.loginsubtable td {
+padding: 20px 30px 0px 30px;
+}
+
+table.loginsubtable img {
+border: 0px;
+}
+
+.loginsep {
+border-left: 1px solid #8bbbd7;
+}
+
+.loginsep table td {
+margin: 4px 2px 0px 2px;
+white-space: nowrap;
+padding: 5px 2px 0px 2px;
+}
+
+.loginsep label{
+text-align: right;
+color: white;
+font-weight: normal;
+white-space: nowrap;
+}
+
+.loginsep table td.submit {
+text-align: right;
+}
+
+#submit {
+text-align: center;
+}
+
+.error{
+color:#f4324f;
+font-weight: normal;
+white-space: nowrap;
+}
+
+.license {
+	 white-space: normal;
+	 text-align: justify;
+	 line-height: 1.8em;
+	 width: 250px;
+}
+
+.error {
+	text-align: left;
+	white-space: normal;
+}

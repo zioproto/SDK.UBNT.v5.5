@@ -1,0 +1,11 @@
+--- a/arch/mips/ar7240/setup.c
++++ b/arch/mips/ar7240/setup.c
+@@ -233,7 +233,7 @@ void __init plat_setup(void)
+     */ 
+ 
+     Uart16550Init();
+-    serial_print("Booting AR7240(Python)...\n");
++    serial_print("Booting...\n");
+ 
+ #ifdef CONFIG_EARLY_PRINTK 
+     serial_setup();

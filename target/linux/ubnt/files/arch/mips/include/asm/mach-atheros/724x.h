@@ -1,0 +1,752 @@
+/*
+ * vim: tabstop=8 : noexpandtab
+ */
+#ifndef _724x_H
+#define _724x_H
+
+/*
+ * Address map
+ */
+#define ATH_PCI_MEM_BASE		0x10000000	/* 128M */
+#define ATH_APB_BASE			0x18000000	/* 384M */
+#define ATH_GE0_BASE			0x19000000	/* 16M */
+#define ATH_GE1_BASE			0x1a000000	/* 16M */
+#define ATH_USB_OHCI_BASE		0x1b000000
+#define ATH_USB_EHCI_BASE		0x1b000000
+#define ATH_SPI_BASE			0x1f000000
+
+/*
+ * Added the PCI LCL RESET register from u-boot
+ * ar7240_soc.h so that we can query the PCI LCL RESET
+ * register for the presence of WLAN H/W.
+ */
+#define ATH_PCI_LCL_BASE		(ATH_APB_BASE+0x000f0000)
+#define ATH_PCI_LCL_APP			(ATH_PCI_LCL_BASE+0x00)
+#define ATH_PCI_LCL_RESET		(ATH_PCI_LCL_BASE+0x18)
+
+/*
+ * APB block
+ */
+#define ATH_DDR_CTL_BASE		ATH_APB_BASE+0x00000000
+#define ATH_CPU_BASE			ATH_APB_BASE+0x00010000
+#define ATH_UART_BASE			ATH_APB_BASE+0x00020000
+#define ATH_USB_CONFIG_BASE		ATH_APB_BASE+0x00030000
+#define ATH_GPIO_BASE			ATH_APB_BASE+0x00040000
+#define ATH_PLL_BASE			ATH_APB_BASE+0x00050000
+#define ATH_RESET_BASE			ATH_APB_BASE+0x00060000
+#define ATH_DMA_BASE			ATH_APB_BASE+0x000A0000
+#define ATH_SLIC_BASE			ATH_APB_BASE+0x00090000
+#define ATH_STEREO_BASE			ATH_APB_BASE+0x000B0000
+#define ATH_PCI_CTLR_BASE		ATH_APB_BASE+0x000F0000
+
+/*
+ * DDR block
+ */
+#define ATH_DDR_CONFIG			ATH_DDR_CTL_BASE+0
+#define ATH_DDR_CONFIG2			ATH_DDR_CTL_BASE+4
+#define ATH_DDR_MODE			ATH_DDR_CTL_BASE+0x08
+#define ATH_DDR_EXT_MODE		ATH_DDR_CTL_BASE+0x0c
+#define ATH_DDR_CONTROL			ATH_DDR_CTL_BASE+0x10
+#define ATH_DDR_REFRESH			ATH_DDR_CTL_BASE+0x14
+#define ATH_DDR_RD_DATA_THIS_CYCLE	ATH_DDR_CTL_BASE+0x18
+#define ATH_DDR_TAP_CONTROL0		ATH_DDR_CTL_BASE+0x1c
+#define ATH_DDR_TAP_CONTROL1		ATH_DDR_CTL_BASE+0x20
+#define ATH_DDR_TAP_CONTROL2		ATH_DDR_CTL_BASE+0x24
+#define ATH_DDR_TAP_CONTROL3		ATH_DDR_CTL_BASE+0x28
+
+/*
+ * DDR Config values
+ */
+#define ATH_DDR_CONFIG_16BIT		(1 << 31)
+#define ATH_DDR_CONFIG_PAGE_OPEN	(1 << 30)
+#define ATH_DDR_CONFIG_CAS_LAT_SHIFT	27
+#define ATH_DDR_CONFIG_TMRD_SHIFT	23
+#define ATH_DDR_CONFIG_TRFC_SHIFT	17
+#define ATH_DDR_CONFIG_TRRD_SHIFT	13
+#define ATH_DDR_CONFIG_TRP_SHIFT	9
+#define ATH_DDR_CONFIG_TRCD_SHIFT	5
+#define ATH_DDR_CONFIG_TRAS_SHIFT	0
+
+#define ATH_DDR_CONFIG2_BL2		(2 << 0)
+#define ATH_DDR_CONFIG2_BL4		(4 << 0)
+#define ATH_DDR_CONFIG2_BL8		(8 << 0)
+
+#define ATH_DDR_CONFIG2_BT_IL		(1 << 4)
+#define ATH_DDR_CONFIG2_CNTL_OE_EN	(1 << 5)
+#define ATH_DDR_CONFIG2_PHASE_SEL	(1 << 6)
+#define ATH_DDR_CONFIG2_DRAM_CKE	(1 << 7)
+#define ATH_DDR_CONFIG2_TWR_SHIFT	8
+#define ATH_DDR_CONFIG2_TRTW_SHIFT	12
+#define ATH_DDR_CONFIG2_TRTP_SHIFT	17
+#define ATH_DDR_CONFIG2_TWTR_SHIFT	21
+#define ATH_DDR_CONFIG2_HALF_WIDTH_L	(1 << 31)
+
+#define ATH_DDR_TAP_DEFAULT		0x18
+
+/*
+ * DDR block, gmac flushing
+ */
+#define ATH_DDR_GE0_FLUSH		ATH_DDR_CTL_BASE+0x7c
+#define ATH_DDR_GE1_FLUSH		ATH_DDR_CTL_BASE+0x80
+#define ATH_DDR_USB_FLUSH		ATH_DDR_CTL_BASE+0xa4
+#define ATH_DDR_PCIE_FLUSH		ATH_DDR_CTL_BASE+0x88
+
+#define ATH_EEPROM_GE0_MAC_ADDR		0xbfff1000
+#define ATH_EEPROM_GE1_MAC_ADDR		0xbfff1006
+
+/*
+ * PLL block/CPU
+ */
+
+#define ATH_PLL_CONFIG			ATH_PLL_BASE+0x0
+
+
+#define PLL_DIV_SHIFT			0
+#define PLL_DIV_MASK			0x3ff
+#define REF_DIV_SHIFT			10
+#define REF_DIV_MASK			0xf
+#define AHB_DIV_SHIFT			19
+#define AHB_DIV_MASK			0x1
+#define DDR_DIV_SHIFT			22
+#define DDR_DIV_MASK			0x1
+#define ATH_ETH_PLL_CONFIG		ATH_PLL_BASE+0x4
+#define ATH_ETH_XMII_CONFIG		ATH_PLL_BASE+0x2c
+#define ATH_AUDIO_PLL_CONFIG		ATH_PLL_BASE+0x30
+
+#define ATH_ETH_INT0_CLK		ATH_PLL_BASE+0x14
+#define ATH_ETH_INT1_CLK		ATH_PLL_BASE+0x18
+
+
+/*
+ * USB block
+ */
+#define ATH_USB_FLADJ_VAL		ATH_USB_CONFIG_BASE
+#define ATH_USB_CONFIG			ATH_USB_CONFIG_BASE+0x4
+#define ATH_USB_WINDOW			0x1000000
+#define ATH_USB_MODE			ATH_USB_EHCI_BASE+0x1a8
+
+/*
+ * PCI block
+ */
+#define ATH_PCI_WINDOW			0x8000000 /* 128MB */
+#define ATH_PCI_WINDOW0_OFFSET		ATH_DDR_CTL_BASE+0x7c
+#define ATH_PCI_WINDOW1_OFFSET		ATH_DDR_CTL_BASE+0x80
+#define ATH_PCI_WINDOW2_OFFSET		ATH_DDR_CTL_BASE+0x84
+#define ATH_PCI_WINDOW3_OFFSET		ATH_DDR_CTL_BASE+0x88
+#define ATH_PCI_WINDOW4_OFFSET		ATH_DDR_CTL_BASE+0x8c
+#define ATH_PCI_WINDOW5_OFFSET		ATH_DDR_CTL_BASE+0x90
+#define ATH_PCI_WINDOW6_OFFSET		ATH_DDR_CTL_BASE+0x94
+#define ATH_PCI_WINDOW7_OFFSET		ATH_DDR_CTL_BASE+0x98
+
+#define ATH_PCI_WINDOW0_VAL		0x10000000
+#define ATH_PCI_WINDOW1_VAL		0x11000000
+#define ATH_PCI_WINDOW2_VAL		0x12000000
+#define ATH_PCI_WINDOW3_VAL		0x13000000
+#define ATH_PCI_WINDOW4_VAL		0x14000000
+#define ATH_PCI_WINDOW5_VAL		0x15000000
+#define ATH_PCI_WINDOW6_VAL		0x16000000
+#define ATH_PCI_WINDOW7_VAL		0x07000000
+
+#define ath_write_pci_window(_no)	\
+	ath_reg_wr(ATH_PCI_WINDOW##_no##_OFFSET, ATH_PCI_WINDOW##_no##_VAL);
+
+/*
+ * CRP. To access the host controller config and status registers
+ */
+#define ATH_PCI_CRP			0x180c0000
+#define ATH_PCI_DEV_CFGBASE		0x14000000
+#define ATH_PCI_CRP_AD_CBE		ATH_PCI_CRP
+#define ATH_PCI_CRP_WRDATA		ATH_PCI_CRP+0x4
+#define ATH_PCI_CRP_RDDATA		ATH_PCI_CRP+0x8
+#define ATH_PCI_ERROR			ATH_PCI_CRP+0x1c
+#define ATH_PCI_ERROR_ADDRESS		ATH_PCI_CRP+0x20
+#define ATH_PCI_AHB_ERROR		ATH_PCI_CRP+0x24
+#define ATH_PCI_AHB_ERROR_ADDRESS	ATH_PCI_CRP+0x28
+
+#define ATH_CRP_CMD_WRITE		0x00010000
+#define ATH_CRP_CMD_READ		0x00000000
+
+/*
+ * PCI CFG. To generate config cycles
+ */
+#define ATH_PCI_CFG_AD			ATH_PCI_CRP+0xc
+#define ATH_PCI_CFG_CBE			ATH_PCI_CRP+0x10
+#define ATH_PCI_CFG_WRDATA		ATH_PCI_CRP+0x14
+#define ATH_PCI_CFG_RDDATA		ATH_PCI_CRP+0x18
+#define ATH_CFG_CMD_READ		0x0000000a
+#define ATH_CFG_CMD_WRITE		0x0000000b
+
+#define ATH_PCI_IDSEL_ADLINE_START	17
+
+
+/*
+ * gpio configs
+ */
+#define ATH_GPIO_OE			ATH_GPIO_BASE+0x0
+#define ATH_GPIO_IN			ATH_GPIO_BASE+0x4
+#define ATH_GPIO_OUT			ATH_GPIO_BASE+0x8
+#define ATH_GPIO_SET			ATH_GPIO_BASE+0xc
+#define ATH_GPIO_CLEAR			ATH_GPIO_BASE+0x10
+#define ATH_GPIO_INT_ENABLE		ATH_GPIO_BASE+0x14
+#define ATH_GPIO_INT_TYPE		ATH_GPIO_BASE+0x18
+#define ATH_GPIO_INT_POLARITY		ATH_GPIO_BASE+0x1c
+#define ATH_GPIO_INT_PENDING		ATH_GPIO_BASE+0x20
+#define ATH_GPIO_INT_MASK		ATH_GPIO_BASE+0x24
+#define ATH_GPIO_IN_ETH_SWITCH_LED	ATH_GPIO_BASE+0x28
+#define ATH_GPIO_OUT_FUNCTION0		ATH_GPIO_BASE+0x2c
+#define ATH_GPIO_OUT_FUNCTION1		ATH_GPIO_BASE+0x30
+#define ATH_GPIO_OUT_FUNCTION2		ATH_GPIO_BASE+0x34
+#define ATH_GPIO_OUT_FUNCTION3		ATH_GPIO_BASE+0x38
+#define ATH_GPIO_OUT_FUNCTION4		ATH_GPIO_BASE+0x3c
+#define ATH_GPIO_OUT_FUNCTION5		ATH_GPIO_BASE+0x40
+#define ATH_GPIO_IN_ENABLE0		ATH_GPIO_BASE+0x44
+#define ATH_GPIO_IN_ENABLE1		ATH_GPIO_BASE+0x48
+#define ATH_GPIO_IN_ENABLE2		ATH_GPIO_BASE+0x4c
+#define ATH_GPIO_IN_ENABLE3		ATH_GPIO_BASE+0x50
+#define ATH_GPIO_IN_ENABLE4		ATH_GPIO_BASE+0x54
+#define ATH_GPIO_IN_ENABLE5		ATH_GPIO_BASE+0x58
+#define ATH_GPIO_IN_ENABLE6		ATH_GPIO_BASE+0x5c
+#define ATH_GPIO_IN_ENABLE7		ATH_GPIO_BASE+0x60
+#define ATH_GPIO_IN_ENABLE8		ATH_GPIO_BASE+0x64
+#define ATH_GPIO_IN_ENABLE9		ATH_GPIO_BASE+0x68
+#define ATH_GPIO_FUNCTIONS		ATH_GPIO_BASE+0x28
+#define ATH_GPIO_FUNCTION_2		ATH_GPIO_BASE+0x30
+#define ATH_GPIO_FUNC_ZERO		ATH_GPIO_BASE+0x30
+
+/*
+ * IRQ Map.
+ * There are 4 conceptual ICs in the system. We generally give a block of 16
+ * irqs to each IC.
+ *	CPU :    0 - 0xf
+ *	MISC: 0x10 - 0x1f
+ *	GPIO: 0x20 - 0x2f
+ *	PCI : 0x30 - 0x40
+ *
+ */
+#define ATH_CPU_IRQ_BASE		0x00
+#define ATH_MISC_IRQ_BASE		0x10
+#define ATH_GPIO_IRQ_BASE		0x20
+#define ATH_PCI_IRQ_BASE		0x30
+
+/*
+ * The IPs. Connected to CPU (hardware IP's; the first two are software)
+ */
+#define ATH_CPU_IRQ_PCI			ATH_CPU_IRQ_BASE+2
+#define ATH_CPU_IRQ_USB			ATH_CPU_IRQ_BASE+3
+#define ATH_CPU_IRQ_GE0			ATH_CPU_IRQ_BASE+4
+#define ATH_CPU_IRQ_GE1			ATH_CPU_IRQ_BASE+5
+#define ATH_CPU_IRQ_MISC		ATH_CPU_IRQ_BASE+6
+#define ATH_CPU_IRQ_TIMER		ATH_CPU_IRQ_BASE+7
+
+/*
+ * Interrupts connected to the CPU->Misc line.
+ */
+#define ATH_MISC_IRQ_TIMER		ATH_MISC_IRQ_BASE+0
+#define ATH_MISC_IRQ_ERROR		ATH_MISC_IRQ_BASE+1
+#define ATH_MISC_IRQ_GPIO		ATH_MISC_IRQ_BASE+2
+#define ATH_MISC_IRQ_UART		ATH_MISC_IRQ_BASE+3
+#define ATH_MISC_IRQ_WATCHDOG		ATH_MISC_IRQ_BASE+4
+#define ATH_MISC_IRQ_PERF_COUNTER	ATH_MISC_IRQ_BASE+5
+#define ATH_MISC_IRQ_USB_OHCI		ATH_MISC_IRQ_BASE+6
+#define ATH_MISC_IRQ_DMA		ATH_MISC_IRQ_BASE+7
+#define ATH_MISC_IRQ_ENET_LINK		ATH_MISC_IRQ_BASE+12
+
+#define ATH_MISC_IRQ_COUNT		13
+
+#define MIMR_TIMER			0x01
+#define MIMR_ERROR			0x02
+#define MIMR_GPIO			0x04
+#define MIMR_UART			0x08
+#define MIMR_WATCHDOG			0x10
+#define MIMR_PERF_COUNTER		0x20
+#define MIMR_OHCI_USB			0x40
+#define MIMR_DMA			0x80
+#define MIMR_ENET_LINK			0x1000
+
+#define MISR_TIMER			MIMR_TIMER
+#define MISR_ERROR			MIMR_ERROR
+#define MISR_GPIO			MIMR_GPIO
+#define MISR_UART			MIMR_UART
+#define MISR_WATCHDOG			MIMR_WATCHDOG
+#define MISR_PERF_COUNTER		MIMR_PERF_COUNTER
+#define MISR_OHCI_USB			MIMR_OHCI_USB
+#define MISR_DMA			MIMR_DMA
+
+/*
+ * Interrupts connected to the Misc->GPIO line
+ */
+#define ATH_GPIO_IRQn(_gpio)		ATH_GPIO_IRQ_BASE+(_gpio)
+#define ATH_GPIO_IRQ_COUNT		16
+
+/* Interrupts connected to CPU->PCI */
+#ifdef CONFIG_PERICOM
+#	define ATH_PRI_BUS_NO		0u
+#	define ATH_PORT0_BUS_NO		1u
+#	define ATH_PORT1_BUS_NO		2u
+#	define ATH_PCI_IRQ_DEV0		(ATH_PCI_IRQ_BASE + 0)
+#	define ATH_PCI_IRQ_DEV1		(ATH_PCI_IRQ_BASE + 1)
+#	define ATH_PCI_IRQ_COUNT	2
+#else
+#	define ATH_PCI_IRQ_DEV0		ATH_PCI_IRQ_BASE+0
+#	define ATH_PCI_IRQ_COUNT	1
+#endif /* CONFIG_PERICOM */
+
+/*
+ * PCI interrupt mask and status
+ */
+#define PIMR_DEV0			0x01
+#define PIMR_DEV1			0x02
+#define PIMR_DEV2			0x04
+#define PIMR_CORE			0x10
+
+#define PISR_DEV0			PIMR_DEV0
+#define PISR_DEV1			PIMR_DEV1
+#define PISR_DEV2			PIMR_DEV2
+#define PISR_CORE			PIMR_CORE
+
+void ar7240_pci_irq_init(int irq_base); /* ??? */
+
+/*
+ * GPIO Function Enables
+ */
+#define ATH_GPIO_FUNCTION_STEREO_EN			(1<<17)
+#define ATH_GPIO_FUNCTION_SLIC_EN			(1<<16)
+
+#define ATH_GPIO_FUNCTION_OVERCURRENT_EN		(1<< 4)
+#define ATH_GPIO_FUNCTION_USB_CLK_CORE_EN		(1<< 0)
+#define ATH_GPIO_FUNCTION_WMAC_LED			(1<<22)
+#define ATH_GPIO_FUNCTION_STEREO_EN			(1<<17)
+#define ATH_GPIO_FUNCTION_SLIC_EN			(1<<16)
+#define ATH_GPIO_FUNCTION_SPDIF2TCK_EN			(1<<31)
+#define ATH_GPIO_FUNCTION_SPDIF_EN			(1<<30)
+#define ATH_GPIO_FUNCTION_I2S_GPIO_18_22_EN		(1<<29)
+#define ATH_GPIO_FUNCTION_I2S_REFCLKEN			(1<<28)
+#define ATH_GPIO_FUNCTION_I2S_MCKEN			(1<<27)
+#define ATH_GPIO_FUNCTION_I2S0_EN			(1<<26)
+#define ATH_GPIO_FUNCTION_ETH_SWITCH_LED_DUPL_EN	(1<<25)
+#define ATH_GPIO_FUNCTION_ETH_SWITCH_LED_COLL		(1<<24)
+#define ATH_GPIO_FUNCTION_ETH_SWITCH_LED_ACTV		(1<<23)
+#define ATH_GPIO_FUNCTION_PLL_SHIFT_EN			(1<<22)
+#define ATH_GPIO_FUNCTION_EXT_MDIO_SEL			(1<<21)
+#define ATH_GPIO_FUNCTION_CLK_OBS6_ENABLE		(1<<20)
+#define ATH_GPIO_FUNCTION_CLK_OBS0_ENABLE		(1<<19)
+#define ATH_GPIO_FUNCTION_SPI_EN			(1<<18)
+#define ATH_GPIO_FUNCTION_DDR_DQOE_EN			(1<<17)
+#define ATH_GPIO_FUNCTION_PCIEPHY_TST_EN		(1<<16)
+#define ATH_GPIO_FUNCTION_S26_UART_DISABLE		(1<<15)
+#define ATH_GPIO_FUNCTION_SPI_CS_1_EN			(1<<14)
+#define ATH_GPIO_FUNCTION_SPI_CS_0_EN			(1<<13)
+#define ATH_GPIO_FUNCTION_CLK_OBS5_ENABLE		(1<<12)
+#define ATH_GPIO_FUNCTION_CLK_OBS4_ENABLE		(1<<11)
+#define ATH_GPIO_FUNCTION_CLK_OBS3_ENABLE		(1<<10)
+#define ATH_GPIO_FUNCTION_CLK_OBS2_ENABLE		(1<< 9)
+#define ATH_GPIO_FUNCTION_CLK_OBS1_ENABLE		(1<< 8)
+#define ATH_GPIO_FUNCTION_ETH_SWITCH_LED4_EN		(1<< 7)
+#define ATH_GPIO_FUNCTION_ETH_SWITCH_LED3_EN		(1<< 6)
+#define ATH_GPIO_FUNCTION_ETH_SWITCH_LED2_EN		(1<< 5)
+#define ATH_GPIO_FUNCTION_ETH_SWITCH_LED1_EN		(1<< 4)
+#define ATH_GPIO_FUNCTION_ETH_SWITCH_LED0_EN		(1<< 3)
+#define ATH_GPIO_FUNCTION_UART_RTS_CTS_EN		(1<< 2)
+#define ATH_GPIO_FUNCTION_UART_EN			(1<< 1)
+#define ATH_GPIO_FUNCTION_2_EN_I2WS_ON_0		(1<< 4)
+#define ATH_GPIO_FUNCTION_2_EN_I2SCK_ON_1		(1<< 3)
+#define ATH_GPIO_FUNCTION_2_I2S_ON_LED			(1<< 1)
+#define ATH_GPIO_FUNCTION_SRIF_ENABLE			(1<< 0)
+
+#define ATH_GPIO_FUNCTION_JTAG_DISABLE			(1<< 0)
+
+#define ATH_GPIO_OE_EN(x)				(x)
+#define ATH_GPIO_IN_ENABLE4_SLIC_PCM_FS_IN(x)		((0xff&x)<< 8)
+#define ATH_GPIO_IN_ENABLE4_SLIC_DATA_IN(x)		(0xff&x)
+#define ATH_GPIO_OUT_FUNCTION3_ENABLE_GPIO_15(x)	((0xff&x)<<24)
+#define ATH_GPIO_OUT_FUNCTION3_ENABLE_GPIO_14(x)	((0xff&x)<<16)
+#define ATH_GPIO_OUT_FUNCTION3_ENABLE_GPIO_13(x)	((0xff&x)<< 8)
+#define ATH_GPIO_OUT_FUNCTION3_ENABLE_GPIO_12(x)	(0xff&x)
+#define ATH_GPIO_OUT_FUNCTION2_ENABLE_GPIO_11(x)	((0xff&x)<<24)
+#define ATH_GPIO_OUT_FUNCTION2_ENABLE_GPIO_10(x)	((0xff&x)<<16)
+#define ATH_GPIO_OUT_FUNCTION2_ENABLE_GPIO_9(x)		((0xff&x)<< 8)
+#define ATH_GPIO_OUT_FUNCTION2_ENABLE_GPIO_8(x)		(0xff&x)
+#define ATH_GPIO_OUT_FUNCTION1_ENABLE_GPIO_7(x)		((0xff&x)<<24)
+#define ATH_GPIO_OUT_FUNCTION1_ENABLE_GPIO_6(x)		((0xff&x)<<16)
+#define ATH_GPIO_OUT_FUNCTION1_ENABLE_GPIO_5(x)		((0xff&x)<< 8)
+#define ATH_GPIO_OUT_FUNCTION1_ENABLE_GPIO_4(x)		(0xff&x)
+#define ATH_GPIO_OUT_FUNCTION0_ENABLE_GPIO_3(x)		((0xff&x)<<24)
+#define ATH_GPIO_OUT_FUNCTION0_ENABLE_GPIO_2(x)		((0xff&x)<<16)
+#define ATH_GPIO_IN_ENABLE1_I2SEXT_MCLK(x)		((0xff&x)<<24)
+#define ATH_GPIO_IN_ENABLE0_UART_SIN(x)			((0xff&x)<< 8)
+#define ATH_GPIO_IN_ENABLE0_SPI_DATA_IN(x)		(0xff&x)
+
+/* SPI, SLIC and GPIO are all multiplexed on gpio pins */
+#define ATH_SPI_FS		(ATH_SPI_BASE+0x00)
+#define ATH_SPI_READ		(ATH_SPI_BASE+0x00)
+#define ATH_SPI_CLOCK		(ATH_SPI_BASE+0x04)
+#define ATH_SPI_WRITE		(ATH_SPI_BASE+0x08)
+#define ATH_SPI_RD_STATUS	(ATH_SPI_BASE+0x0c)
+#define ATH_SPI_SHIFT_DO	(ATH_SPI_BASE+0x10)
+#define ATH_SPI_SHIFT_CNT	(ATH_SPI_BASE+0x14)
+#define ATH_SPI_SHIFT_DI	(ATH_SPI_BASE+0x18)
+#define ATH_SPI_D0_HIGH		(1<<0)	/* Pin spi_do */
+#define ATH_SPI_CLK_HIGH	(1<<8)	/* Pin spi_clk */
+
+#define ATH_SPI_CS_ENABLE_0	(6<<16)	/* Pin gpio/cs0 (active low) */
+#define ATH_SPI_CS_ENABLE_1	(5<<16)	/* Pin gpio/cs1 (active low) */
+#define ATH_SPI_CS_ENABLE_2	(3<<16)	/* Pin gpio/cs2 (active low) */
+//#define ATH_SPI_CS_DIS	(ATH_SPI_CS_ENABLE_0|ATH_SPI_CS_ENABLE_1|ATH_SPI_CS_ENABLE_2)
+#define ATH_SPI_CS_DIS		0x70000
+
+#define ath_spi_enable_cs1	__ath_spi_enable_cs1
+
+/*
+ * SOC
+ */
+#define ATH_SPI_CMD_WRITE_SR		0x01
+#define ATH_SPI_CMD_WREN		0x06
+#define ATH_SPI_CMD_RD_STATUS		0x05
+#define ATH_SPI_CMD_FAST_READ		0x0b
+#define ATH_SPI_CMD_PAGE_PROG		0x02
+#define ATH_SPI_CMD_SECTOR_ERASE	0xd8
+
+/*
+ * Reset block
+ */
+#define ATH_GENERAL_TMR			ATH_RESET_BASE+0
+#define ATH_GENERAL_TMR_RELOAD		ATH_RESET_BASE+4
+#define ATH_WATCHDOG_TMR_CONTROL	ATH_RESET_BASE+8
+#define ATH_WATCHDOG_TMR		ATH_RESET_BASE+0xc
+#define ATH_MISC_INT_STATUS		ATH_RESET_BASE+0x10
+#define ATH_MISC_INT_MASK		ATH_RESET_BASE+0x14
+
+#define ATH_PCI_INT_STATUS		ATH_PCI_CTLR_BASE+0x4c
+#define ATH_PCI_INT_MASK		ATH_PCI_CTLR_BASE+0x50
+#define ATH_PCI_INT_A_L			(1 << 14) /* INTA Level Trigger */
+#define ATH_PCI_INT_B_L			(1 << 15) /* INTB Level Trigger */
+#define ATH_PCI_INT_C_L			(1 << 16) /* INTC Level Trigger */
+#define ATH_GLOBAL_INT_STATUS		ATH_RESET_BASE+0x20
+#define ATH_RESET			ATH_RESET_BASE+0x1c
+#define ATH_OBSERVATION_ENABLE		ATH_RESET_BASE+0x28
+
+
+#define ATH_WD_ACT_MASK			3u
+#define ATH_WD_ACT_NONE			0u /* No Action */
+#define ATH_WD_ACT_GP_INTR		1u /* General purpose intr */
+#define ATH_WD_ACT_NMI			2u /* NMI */
+#define ATH_WD_ACT_RESET		3u /* Full Chip Reset */
+
+#define ATH_WD_LAST_SHIFT		31
+#define ATH_WD_LAST_MASK		((uint32_t)(1 << ATH_WD_LAST_SHIFT))
+
+
+
+/*
+ * Performace counters
+ */
+#define ATH_PERF0_COUNTER		ATH_GE0_BASE+0xa0
+#define ATH_PERF1_COUNTER		ATH_GE1_BASE+0xa0
+
+/*
+ * SLIC/STEREO DMA Size Configurations
+ */
+#define ATH_DMA_BUF_SIZE_4X2		0x00
+#define ATH_DMA_BUF_SIZE_8X2		0x01
+#define ATH_DMA_BUF_SIZE_16X2		0x02
+#define ATH_DMA_BUF_SIZE_32X2		0x03
+#define ATH_DMA_BUF_SIZE_64X2		0x04
+#define ATH_DMA_BUF_SIZE_128X2		0x05
+#define ATH_DMA_BUF_SIZE_256X2		0x06
+#define ATH_DMA_BUF_SIZE_512X2		0x07
+
+/*
+ * SLIC/STEREO DMA Assignments
+ */
+#define ATH_DMA_CHAN_SLIC0_RX		0
+#define ATH_DMA_CHAN_SLIC1_RX		1
+#define ATH_DMA_CHAN_STEREO_RX		2
+#define ATH_DMA_CHAN_SLIC0_TX		3
+#define ATH_DMA_CHAN_SLIC1_TX		4
+#define ATH_DMA_CHAN_STEREO_TX		5
+
+/*
+ * MBOX register definitions
+ */
+#define ATH_MBOX_FIFO				(ATH_DMA_BASE+0x00)
+#define ATH_MBOX_FIFO_STATUS			(ATH_DMA_BASE+0x08)
+#define ATH_MBOX_SLIC_FIFO_STATUS		(ATH_DMA_BASE+0x0c)
+#define ATH_MBOX_DMA_POLICY			(ATH_DMA_BASE+0x10)
+#define ATH_MBOX_SLIC_DMA_POLICY		(ATH_DMA_BASE+0x14)
+#define ATH_MBOX_DMA_RX_DESCRIPTOR_BASE0	(ATH_DMA_BASE+0x18)
+#define ATH_MBOX_DMA_RX_CONTROL0		(ATH_DMA_BASE+0x1c)
+#define ATH_MBOX_DMA_TX_DESCRIPTOR_BASE0	(ATH_DMA_BASE+0x20)
+#define ATH_MBOX_DMA_TX_CONTROL0		(ATH_DMA_BASE+0x24)
+#define ATH_MBOX_DMA_RX_DESCRIPTOR_BASE1	(ATH_DMA_BASE+0x28)
+#define ATH_MBOX_DMA_RX_CONTROL1		(ATH_DMA_BASE+0x2c)
+#define ATH_MBOX_DMA_TX_DESCRIPTOR_BASE1	(ATH_DMA_BASE+0x30)
+#define ATH_MBOX_DMA_TX_CONTROL1		(ATH_DMA_BASE+0x34)
+#define ATH_MBOX_FRAME				(ATH_DMA_BASE+0x34)
+#define ATH_MBOX_SLIC_FRAME			(ATH_DMA_BASE+0x3c)
+#define ATH_MBOX_FIFO_TIMEOUT			(ATH_DMA_BASE+0x40)
+#define ATH_MBOX_INT_STATUS			(ATH_DMA_BASE+0x44)
+#define ATH_MBOX_SLIC_INT_STATUS		(ATH_DMA_BASE+0x48)
+#define ATH_MBOX_INT_ENABLE			(ATH_DMA_BASE+0x4c)
+#define ATH_MBOX_SLIC_INT_ENABLE		(ATH_DMA_BASE+0x50)
+#define ATH_MBOX_FIFO_RESET			(ATH_DMA_BASE+0x58)
+#define ATH_MBOX_SLIC_FIFO_RESET		(ATH_DMA_BASE+0x5c)
+
+#define ATH_MBOX_DMA_POLICY_RX_QUANTUM		(1<< 1)
+#define ATH_MBOX_DMA_POLICY_TX_QUANTUM		(1<< 3)
+#define ATH_MBOX_DMA_POLICY_TX_FIFO_THRESH(x)	((0xff&x)<< 4)
+
+/*
+ * MBOX Enables
+ */
+#define ATH_MBOX_DMA_POLICY_RX_QUANTUM		(1<< 1)
+#define ATH_MBOX_DMA_POLICY_TX_QUANTUM		(1<< 3)
+#define ATH_MBOX_DMA_POLICY_TX_FIFO_THRESH(x)	((0xff&x)<< 4)
+
+/*
+ * SLIC register definitions
+ */
+#define ATH_SLIC_STATUS				(ATH_SLIC_BASE+0x00)
+#define ATH_SLIC_CNTRL				(ATH_SLIC_BASE+0x04)
+#define ATH_SLIC_SLOT0_NUM			(ATH_SLIC_BASE+0x08)
+#define ATH_SLIC_SLOT1_NUM			(ATH_SLIC_BASE+0x0c)
+#define ATH_SLIC_SAM_POS			(ATH_SLIC_BASE+0x2c)
+#define ATH_SLIC_FREQ_DIV			(ATH_SLIC_BASE+0x30)
+
+/*
+ * SLIC Control bits
+ */
+#define ATH_SLIC_CNTRL_ENABLE			(1<<0)
+#define ATH_SLIC_CNTRL_SLOT0_ENABLE		(1<<1)
+#define ATH_SLIC_CNTRL_SLOT1_ENABLE		(1<<2)
+#define ATH_SLIC_CNTRL_IRQ_ENABLE		(1<<3)
+
+/*
+ * STEREO register definitions
+ */
+#define ATH_STEREO_CONFIG			(ATH_STEREO_BASE+0x00)
+#define ATH_STEREO_VOLUME			(ATH_STEREO_BASE+0x04)
+#define ATH_STEREO_MCLK				(ATH_STEREO_BASE+0x08)
+
+/*
+ * Stereo Configuration Bits
+ */
+#define ATH_STEREO_CONFIG_SPDIF_ENABLE		(1<<23)
+#define ATH_STEREO_CONFIG_ENABLE		(1<<21)
+#define ATH_STEREO_CONFIG_RESET			(1<<19)
+#define ATH_STEREO_CONFIG_DELAY			(1<<18)
+#define ATH_STEREO_CONFIG_PCM_SWAP		(1<<17)
+#define ATH_STEREO_CONFIG_MIC_WORD_SIZE		(1<<16)
+#define ATH_STEREO_CONFIG_MODE(x)		((3&x)<<14)
+#define ATH_STEREO_MODE_STEREO			0
+#define ATH_STEREO_MODE_LEFT			1
+#define ATH_STEREO_MODE_RIGHT			2
+#define ATH_STEREO_CONFIG_DATA_WORD_SIZE(x)	((3&x)<<12)
+#define ATH_STEREO_CONFIG_I2S_32B_WORD		(1<<11)
+#define ATH_STEREO_CONFIG_I2S_MCLK_SEL		(1<<10)
+#define ATH_STEREO_CONFIG_SAMPLE_CNT_CLEAR_TYPE	(1<<9)
+#define ATH_STEREO_CONFIG_MASTER		(1<<8)
+#define ATH_STEREO_CONFIG_PSEDGE(x)		(0xff&x)
+
+/*
+ * Word sizes to use with common configurations:
+ */
+#define ATH_STEREO_WS_8B		0
+#define ATH_STEREO_WS_16B		1
+#define ATH_STEREO_WS_24B		2
+#define ATH_STEREO_WS_32B		3
+
+/*
+ * Slic Configuration Bits
+ */
+#define ATH_SLIC_SLOT_SEL(x)				(0x7f&x)
+#define ATH_SLIC_CLOCK_CTRL_DIV(x)			(0x3f&x)
+#define ATH_SLIC_CTRL_CLK_EN				(1<<3)
+#define ATH_SLIC_CTRL_MASTER				(1<<2)
+#define ATH_SLIC_CTRL_EN				(1<<1)
+#define ATH_SLIC_TX_SLOTS1_EN(x)			(x)
+#define ATH_SLIC_TX_SLOTS2_EN(x)			(x)
+#define ATH_SLIC_RX_SLOTS1_EN(x)			(x)
+#define ATH_SLIC_RX_SLOTS2_EN(x)			(x)
+#define ATH_SLIC_TIMING_CTRL_RXDATA_SAMPLE_POS_EXTEND	(1<<11)
+#define ATH_SLIC_TIMING_CTRL_DATAOEN_ALWAYS		(1<<9)
+#define ATH_SLIC_TIMING_CTRL_RXDATA_SAMPLE_POS(x)	((0x3&x)<<7)
+#define ATH_SLIC_TIMING_CTRL_TXDATA_FS_SYNC(x)		((0x3&x)<<5)
+#define ATH_SLIC_TIMING_CTRL_LONG_FSCLKS(x)		((0x7&x)<<2)
+#define ATH_SLIC_TIMING_CTRL_FS_POS			(1<<1)
+#define ATH_SLIC_TIMING_CTRL_LONG_FS			(1<<0)
+#define ATH_SLIC_INTR_MASK(x)				(0x1f&x)
+#define ATH_SLIC_SWAP_RX_DATA				(1<<1)
+#define ATH_SLIC_SWAP_TX_DATA				(1<<0)
+
+#define ATH_SLIC_TIMING_CTRL_RXDATA_SAMPLE_POS_2_NGEDGE	2
+#define ATH_SLIC_TIMING_CTRL_RXDATA_SAMPLE_POS_1_NGEDGE	1
+#define ATH_SLIC_TIMING_CTRL_TXDATA_FS_SYNC_NXT_PSEDGE	2
+#define ATH_SLIC_TIMING_CTRL_TXDATA_FS_SYNC_NXT_NGEDGE	3
+#define ATH_SLIC_TIMING_CTRL_LONG_FSCLKS_1BIT		0
+#define ATH_SLIC_TIMING_CTRL_LONG_FSCLKS_8BIT		7
+#define ATH_SLIC_INTR_STATUS_NO_INTR			0
+#define ATH_SLIC_INTR_STATUS_UNEXP_FRAME		1
+#define ATH_SLIC_INTR_MASK_RESET			0x1f
+#define ATH_SLIC_INTR_MASK_0				1
+#define ATH_SLIC_INTR_MASK_1				2
+#define ATH_SLIC_INTR_MASK_2				4
+#define ATH_SLIC_INTR_MASK_3				8
+#define ATH_SLIC_INTR_MASK_4				16
+
+/*
+ * Common configurations for stereo block
+ */
+#define ATH_STEREO_CFG_MASTER_STEREO_FS32_48KHZ(ws) ( \
+	ATH_STEREO_CONFIG_DELAY | \
+	ATH_STEREO_CONFIG_RESET | \
+	ATH_STEREO_CONFIG_DATA_WORD_SIZE(ws) | \
+	ATH_STEREO_CONFIG_MODE(ATH_STEREO_MODE_LEFT) | \
+	ATH_STEREO_CONFIG_MASTER | \
+	ATH_STEREO_CONFIG_PSEDGE(26))
+
+#define ATH_STEREO_CFG_MASTER_STEREO_FS64_48KHZ(ws) ( \
+	ATH_STEREO_CONFIG_DELAY | \
+	ATH_STEREO_CONFIG_RESET | \
+	ATH_STEREO_CONFIG_DATA_WORD_SIZE(ws) | \
+	ATH_STEREO_CONFIG_MODE(ATH_STEREO_MODE_STEREO) | \
+	ATH_STEREO_CONFIG_I2S_32B_WORD | \
+	ATH_STEREO_CONFIG_MASTER | \
+	ATH_STEREO_CONFIG_PSEDGE(13))
+
+#define ATH_STEREO_CFG_SLAVE_STEREO_FS32_48KHZ(ws) ( \
+	ATH_STEREO_CONFIG_RESET | \
+	ATH_STEREO_CONFIG_DATA_WORD_SIZE(ws) | \
+	ATH_STEREO_CONFIG_MODE(ATH_STEREO_MODE_STEREO) | \
+	ATH_STEREO_CONFIG_PSEDGE(26))
+
+#define ATH_STEREO_CFG_SLAVE_STEREO_FS64_48KHZ(ws) ( \
+	ATH_STEREO_CONFIG_RESET | \
+	ATH_STEREO_CONFIG_I2S_32B_WORD | \
+	ATH_STEREO_CONFIG_DATA_WORD_SIZE(ws) | \
+	ATH_STEREO_CONFIG_MODE(ATH_STEREO_MODE_STEREO) | \
+	ATH_STEREO_CONFIG_PSEDGE(13))
+
+/*
+ * PERF CTL bits
+ */
+#define PERF_CTL_PCI_AHB_0		( 0)
+#define PERF_CTL_PCI_AHB_1		( 1)
+#define PERF_CTL_USB_0			( 2)
+#define PERF_CTL_USB_1			( 3)
+#define PERF_CTL_GE0_PKT_CNT		( 4)
+#define PERF_CTL_GEO_AHB_1		( 5)
+#define PERF_CTL_GE1_PKT_CNT		( 6)
+#define PERF_CTL_GE1_AHB_1		( 7)
+#define PERF_CTL_PCI_DEV_0_BUSY		( 8)
+#define PERF_CTL_PCI_DEV_1_BUSY		( 9)
+#define PERF_CTL_PCI_DEV_2_BUSY		(10)
+#define PERF_CTL_PCI_HOST_BUSY		(11)
+#define PERF_CTL_PCI_DEV_0_ARB		(12)
+#define PERF_CTL_PCI_DEV_1_ARB		(13)
+#define PERF_CTL_PCI_DEV_2_ARB		(14)
+#define PERF_CTL_PCI_HOST_ARB		(15)
+#define PERF_CTL_PCI_DEV_0_ACTIVE	(16)
+#define PERF_CTL_PCI_DEV_1_ACTIVE	(17)
+#define PERF_CTL_PCI_DEV_2_ACTIVE	(18)
+#define PERF_CTL_HOST_ACTIVE		(19)
+
+/* These are values used in platform.inc to select PLL settings */
+
+#define ATH_REV_ID			(ATH_RESET_BASE + 0x90)
+#define ATH_REV_ID_MASK			0xffff
+
+#define ATH_REV_ID_AR7130		0xa0
+#define ATH_REV_ID_AR7141		0xa1
+#define ATH_REV_ID_AR7161		0xa2
+
+#define ATH_AR7240_1_0			0xc0
+#define ATH_AR7240_1_1			0xc1
+#define ATH_AR7240_1_2			0xc2
+
+#define ATH_AR7241_1_0			0x0100
+#define ATH_AR7241_1_1			0x0101
+
+#define ATH_AR7242_1_0			0x1100
+#define ATH_AR7242_1_1			0x1101
+
+#undef is_ar7240()
+#undef is_ar7241()
+#undef is_ar7242()
+
+#define ath_get_rev()	(ath_reg_rd(ATH_REV_ID) & ATH_REV_ID_MASK)
+
+#define is_ar7240()	((ath_get_rev() == ATH_AR7240_1_0) || \
+			 (ath_get_rev() == ATH_AR7240_1_1) || \
+			 (ath_get_rev() == ATH_AR7240_1_2))
+
+#define is_ar7241()	((ath_get_rev() == ATH_AR7241_1_0) || \
+			 (ath_get_rev() == ATH_AR7241_1_1))
+
+#define is_ar7242()	((ath_get_rev() == ATH_AR7242_1_0) || \
+			 (ath_get_rev() == ATH_AR7242_1_1))
+
+#define ATH_PLL_USE_REV_ID		0
+#define ATH_PLL_200_200_100		1
+#define ATH_PLL_300_300_150		2
+#define ATH_PLL_333_333_166		3
+#define ATH_PLL_266_266_133		4
+#define ATH_PLL_266_266_66		5
+#define ATH_PLL_400_400_200		6
+#define ATH_PLL_600_400_150		7
+
+
+/*
+ * ATH_RESET bit defines
+ */
+#define ATH_RESET_SLIC			(1 << 30)
+#define ATH_RESET_EXTERNAL		(1 << 28)
+#define ATH_RESET_FULL_CHIP		(1 << 24)
+#define ATH_RESET_GE0_MDIO		(1 << 22)
+#define ATH_RESET_CPU_NMI		(1 << 21)
+#define ATH_RESET_CPU_COLD_RESET_MASK	(1 << 20)
+#define ATH_RESET_DMA			(1 << 19)
+#define ATH_RESET_STEREO		(1 << 17)
+#define ATH_RESET_DDR			(1 << 16)
+#define ATH_RESET_GE1_MAC		(1 << 13)
+#define ATH_RESET_GE1_PHY		(1 << 12)
+#define ATH_RESET_USB_PHY_ANALOG	(1 << 11)
+#define ATH_RESET_PCIE_PHY_SHIFT	(1 << 10)
+#define ATH_RESET_GE0_MAC		(1 << 9)
+#define ATH_RESET_GE0_PHY		(1 << 8)
+#define ATH_RESET_USBSUS_OVRIDE		(1 << 3)
+#define ATH_RESET_USB_OHCI_DLL		(1 << 3)
+#define ATH_RESET_USB_HOST		(1 << 5)
+#define ATH_RESET_USB_PHY		(1 << 4)
+#define ATH_RESET_PCI_BUS		(1 << 1)
+#define ATH_RESET_PCI_CORE		(1 << 0)
+#define ATH_RESET_I2S			(1 << 0)
+
+/*
+ * Mii block
+ */
+#define ATH_MII0_CTRL		0x18070000
+#define ATH_MII1_CTRL		0x18070004
+
+#define ath_flush_ge(_unit) do { \
+	u32 reg = (_unit) ? ATH_DDR_GE1_FLUSH : ATH_DDR_GE0_FLUSH; \
+	ath_reg_wr(reg, 1); \
+	while((ath_reg_rd(reg) & 0x1)); \
+	ath_reg_wr(reg, 1); \
+	while((ath_reg_rd(reg) & 0x1)); \
+} while(0)
+
+#define ath_flush_pcie() do { \
+	ath_reg_wr(ATH_DDR_PCIE_FLUSH, 1); \
+	while((ath_reg_rd(ATH_DDR_PCIE_FLUSH) & 0x1)); \
+	ath_reg_wr(ATH_DDR_PCIE_FLUSH, 1); \
+	while((ath_reg_rd(ATH_DDR_PCIE_FLUSH) & 0x1)); \
+} while(0)
+
+#define ath_flush_USB() do { \
+	ath_reg_wr(ATH_DDR_USB_FLUSH, 1); \
+	while((ath_reg_rd(ATH_DDR_USB_FLUSH) & 0x1)); \
+	ath_reg_wr(ATH_DDR_USB_FLUSH, 1); \
+	while((ath_reg_rd(ATH_DDR_USB_FLUSH) & 0x1)); \
+} while(0)
+
+#endif

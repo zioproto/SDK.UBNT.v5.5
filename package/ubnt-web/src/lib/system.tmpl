@@ -1,0 +1,424 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/DTD/loose.dtd">
+<html>
+<head>
+<title><? echo get_title($cfg, dict_translate("System")); ></title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Pragma" content="no-cache">
+<link rel="shortcut icon" href="FULL_VERSION_LINK/favicon.ico" >
+<link href="FULL_VERSION_LINK/style.css" rel="stylesheet" type="text/css">
+<link href="FULL_VERSION_LINK/jquery-ui.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" language="javascript" src="jsl10n.cgi"></script>
+<script type="text/javascript" language="javascript" src="FULL_VERSION_LINK/util.js"></script>
+<script type="text/javascript" language="javascript" src="FULL_VERSION_LINK/jsval.js"></script>
+<script type="text/javascript" language="javascript" src="FULL_VERSION_LINK/system.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.cookie.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.passwd.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.utils.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/ui.datepicker.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.blockUI.js"></script>
+<? flush()>
+<script language="javascript" type="text/javascript">
+
+<? gen_update_check($cfg); >
+
+function doSubmit() {
+	$('#sys_form').submit();
+}
+
+function on_language_change(e)
+{
+	var clone_form = jQuery(e.target.form).clone().unbind().empty().attr("id",
+		function() {return this.id+"_clone";})
+		.insertAfter(e.target.form);
+	jQuery(e.target.form).find(":text, :password, :checkbox, select")
+		.each(function() {
+			jQuery('<input type="hidden" name="'+this.name+'" value="">')
+				.appendTo(clone_form)
+				.val((this.type == "checkbox" && !this.checked)
+					? "disabled" : jQuery(this).val());
+		});
+	clone_form.submit();
+}
+
+function validateDate() {
+	var systemdate = $('#systemdate_ui').val();
+	if (systemdate.length > 0) {
+		var d = new Date(systemdate);
+		return !isNaN(d.getTime());
+	}
+
+	return false;
+}
+
+function init() {
+	if ($.browser.msie) {
+		$('#timezone option').each(function() {
+			$(this).attr('title', $(this).text());
+		});
+	}
+
+<? if ($feature_logo == 1) { >
+	logoStatusClicked();
+<? }>
+	roUserStatusClicked();
+
+	jQuery("#ui_language").bind("change", on_language_change);
+
+	$("#systemdate_ui").datepicker({
+		duration: 0,
+		showOn: 'button',
+		buttonImage: 'FULL_VERSION_LINK/images/calendar.gif',
+		buttonImageOnly: true
+	});
+
+	dateStatusChanged();
+	$('#date_status').change(dateStatusChanged);
+	$('#timezone').val('<? echo $timezone;>');
+
+	var config_date = '<? echo $systemdate;>';
+	var date_regex = /^([0-9]{2})([0-9]{2})[0-9]{4}([0-9]{4})$/;
+	var rg = config_date.match(date_regex);
+	if (rg != null) {
+		var sysdate = new Date(rg[3], rg[1] - 1, rg[2], 0, 0, 0, 0);
+		var format = $('#systemdate_ui').datepicker('option', 'dateFormat');
+		$('#systemdate_ui').val($.datepicker.formatDate(format, sysdate));
+	}
+
+	$('.i_adminpasswd, i_ropasswd').disable();
+	$('.adminpasswd, .ropasswd').hide();
+
+	$('#admin_passwd_trigger').click(function() {
+		$('.adminpasswd').toggle();
+		$('.i_adminpasswd').toggleDisabled();
+		$('.i_adminpasswd:first').not(':disabled').focus();
+	});
+	$('#ro_passwd_trigger').click(function() {
+		$('.ropasswd').toggle();
+		$('.i_ropasswd').toggleDisabled();
+		$('#roPassword').not(':disabled').focus();
+	});
+	$('#roPassword').passwd({
+		label :  "<?echo dict_translate("Show");>",
+		migrate_attrs : [ 'req', 'callback', 'realname' ]
+	});
+
+    $(window).unload(function() {
+        $.unblockUI();
+    });
+
+    var fwupload_clicked = false;
+    $('#btn_fwupload').click(function() {
+        fwupload_clicked = true;
+    });
+
+    $('#btn_fwupdate').click(function() {
+        openPage('fwflash.cgi?do_update=do');
+        $('#updatedMsgDiv').hide();
+        $.blockUI({ message: "<h3>Please Wait. Updating Firmware...</h3>"});
+        return false;
+    });
+
+	$('#sys_form').submit(function() { // - two forms in this page
+        if ($('#fwfile').val() != '' && !fwupload_clicked) {
+            $('#fwfile').val('');
+        } else if (fwupload_clicked) {
+            $.blockUI({ message: "<h3>Please Wait. Uploading Firmware...</h3>"});
+            return true;
+        }
+
+		if (!validateStandard($(this).get(0), 'error')) {
+			return false;
+		}
+		appendSystemDate($(this));
+		return true;
+	});
+
+	$('#cfgfile, #fwfile').change(function() {
+		if ($(this).val() == '') {
+			$(this).next('input').css('visibility', 'hidden');
+		} else {
+			$(this).next('input').css('visibility', 'visible');
+		}
+	});
+
+	fwUpdateCheck(false, fw_check);
+	$("#update_check").click(function() { fwUpdateCheck(true, fw_check); });
+
+	<? if ($newfwversion); ?>
+		$("#error").text("<? echo dict_translate("warn_downgrade|WARNING: After firmware downgrade some features and/or communication to device may be lost."); >");
+		var c = 0;
+		var n = 0;
+		var c_array = "<?echo $fwversion>".replace(/.*\.v|-.*/g,".").split(".", 4).slice(1);
+		var n_array = "<?echo $newfwversion>".replace(/.*\.v|-.*/g,".").split(".", 4).slice(1);
+		for(var i = 0; i < 3 ; i++) {
+			var v = parseInt(c_array[i],10);
+			if (v != NaN)
+				v <<= (8*(2-i));
+			else
+				v = 0;
+			c |= v;
+			v = parseInt(n_array[i],10);
+			if (v != NaN)
+				v <<= (8*(2-i));
+			else
+				v = 0;
+			n |= v;
+		}
+		if (n < c && n < 5<<16|5<<8|0) /*v5.5.0*/
+		$("#errortbl").show();
+	<? endif; ?>
+}
+
+jQuery(document).ready(init);
+</script>
+</head>
+<? flush(); >
+<body>
+<table class="maintable" cellpadding="0" align="center" cellspacing="0"><?
+$top_tab = "system"; include("lib/head.tmpl");
+>  <tr>
+    <td colspan="2" class="centr">
+    <?if (cfg_is_modified($cfg_file)) { include("lib/modified.tmpl"); } 
+	if ($newfwversion) { include("lib/fw_update_inline.tmpl"); } 
+    if (fileinode($emerg_file) != -1) { include("lib/warn-emerg.tmpl"); }
+    include("lib/error.tmpl");>
+    <br>
+    <form id="sys_form" enctype="multipart/form-data" action="system.cgi" method="POST">
+	<table class="linktable" cellspacing="0" cellpadding="0">
+	<tr><th colspan="5"><? echo dict_translate("Firmware Update"); ></th></tr>
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+	<tr>
+		<td class="f"><? echo dict_translate("Firmware Version:"); ></td>
+		<td><?echo $fwversion></td>
+		<td>&nbsp;</td>
+		<td class="f"><? echo dict_translate("Upload Firmware:"); ></td>
+		<td><input id="fwfile" name="fwfile" type="file" <? if ($newfwversion); ?>disabled="disabled"<? endif; ?> size="15" realname="<? echo dict_translate("Upload Firmware File"); >">&nbsp;<input style="visibility: hidden" name="fwupload" id="btn_fwupload" type="submit" value="<? echo dict_translate("Upload"); >"><input type="hidden" name="action" value="fwupload"></td>
+	</tr>
+	<tr>
+		<td class="f"><? echo dict_translate("Build Number:"); ></td>
+		<td><?echo $fwbuild;></td>
+		<td>&nbsp;</td>
+		<td class="f">&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="f"><? echo dict_translate("Check for Updates:"); ></td>
+		<td>
+			<input type="checkbox" name="update_status" id="update_status" value="enabled"
+				<? if ($update_status=="enabled") { echo "checked"; }>> <label class="f" for="date_status"><? echo dict_translate("Enable"); ></label>
+			<input type="button" id="update_check" value="<? echo dict_translate("Check Now"); >" />
+		</td>
+		<td>&nbsp;</td>
+		<td class="f">&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+	<tr>
+		<th colspan="2"><? echo dict_translate("Device"); ></th>
+	    <td class="sep">&nbsp;</td>
+	    <th colspan="2"><? echo dict_translate("Date Settings"); ></th>
+	</tr>
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+	<tr>
+		<td class="f d"><? echo dict_translate("Device Name:"); ></td>
+		<td class="d"><input type="text" class="config" name="hostname" id="hostname" value="<?echo $hostname>" req="1" maxlength="64" realname="<? echo dict_translate("Device Name"); >"></td>
+		<td class="sep">&nbsp;</td>
+		<td class="f"><? echo dict_translate("Time Zone:"); ></td>
+		<td class="d">
+			<select name="timezone" id="timezone">
+				<option value="GMT+12">(GMT-12:00) International Date Line West</option>
+				<option value="GMT+11">(GMT-11:00) Midway Island, Samoa</option>
+				<option value="GMT+10">(GMT-10:00) Hawaii</option>
+				<option value="GMT+9">(GMT-09:00) Alaska</option>
+				<option value="GMT+8">(GMT-08:00) Pacific Standard Time</option>
+				<option value="GMT+7">(GMT-07:00) Mountain Standard Time</option>
+				<option value="GMT+6">(GMT-06:00) Central Standard Time</option>
+				<option value="GMT+5">(GMT-05:00) Eastern Standard Time</option>
+				<option value="GMT+4:30">(GMT-04:30) Caracas</option>
+				<option value="GMT+4">(GMT-04:00) Eastern Caribbean Time</option>
+				<option value="GMT+3:30">(GMT-03:30) Newfoundland</option>
+				<option value="GMT+3">(GMT-03:00) Greenland, Buenos Aires</option>
+				<option value="GMT+2">(GMT-02:00) Mid-Atlantic</option>
+				<option value="GMT+1">(GMT-01:00) Cape Verde Time</option>
+				<option value="GMT">(GMT) Western Europe Time</option>
+				<option value="GMT-1">(GMT+01:00) Central European Time</option>
+				<option value="GMT-2">(GMT+02:00) Eastern European Time</option>
+				<option value="GMT-3">(GMT+03:00) Baghdad, Riyadh, St. Petersburg</option>
+				<option value="GMT-3:30">(GMT+03:30) Tehran</option>
+				<option value="GMT-4">(GMT+04:00) Abu Dhabi, Muscat, Baku, Tbilisi</option>
+				<option value="GMT-4:30">(GMT+04:30) Kabul</option>
+				<option value="GMT-5">(GMT+05:00) Ekaterinburg, Islamabad, Karachi, Tashkent</option>
+				<option value="GMT-5:30">(GMT+05:30) Bombay, Calcutta, Madras, New Delhi</option>
+				<option value="GMT-5:45">(GMT+05:45) Kathmandu</option>
+				<option value="GMT-6">(GMT+06:00) Almaty, Dhaka, Colombo</option>
+				<option value="GMT-7">(GMT+07:00) Bangkok, Hanoi, Jakarta</option>
+				<option value="GMT-8">(GMT+08:00) Beijing, Perth, Singapore, Hong Kong</option>
+				<option value="GMT-9">(GMT+09:00) Tokyo, Seoul, Osaka, Sapporo, Yakutsk</option>
+				<option value="GMT-9:30">(GMT+09:30) Adelaide, Darwin</option>
+				<option value="GMT-10">(GMT+10:00) Eastern Australia, Guam, Vladivostok</option>
+				<option value="GMT-11">(GMT+11:00) Magadan, Solomon Islands, New Caledonia</option>
+				<option value="GMT-12">(GMT+12:00) Auckland, Wellington, Fiji, Kamchatka</option>
+			</select>
+		</td>
+	</tr>
+	<tr>
+		<td class="f d"><? echo dict_translate("Interface Language:"); ></td>
+		<td class="d"><select name="ui_language" id="ui_language"><? echo get_language_options($languages, $active_language);></select></td>
+		<td class="sep">&nbsp;</td>
+		<td class="f"><? echo dict_translate("Startup Date:"); ></td>
+		<td><input type="checkbox" name="date_status" id="date_status" value="enabled" <? if ($date_status=="enabled") { echo "checked"; }> > <label class="f" for="date_status"><? echo dict_translate("Enable"); ></label></td>
+	</tr>
+	<tr>
+		<td class="sep" colspan="3">&nbsp;</td>
+		<td class="f"><? echo dict_translate("Startup Date:"); ></td>
+		<td>
+			<input type="text" class="config" style="vertical-align: middle;" name="systemdate_ui" id="systemdate_ui"
+				req="1" callback="validateDate" realname="<? echo dict_translate("Startup Date"); >">
+		</td>
+	</tr>
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+	<tr><th colspan="5"><? echo dict_translate("System Accounts"); $change_password=dict_translate("Change Password"); ></th> </tr>
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+	<tr>
+		<td class="f"><? echo dict_translate("Administrator Username:"); ></td>
+		<td colspan="3"><input type="text" class="config" name="adminname" id="adminname" autocomplete="off" value="<?echo $adminname>" realname="<? echo dict_translate("User Name"); >" req="1"> <img id="admin_passwd_trigger" class="middle" src="FULL_VERSION_LINK/images/passwd.png" alt="<? echo $change_password;>" title="<? echo $change_password; >"></td>
+		<td></td>
+	</tr>
+	<tr class="adminpasswd">
+		<td class="f"><? echo dict_translate("Current Password:"); ></td>
+		<td colspan="4"><input type="password" autocomplete="off" class="config i_adminpasswd" name="OldPassword" id="OldPassword" maxlength="8" value="<? echo $OldPassword;>" realname="<? echo dict_translate("Current password"); >">
+	</tr>
+	<tr class="adminpasswd">
+		<td class="f"><label for="NewPassword"><? echo dict_translate("New Password:"); ></label></td>
+		<td colspan="4">
+		<input type="password" class="config i_adminpasswd" name="NewPassword" id="NewPassword" maxlength="8" value="<? echo $NewPassword;>" realname="<? echo dict_translate("New password"); >">
+		<label class="f" for="NewPassword2"><? echo dict_translate("Verify New Password:"); ></label><input type="password" autocomplete="off" class="config i_adminpasswd" name="NewPassword2" id="NewPassword2" maxlength="8" value="<? echo $NewPassword2;>" equals="NewPassword" realname="<? echo dict_translate("msg_passwd_verify|New password for verification"); >">
+		</td>
+	</tr>
+	<tr>
+		<td class="f"><? echo dict_translate("Read-Only Account:"); ></td>
+		<td colspan="3"><input type="checkbox" name="ro_status" id="ro_status" onClick="roUserStatusClicked();" value="enabled"  <? if ($ro_status=="enabled") { echo "checked"; }>> <label class="f" for="ro_status"><? echo dict_translate("Enable"); ></label></td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr class="rouser">
+		<td class="f"><? echo dict_translate("Read-Only Account Name:"); ></td>
+		<td colspan="3"><input type="text" class="config i_rouser" name="rousername" id="rousername" value="<?echo $rousername>" realname="<? echo dict_translate("Read-Only Account Name"); >" req="1" callback="validateRoUser"> <img id="ro_passwd_trigger" class="middle" src="FULL_VERSION_LINK/images/passwd.png" alt="<? echo $change_password;>" title="<? echo $change_password; >"> </td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr class="ropasswd">
+		<td class="f"><? echo dict_translate("New Password:"); ></td>
+		<td colspan="3"><input type="password" autocomplete="off" class="config i_ropasswd" name="roPassword" id="roPassword" maxlength="8" value="<? echo $roPassword;>" realname="<? echo dict_translate("Password"); >"><input type="hidden" class="i_ropasswd" name="hasRoPassword" value="true"></td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+	<tr>
+		<th colspan="2"><? echo dict_translate("Miscellaneous"); ></th>
+		<td class="tdpad">&nbsp;</td>
+		<th colspan="2"><? echo dict_translate("Location"); ></th>
+	</tr>
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+	<tr>
+		<td class="f"><? echo dict_translate("Reset Button:"); ></td>
+		<td>
+			<input type="checkbox" name="resetb_status" id="resetb_status" value="enabled"
+				<? if ($resetb_status=="enabled") { echo "checked"; }>> <label class="f" for="resetb_status"><? echo dict_translate("Enable"); ></label>
+		</td>
+		<td>&nbsp;</td>
+		<td class="f"><? echo dict_translate("Latitude:"); ></td>
+		<td><input type="text" name="latitude" id="latitude" value="<? echo $latitude; >"
+			req="1" callback="validateCoord" realname="<? echo dict_translate("Latitude"); >" <? if ($location_readonly == 1) { echo "disabled"; }>></td>
+	</tr>
+	<tr>
+		<td class="f">&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td class="f"><? echo dict_translate("Longitude:"); ></td>
+		<td><input type="text" name="longitude" id="longitude" value="<? echo $longitude; >"
+			req="1" callback="validateCoord" realname="<? echo dict_translate("Longitude"); >"
+			<? if ($location_readonly == 1) { echo "disabled"; }>></td>
+	</tr>
+	<? if (!$radio_outdoor) { >
+	<tr>
+		<td class="f"><? echo dict_translate("airMAX Technology Features:"); ></td>
+		<td>
+			<input type="checkbox" name="advmode_status" id="advmode_status" value="enabled"
+				<? if ($advmode_status=="enabled") { echo "checked"; }>> <label class="f" for="advmode_status"><? echo dict_translate("Enable"); ></label>
+		</td>
+		<td colspan="3" class="tdpad">&nbsp;</td>
+	</tr>
+	<? } >
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+	<tr><th colspan="5">&nbsp;</th></tr>
+	<tr><td colspan="5" style="padding-bottom: 40px;" class="change"><input type="submit" name="change" value="<? echo dict_translate("Change"); >"></td></tr>
+<? if ($feature_logo == 1) { >
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+	<tr><th colspan="5"><? echo dict_translate("Logo Customization"); ></th></tr>
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+	<tr>
+	 <td class="f"><? echo dict_translate("Custom Logo:"); ></td>
+	 <td colspan="4"><input type="checkbox" name="logoStatus" id="logoStatus" onClick="logoStatusClicked();" <? if ($logo_status=="enabled") { echo "checked"; }>> <label class="f" for="logoStatus"><? echo dict_translate("Enable"); ></label></td>
+	</tr>
+	<tr>
+	 <td class="f"><? echo dict_translate("Logo Target URL:"); ></td>
+	 <td colspan="4"><input type="text" class="config" name="logoURL" id="logoURL" realname="<? echo dict_translate("Logo Target URL"); >" req="1" callback="validateLogoURL" value="<?echo $logo_url>">
+	 </td>
+	</tr>
+	<tr>
+	 <td class="f"><? echo dict_translate("Logo File:"); ></td>
+	 <td colspan="4"><input type="file" name="logo_file" id="logoFile" realname="<? echo dict_translate("msg_logo_file|Logo File (only GIF type files are allowed)"); >" req="1" callback="validateLogoFile">
+	 </td>
+	</tr>
+	<tr>
+	 <td colspan="5" align="center"><input type="submit" id="logoSubmit" name="chlogo" value="<? echo dict_translate("Upload"); >"><input type="hidden" name="action" value="chlogo"></td>
+	</tr>
+<? } >
+	<tr>
+		<th colspan="2"><? echo dict_translate("Device Maintenance"); ></th>
+		<td class="tdpad">&nbsp;</td>
+		<th colspan="2"><? echo dict_translate("Configuration Management"); ></th>
+	</tr>
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+	<tr>
+		<td class="f"><? echo dict_translate("Reboot Device:"); ></td>
+		<td><input class="maint_btn" type="button" onClick="openPage('reboot.cgi');" value="<? echo dict_translate("Reboot..."); >"></td>
+		<td>&nbsp;</td>
+        <td class="f"><? echo dict_translate("Back Up Configuration:"); ></td>
+		<td><input type="button" onClick="return openPage('cfg.cgi');" value="<? echo dict_translate("Download..."); >"></td>
+	</tr>
+	<tr>
+		<td class="f"><? echo dict_translate("Support Info:"); ></td>
+		<td><input class="maint_btn" type="button" onClick="openPage('support.cgi');" value="<? echo dict_translate("Download..."); >"></td>
+		<td>&nbsp;</td>
+		<td class="f"><? echo dict_translate("Upload Configuration:"); ></td>
+		<td><input size="17" type="file" name="cfgfile" id="cfgfile" realname="<? echo dict_translate("Configuration File"); >">
+		<input type="submit" style="visibility: hidden" id="cfgupload" name="cfgupload" value="<? echo dict_translate("Upload"); >"><input type="hidden" name="action" value="cfgupload">
+		</td>
+	  		</tr>
+	<tr>
+		<td class="f">&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td class="f"><? echo dict_translate("Reset to Factory Defaults:"); ></td>
+		<td><input class="maint_btn" type="button" onClick="openPage('reset.cgi');" value="<? echo dict_translate("Reset..."); >"></td>
+	</tr>
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+	</table>
+	</form>
+    </td>
+  </tr>
+  <tr> 
+   <td colspan="2">
+      <table cellpadding="0" align="center" cellspacing="0" width="100%">
+      <tr>
+	<td height="10" class="footlogo"><img src="/glogo.cgi" border="0"></td>
+	<td height="10" class="foottext"><? echo dict_translate($oem_copyright); ></td>
+      </tr>
+      </table>
+   </td>
+  </tr>
+</table>
+
+</body>
+</html>

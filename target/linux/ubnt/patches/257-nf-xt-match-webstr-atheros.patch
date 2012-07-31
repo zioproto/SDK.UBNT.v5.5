@@ -1,0 +1,18 @@
+Index: linux-2.6.32.29/net/netfilter/Kconfig
+===================================================================
+--- linux-2.6.32.29.orig/net/netfilter/Kconfig	2011-04-05 16:28:57.285848764 +0300
++++ linux-2.6.32.29/net/netfilter/Kconfig	2011-04-06 09:34:32.812126273 +0300
+@@ -959,6 +959,13 @@
+ 
+ 	  To compile it as a module, choose M here.  If unsure, say N.
+ 
++config NETFILTER_XT_MATCH_WEBSTR
++        tristate "Webstr match support (EXPERIMENTAL)"
++	depends on NETFILTER_ADVANCED
++	help
++	   This option is used for url filter.	
++	   To compile it as a module, choose M here.  If unsure, say N.
++
+ endif # NETFILTER_XTABLES
+ 
+ endmenu

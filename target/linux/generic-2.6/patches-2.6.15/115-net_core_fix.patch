@@ -1,0 +1,196 @@
+--- linux-2.6.15-5.2/net/core/datagram.c
++++ linux-2.6.15.7/net/core/datagram.c
+@@ -211,49 +211,74 @@
+ int skb_copy_datagram_iovec(const struct sk_buff *skb, int offset,
+ 			    struct iovec *to, int len)
+ {
+-	int i, err, fraglen, end = 0;
+-	struct sk_buff *next = skb_shinfo(skb)->frag_list;
+-
+-	if (!len)
+-		return 0;
+-
+-next_skb:
+-	fraglen = skb_headlen(skb);
+-	i = -1;
+-
+-	while (1) {
+-		int start = end;
+-
+-		if ((end += fraglen) > offset) {
+-			int copy = end - offset, o = offset - start;
++	int start = skb_headlen(skb);
++	int i, copy = start - offset;
++
++	/* Copy header. */
++	if (copy > 0) {
++		if (copy > len)
++			copy = len;
++		if (memcpy_toiovec(to, skb->data + offset, copy))
++			goto fault;
++		if ((len -= copy) == 0)
++			return 0;
++		offset += copy;
++	}
++
++	/* Copy paged appendix. Hmm... why does this look so complicated? */
++	for (i = 0; i < skb_shinfo(skb)->nr_frags; i++) {
++		int end;
++
++		BUG_TRAP(start <= offset + len);
++
++		end = start + skb_shinfo(skb)->frags[i].size;
++		if ((copy = end - offset) > 0) {
++			int err;
++			u8  *vaddr;
++			skb_frag_t *frag = &skb_shinfo(skb)->frags[i];
++			struct page *page = frag->page;
+ 
+ 			if (copy > len)
+ 				copy = len;
+-			if (i == -1)
+-				err = memcpy_toiovec(to, skb->data + o, copy);
+-			else {
+-				skb_frag_t *frag = &skb_shinfo(skb)->frags[i];
+-				struct page *page = frag->page;
+-				void *p = kmap(page) + frag->page_offset + o;
+-				err = memcpy_toiovec(to, p, copy);
+-				kunmap(page);
+-			}
++			vaddr = kmap(page);
++			err = memcpy_toiovec(to, vaddr + frag->page_offset +
++					     offset - start, copy);
++			kunmap(page);
+ 			if (err)
+ 				goto fault;
+ 			if (!(len -= copy))
+ 				return 0;
+ 			offset += copy;
+ 		}
+-		if (++i >= skb_shinfo(skb)->nr_frags)
+-			break;
+-		fraglen = skb_shinfo(skb)->frags[i].size;
+-	}
+-	if (next) {
+-		skb = next;
+-		BUG_ON(skb_shinfo(skb)->frag_list);
+-		next = skb->next;
+-		goto next_skb;
+-	}
++		start = end;
++	}
++
++	if (skb_shinfo(skb)->frag_list) {
++		struct sk_buff *list = skb_shinfo(skb)->frag_list;
++
++		for (; list; list = list->next) {
++			int end;
++
++			BUG_TRAP(start <= offset + len);
++
++			end = start + list->len;
++			if ((copy = end - offset) > 0) {
++				if (copy > len)
++					copy = len;
++				if (skb_copy_datagram_iovec(list,
++							    offset - start,
++							    to, copy))
++					goto fault;
++				if ((len -= copy) == 0)
++					return 0;
++				offset += copy;
++			}
++			start = end;
++		}
++	}
++	if (!len)
++		return 0;
++
+ fault:
+ 	return -EFAULT;
+ }
+--- linux-2.6.15-5.2/net/core/net-sysfs.c
++++ linux-2.6.15.7/net/core/net-sysfs.c
+@@ -16,6 +16,7 @@
+ #include <net/sock.h>
+ #include <linux/rtnetlink.h>
+ #include <linux/wireless.h>
++#include <net/iw_handler.h>
+ 
+ #define to_class_dev(obj) container_of(obj,struct class_device,kobj)
+ #define to_net_dev(class) container_of(class, struct net_device, class_dev)
+@@ -313,13 +314,19 @@
+ 					       char *))
+ {
+ 	struct net_device *dev = to_net_dev(cd);
+-	const struct iw_statistics *iw;
++	const struct iw_statistics *iw = NULL;
+ 	ssize_t ret = -EINVAL;
+ 	
+ 	read_lock(&dev_base_lock);
+-	if (dev_isalive(dev) && dev->get_wireless_stats 
+-	    && (iw = dev->get_wireless_stats(dev)) != NULL) 
+-		ret = (*format)(iw, buf);
++	if (dev_isalive(dev)) {
++		if(dev->wireless_handlers &&
++		   dev->wireless_handlers->get_wireless_stats)
++			iw = dev->wireless_handlers->get_wireless_stats(dev);
++		else if (dev->get_wireless_stats)
++			iw = dev->get_wireless_stats(dev);
++		if (iw != NULL)
++			ret = (*format)(iw, buf);
++	}
+ 	read_unlock(&dev_base_lock);
+ 
+ 	return ret;
+@@ -420,7 +427,8 @@
+ 		sysfs_remove_group(&class_dev->kobj, &netstat_group);
+ 
+ #ifdef WIRELESS_EXT
+-	if (net->get_wireless_stats)
++	if (net->get_wireless_stats || (net->wireless_handlers &&
++			net->wireless_handlers->get_wireless_stats))
+ 		sysfs_remove_group(&class_dev->kobj, &wireless_group);
+ #endif
+ 	class_device_del(class_dev);
+@@ -453,10 +461,12 @@
+ 		goto out_unreg; 
+ 
+ #ifdef WIRELESS_EXT
+-	if (net->get_wireless_stats &&
+-	    (ret = sysfs_create_group(&class_dev->kobj, &wireless_group)))
+-		goto out_cleanup; 
+-
++	if (net->get_wireless_stats || (net->wireless_handlers &&
++			net->wireless_handlers->get_wireless_stats)) {
++		ret = sysfs_create_group(&class_dev->kobj, &wireless_group);
++		if (ret)
++			goto out_cleanup;
++	}
+ 	return 0;
+ out_cleanup:
+ 	if (net->get_stats)
+--- linux-2.6.15-5.2/net/core/sock.c
++++ job/linux-2.6.15.7/net/core/sock.c
+@@ -7,7 +7,7 @@
+  *		handler for protocols to use and generic option handler.
+  *
+  *
+- * Version:	$Id: //depot/sw/releases/7.3_AP/linux/kernels/mips-linux-2.6.15/net/core/sock.c#1 $
++ * Version:	$Id: sock.c,v 1.117 2002/02/01 22:01:03 davem Exp $
+  *
+  * Authors:	Ross Biro
+  *		Fred N. van Kempen, <waltje@uWalt.NL.Mugnet.ORG>
+@@ -403,8 +403,9 @@
+ 			if (!valbool) {
+ 				sk->sk_bound_dev_if = 0;
+ 			} else {
+-				if (optlen > IFNAMSIZ) 
+-					optlen = IFNAMSIZ; 
++				if (optlen > IFNAMSIZ - 1)
++					optlen = IFNAMSIZ - 1;
++				memset(devname, 0, sizeof(devname));
+ 				if (copy_from_user(devname, optval, optlen)) {
+ 					ret = -EFAULT;
+ 					break;
+

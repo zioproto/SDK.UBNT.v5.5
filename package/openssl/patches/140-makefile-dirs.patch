@@ -1,0 +1,19 @@
+--- a/Makefile.org
++++ b/Makefile.org
+@@ -105,15 +105,15 @@ PERLASM_SCHEME=
+ KRB5_INCLUDES=
+ LIBKRB5=
+ 
+ # Zlib stuff
+ ZLIB_INCLUDE=
+ LIBZLIB=
+ 
+-DIRS=   crypto ssl engines apps test tools
++DIRS=   crypto ssl apps
+ ENGDIRS= ccgost
+ SHLIBDIRS= crypto ssl
+ 
+ # dirs in crypto to build
+ SDIRS=  \
+ 	objects \
+ 	md2 md4 md5 sha mdc2 hmac ripemd whrlpool \

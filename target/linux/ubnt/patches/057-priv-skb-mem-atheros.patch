@@ -1,0 +1,252 @@
+Index: linux-2.6.32.29/net/core/skb_dma_map.c
+===================================================================
+--- linux-2.6.32.29.orig/net/core/skb_dma_map.c	2011-02-18 02:00:11.000000000 +0200
++++ linux-2.6.32.29/net/core/skb_dma_map.c	2011-04-05 22:54:55.915224768 +0300
+@@ -8,6 +8,7 @@
+ #include <linux/dma-mapping.h>
+ #include <linux/skbuff.h>
+ 
++#ifndef CONFIG_PRIV_SKB_MEM
+ int skb_dma_map(struct device *dev, struct sk_buff *skb,
+ 		enum dma_data_direction dir)
+ {
+@@ -63,3 +64,4 @@
+ 	}
+ }
+ EXPORT_SYMBOL(skb_dma_unmap);
++#endif
+Index: linux-2.6.32.29/net/core/skbuff.c
+===================================================================
+--- linux-2.6.32.29.orig/net/core/skbuff.c	2011-04-05 16:28:57.365847952 +0300
++++ linux-2.6.32.29/net/core/skbuff.c	2011-04-05 22:54:55.915224768 +0300
+@@ -154,6 +154,158 @@
+  *
+  */
+ 
++#ifdef CONFIG_PRIV_SKB_MEM
++#define PRIV_SKB_MEM_2K (CONFIG_PRIV_SKB_MEM_2K * 0x100000)
++#define PRIV_SKB_MEM_4K (CONFIG_PRIV_SKB_MEM_4K * 0x100000)
++u8 priv_skb_mem[PRIV_SKB_MEM_2K + PRIV_SKB_MEM_4K +
++                SMP_CACHE_BYTES];
++#define PRIV_BUFSIZE_2K 2048
++#define PRIV_BUFSIZE_4K 4096
++#define PRIV_SKB2K_MAX (PRIV_SKB_MEM_2K / PRIV_BUFSIZE_2K)
++#define PRIV_SKB4K_MAX (PRIV_SKB_MEM_4K / PRIV_BUFSIZE_4K)
++u32 ps_head2k = 0;
++u32 ps_tail2k = 0;
++u32 ps_head4k = 0;
++u32 ps_tail4k = 0;
++u8 *priv_skb_list_2k[PRIV_SKB2K_MAX];
++u8 *priv_skb_list_4k[PRIV_SKB4K_MAX];
++spinlock_t priv_skb2k_lock;
++spinlock_t priv_skb4k_lock;
++#ifdef PRIV_SKB_DEBUG
++u32 ps_2k_alloc_cnt = 0;
++u32 ps_2k_free_cnt = 0;
++#endif
++
++void priv_skb_init(void)
++{
++    u8 * priv_skb_mem_2k = (u8 *)((((unsigned long)priv_skb_mem) + SMP_CACHE_BYTES - 1) &
++                                ~(SMP_CACHE_BYTES - 1));
++    u8 * priv_skb_mem_4k = (u8 *)(((unsigned long)priv_skb_mem_2k) + PRIV_SKB_MEM_2K);
++
++    /* Init 2K skb list */
++    ps_head2k = 0;
++    ps_tail2k = 0;
++
++    while (ps_tail2k < PRIV_SKB2K_MAX) {
++        priv_skb_list_2k[ps_tail2k] = (u8 *)(((unsigned long)priv_skb_mem_2k) +
++                                        (ps_tail2k * PRIV_BUFSIZE_2K));
++        ps_tail2k++;
++    }
++    ps_tail2k = -1;
++#ifdef PRIV_SKB_DEBUG
++    ps_2k_alloc_cnt = 0;
++    ps_2k_free_cnt = 0;
++#endif
++    spin_lock_init(&priv_skb2k_lock);
++
++    /* Init 4K skb list */
++    ps_head4k = 0;
++    ps_tail4k = 0;
++
++    while (ps_tail4k < PRIV_SKB4K_MAX) {
++        priv_skb_list_4k[ps_tail4k] = (u8 *)(((unsigned long)priv_skb_mem_4k) +
++                                        (ps_tail4k * PRIV_BUFSIZE_4K));
++        ps_tail4k++;
++    }
++    ps_tail4k = -1;
++    spin_lock_init(&priv_skb4k_lock);
++
++    printk(KERN_ERR "\n****************ALLOC***********************\n");
++    printk(KERN_ERR " Packet mem: %x (0x%x bytes)\n", (unsigned)priv_skb_mem_2k, sizeof(priv_skb_mem) - SMP_CACHE_BYTES);
++    printk(KERN_ERR "********************************************\n\n");
++}
++
++u8* priv_skb_get_2k(void)
++{
++    u8 *skbmem;
++    unsigned long flags = 0;
++    int from_irq = in_irq();
++
++    if (!from_irq)
++        spin_lock_irqsave(priv_skb2k_lock, flags);
++
++    if(ps_head2k != ps_tail2k) {
++        skbmem = priv_skb_list_2k[ps_head2k];
++        priv_skb_list_2k[ps_head2k] = NULL;
++        ps_head2k = (ps_head2k + 1) % PRIV_SKB2K_MAX;
++#ifdef PRIV_SKB_DEBUG
++        ps_2k_alloc_cnt++;
++#endif
++    } else  {
++        skbmem = NULL;
++    }
++
++    if (!from_irq)
++        spin_unlock_irqrestore(priv_skb2k_lock, flags);
++
++    return skbmem;
++}
++
++u8* priv_skb_get_4k(void)
++{
++    u8 *skbmem;
++    unsigned long flags = 0;
++    int from_irq = in_irq();
++
++    if (!from_irq)
++        spin_lock_irqsave(priv_skb4k_lock, flags);
++    if(ps_head4k != ps_tail4k) {
++        skbmem = priv_skb_list_4k[ps_head4k];
++        priv_skb_list_4k[ps_head4k] = NULL;
++        ps_head4k = (ps_head4k + 1) % PRIV_SKB4K_MAX;
++    } else  {
++        skbmem = NULL;
++    }
++    if (!from_irq)
++        spin_unlock_irqrestore(priv_skb4k_lock, flags);
++    return skbmem;
++}
++
++u8* priv_skbmem_get(int size)
++{
++    if(size <= PRIV_BUFSIZE_2K)
++        return priv_skb_get_2k();
++    else
++        return priv_skb_get_4k();
++}
++
++void priv_skb_free_2k(u8 *skbmem)
++{
++    unsigned long flags = 0;
++    int from_irq = in_irq();
++
++    if (!from_irq)
++        spin_lock_irqsave(priv_skb2k_lock, flags);
++    ps_tail2k = (ps_tail2k + 1) % PRIV_SKB2K_MAX;
++    priv_skb_list_2k[ps_tail2k] = skbmem;
++#ifdef PRIV_SKB_DEBUG
++    ps_2k_free_cnt++;
++#endif
++    if (!from_irq)
++        spin_unlock_irqrestore(priv_skb2k_lock, flags);
++}
++
++void priv_skb_free_4k(u8 *skbmem)
++{
++    unsigned long flags = 0;
++    int from_irq = in_irq();
++    if (!from_irq)
++        spin_lock_irqsave(priv_skb4k_lock, flags);
++    ps_tail4k = (ps_tail4k + 1) % PRIV_SKB4K_MAX;
++    priv_skb_list_4k[ps_tail4k] = skbmem;
++    if (!from_irq)
++        spin_unlock_irqrestore(priv_skb4k_lock, flags);
++}
++
++void priv_skbmem_free(u8 *skbmem, int size)
++{
++    if(size <= PRIV_BUFSIZE_2K)
++        priv_skb_free_2k(skbmem);
++    else
++        priv_skb_free_4k(skbmem);
++}
++#endif
++
+ /**
+  *	__alloc_skb	-	allocate a network buffer
+  *	@size: size to allocate
+@@ -185,8 +337,16 @@
+ 		goto out;
+ 
+ 	size = SKB_DATA_ALIGN(size);
++#ifdef CONFIG_PRIV_SKB_MEM
++    if (unlikely((size > PRIV_BUFSIZE_4K) || ((data = priv_skbmem_get(size +
++            sizeof(struct skb_shared_info))) == NULL))) {
++	    data = kmalloc_node_track_caller(size + sizeof(struct skb_shared_info),
++			    gfp_mask, node);
++    }
++#else
+ 	data = kmalloc_node_track_caller(size + sizeof(struct skb_shared_info),
+ 			gfp_mask, node);
++#endif
+ 	if (!data)
+ 		goto nodata;
+ 
+@@ -338,6 +498,10 @@
+ 
+ static void skb_release_data(struct sk_buff *skb)
+ {
++#ifdef CONFIG_PRIV_SKB_MEM
++    u32 size;
++#endif
++
+ 	if (!skb->cloned ||
+ 	    !atomic_sub_return(skb->nohdr ? (1 << SKB_DATAREF_SHIFT) + 1 : 1,
+ 			       &skb_shinfo(skb)->dataref)) {
+@@ -350,8 +514,17 @@
+ 		if (skb_has_frags(skb))
+ 			skb_drop_fraglist(skb);
+ 
++#ifdef CONFIG_PRIV_SKB_MEM
++        if (likely((skb->head - priv_skb_mem) < sizeof(priv_skb_mem))) {
++            size = skb->end - skb->head + sizeof(struct skb_shared_info);
++            priv_skbmem_free(skb->head, size);
++        } else {
+ 		kfree(skb->head);
+ 	}
++#else
++		kfree(skb->head);
++#endif
++	}
+ }
+ 
+ /*
+@@ -813,7 +986,14 @@
+ 
+ 	size = SKB_DATA_ALIGN(size);
+ 
++#ifdef CONFIG_PRIV_SKB_MEM
++    if (unlikely((size > PRIV_BUFSIZE_4K) || ((data = priv_skbmem_get(size +
++            sizeof(struct skb_shared_info))) == NULL))) {
+ 	data = kmalloc(size + sizeof(struct skb_shared_info), gfp_mask);
++    }
++#else
++	data = kmalloc(size + sizeof(struct skb_shared_info), gfp_mask);
++#endif
+ 	if (!data)
+ 		goto nodata;
+ 
+@@ -2781,6 +2961,10 @@
+ 						0,
+ 						SLAB_HWCACHE_ALIGN|SLAB_PANIC,
+ 						NULL);
++
++#ifdef CONFIG_PRIV_SKB_MEM
++    priv_skb_init();
++#endif
+ }
+ 
+ /**

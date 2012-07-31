@@ -1,0 +1,172 @@
+Index: linux-2.6.32.29/mm/fremap.c
+===================================================================
+--- linux-2.6.32.29.orig/mm/fremap.c	2011-02-18 02:00:11.000000000 +0200
++++ linux-2.6.32.29/mm/fremap.c	2011-04-05 23:45:26.275223159 +0300
+@@ -217,6 +217,7 @@
+ 		spin_unlock(&mapping->i_mmap_lock);
+ 	}
+ 
++#ifdef CONFIG_HAVE_MLOCK
+ 	if (vma->vm_flags & VM_LOCKED) {
+ 		/*
+ 		 * drop PG_Mlocked flag for over-mapped range
+@@ -225,16 +226,19 @@
+ 		munlock_vma_pages_range(vma, start, start + size);
+ 		vma->vm_flags = saved_flags;
+ 	}
++#endif
+ 
+ 	mmu_notifier_invalidate_range_start(mm, start, start + size);
+ 	err = populate_range(mm, vma, start, size, pgoff);
+ 	mmu_notifier_invalidate_range_end(mm, start, start + size);
+ 	if (!err && !(flags & MAP_NONBLOCK)) {
+ 		if (vma->vm_flags & VM_LOCKED) {
++#ifdef CONFIG_HAVE_MLOCK
+ 			/*
+ 			 * might be mapping previously unmapped range of file
+ 			 */
+ 			mlock_vma_pages_range(vma, start, start + size);
++#endif
+ 		} else {
+ 			if (unlikely(has_write_lock)) {
+ 				downgrade_write(&mm->mmap_sem);
+Index: linux-2.6.32.29/mm/mmap.c
+===================================================================
+--- linux-2.6.32.29.orig/mm/mmap.c	2011-02-18 02:00:11.000000000 +0200
++++ linux-2.6.32.29/mm/mmap.c	2011-04-06 00:01:37.003973312 +0300
+@@ -969,8 +969,10 @@
+ 	vm_flags = calc_vm_prot_bits(prot) | calc_vm_flag_bits(flags) |
+ 			mm->def_flags | VM_MAYREAD | VM_MAYWRITE | VM_MAYEXEC;
+ 
++#ifdef CONFIG_HAVE_MLOCK
+ 	if (flags & MAP_LOCKED)
+ 		if (!can_do_mlock())
++#endif
+ 			return -EPERM;
+ 
+ 	/* mlock MCL_FUTURE? */
+@@ -1227,6 +1229,7 @@
+ 	mm->total_vm += len >> PAGE_SHIFT;
+ 	vm_stat_account(mm, vm_flags, file, len >> PAGE_SHIFT);
+ 	if (vm_flags & VM_LOCKED) {
++#ifdef CONFIG_HAVE_MLOCK
+ 		/*
+ 		 * makes pages present; downgrades, drops, reacquires mmap_sem
+ 		 */
+@@ -1234,6 +1237,7 @@
+ 		if (nr_pages < 0)
+ 			return nr_pages;	/* vma gone! */
+ 		mm->locked_vm += (len >> PAGE_SHIFT) - nr_pages;
++#endif
+ 	} else if ((flags & MAP_POPULATE) && !(flags & MAP_NONBLOCK))
+ 		make_pages_present(addr, addr + len);
+ 	return addr;
+@@ -1713,8 +1717,10 @@
+ 	if (!prev || expand_stack(prev, addr))
+ 		return NULL;
+ 	if (prev->vm_flags & VM_LOCKED) {
++#ifdef CONFIG_HAVE_MLOCK
+ 		if (mlock_vma_pages_range(prev, addr, prev->vm_end) < 0)
+ 			return NULL;	/* vma gone! */
++#endif
+ 	}
+ 	return prev;
+ }
+@@ -1741,10 +1747,12 @@
+ 	start = vma->vm_start;
+ 	if (expand_stack(vma, addr))
+ 		return NULL;
++#ifdef CONFIG_HAVE_MLOCK
+ 	if (vma->vm_flags & VM_LOCKED) {
+ 		if (mlock_vma_pages_range(vma, addr, start) < 0)
+ 			return NULL;	/* vma gone! */
+ 	}
++#endif
+ 	return vma;
+ }
+ #endif
+@@ -1936,10 +1944,12 @@
+ 	if (mm->locked_vm) {
+ 		struct vm_area_struct *tmp = vma;
+ 		while (tmp && tmp->vm_start < end) {
++#ifdef CONFIG_HAVE_MLOCK
+ 			if (tmp->vm_flags & VM_LOCKED) {
+ 				mm->locked_vm -= vma_pages(tmp);
+ 				munlock_vma_pages_all(tmp);
+ 			}
++#endif
+ 			tmp = tmp->vm_next;
+ 		}
+ 	}
+@@ -2073,10 +2083,12 @@
+ 	vma_link(mm, vma, prev, rb_link, rb_parent);
+ out:
+ 	mm->total_vm += len >> PAGE_SHIFT;
++#ifdef CONFIG_HAVE_MLOCK
+ 	if (flags & VM_LOCKED) {
+ 		if (!mlock_vma_pages_range(vma, addr, addr + len))
+ 			mm->locked_vm += (len >> PAGE_SHIFT);
+ 	}
++#endif
+ 	return addr;
+ }
+ 
+@@ -2096,8 +2108,10 @@
+ 	if (mm->locked_vm) {
+ 		vma = mm->mmap;
+ 		while (vma) {
++#ifdef CONFIG_HAVE_MLOCK
+ 			if (vma->vm_flags & VM_LOCKED)
+ 				munlock_vma_pages_all(vma);
++#endif
+ 			vma = vma->vm_next;
+ 		}
+ 	}
+Index: linux-2.6.32.29/mm/mremap.c
+===================================================================
+--- linux-2.6.32.29.orig/mm/mremap.c	2011-02-18 02:00:11.000000000 +0200
++++ linux-2.6.32.29/mm/mremap.c	2011-04-05 23:45:26.275223159 +0300
+@@ -251,12 +251,14 @@
+ 			vma->vm_next->vm_flags |= VM_ACCOUNT;
+ 	}
+ 
++#ifdef CONFIG_HAVE_MLOCK
+ 	if (vm_flags & VM_LOCKED) {
+ 		mm->locked_vm += new_len >> PAGE_SHIFT;
+ 		if (new_len > old_len)
+ 			mlock_vma_pages_range(new_vma, new_addr + old_len,
+ 						       new_addr + new_len);
+ 	}
++#endif
+ 
+ 	return new_addr;
+ }
+@@ -465,11 +467,13 @@
+ 
+ 			mm->total_vm += pages;
+ 			vm_stat_account(mm, vma->vm_flags, vma->vm_file, pages);
++#ifdef CONFIG_HAVE_MLOCK
+ 			if (vma->vm_flags & VM_LOCKED) {
+ 				mm->locked_vm += pages;
+ 				mlock_vma_pages_range(vma, addr + old_len,
+ 						   addr + new_len);
+ 			}
++#endif
+ 			ret = addr;
+ 			goto out;
+ 		}
+Index: linux-2.6.32.29/ipc/shm.c
+===================================================================
+--- linux-2.6.32.29.orig/ipc/shm.c	2011-02-18 02:00:11.000000000 +0200
++++ linux-2.6.32.29/ipc/shm.c	2011-04-05 23:50:58.493973191 +0300
+@@ -411,8 +411,10 @@
+ 	return error;
+ 
+ no_id:
++#ifdef CONFIG_HAVE_MLOCK
+ 	if (is_file_hugepages(file) && shp->mlock_user)
+ 		user_shm_unlock(size, shp->mlock_user);
++#endif
+ 	fput(file);
+ no_file:
+ 	security_shm_free(shp);

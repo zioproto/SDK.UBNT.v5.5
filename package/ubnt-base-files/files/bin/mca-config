@@ -1,0 +1,74 @@
+#!/bin/sh
+
+CFGMTD=/sbin/cfgmtd
+BGND=/usr/bin/bgnd
+SOFTRESTART=/usr/etc/rc.d/rc.softrestart
+
+usage() {
+	echo "Usage: $0 <operation> <file>"
+	echo "  where <operation> is one of:"
+	echo "     get - retrieves current active configuration"
+	echo "     set - stores supplied configuration file into persistent storage"
+	echo "     activate - stores and activates supplied configuration"
+}
+
+config_dump_impl() {
+	F=$1
+	$CFGMTD -r -p /etc/ -f "$F"
+	if [ $? -ne 0 ]; then
+		$CFGMTD -r -p /etc/ -t 2 -f "$F"
+		if [ $? -ne 0 ]; then
+			cp /etc/default.cfg "$F"
+		fi
+	fi
+}
+
+config_dump() {
+	echo "Exporting active configuration to '"$1"'..."
+	config_dump_impl $1
+	echo "done."
+}
+
+config_store() {
+	echo "Saving '"$1"' to persistent storage..."
+	if [ ! -f "$CFGFILE" ]; then
+		echo "ERROR: Configuration not found at '"$CFGFILE"'. Exiting."
+		exit 253
+	fi
+	$CFGMTD -w -p /etc/ -f "$1"
+	echo "done."
+}
+
+config_activate() {
+	config_store $1
+	echo "Activating new configuration..."
+	config_dump_impl /tmp/system.cfg
+	$BGND -r softrestart -- $SOFTRESTART
+	echo "done."
+}
+
+if [ $# -lt 2 ]; then
+        usage
+        exit 254 
+fi
+
+OP=$1
+CFGFILE=$2
+
+case "$OP" in
+	"get")
+		config_dump $CFGFILE
+		;;
+	"set")
+		config_store $CFGFILE
+		;;
+	"activate")
+		config_activate $CFGFILE
+		;;
+	*)
+		echo "ERROR: Unsupported operation '"$OP"'"
+		usage
+		exit 252
+esac
+
+exit 0

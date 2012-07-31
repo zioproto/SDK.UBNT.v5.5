@@ -1,0 +1,39 @@
+--- linux-2.6.31/arch/mips/kernel/head.S	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/arch/mips/kernel/head.S	2011-03-17 17:03:06.000000000 +0200
+@@ -193,7 +193,15 @@
+ 	PTR_ADDU	sp, $28
+ 	set_saved_sp	sp, t0, t1
+ 	PTR_SUBU	sp, 4 * SZREG		# init stack pointer
+-
++#ifdef CONFIG_BDI_SWITCH
++    /* Setup the PTE pointers for the Abatron bdiGDB.  */  
++    la t0, bdi_ptbase
++    la t1, swapper_pg_dir
++    sw t1, (t0)
++    addiu t0, 4
++    la t1, pgd_current
++    sw t1, (t0)
++#endif
+ 	j		start_kernel
+ 	END(kernel_entry)
+ 
+@@ -229,3 +237,6 @@
+ #endif /* CONFIG_SMP */
+ 
+ 	__FINIT
++#ifdef CONFIG_BDI_SWITCH
++    .comm bdi_ptbase, SZREG*2, SZREG  /* BDI PTBASE should point to this */
++#endif
+--- linux-2.6.31/arch/mips/Kconfig.debug	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/arch/mips/Kconfig.debug	2011-03-17 17:03:05.000000000 +0200
+@@ -51,4 +51,10 @@
+ 	  arch/mips/include/asm/debug.h for debugging macros.
+ 	  If unsure, say N.
+ 
++config BDI_SWITCH
++	bool "Include BDI-2000 user context switcher"
++	depends on DEBUG_KERNEL
++	help
++	  Include in-kernel support for Abatron BDI2000 debugger.
++
+ endmenu

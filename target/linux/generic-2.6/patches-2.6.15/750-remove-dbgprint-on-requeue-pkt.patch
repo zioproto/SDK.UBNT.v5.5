@@ -1,0 +1,14 @@
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -1338,9 +1338,11 @@ int dev_queue_xmit(struct sk_buff *skb)
+ 				}
+ 			}
+ 			HARD_TX_UNLOCK(dev);
++			/*
+ 			if (net_ratelimit())
+ 				printk(KERN_CRIT "Virtual device %s asks to "
+ 				       "queue packet!\n", dev->name);
++			*/
+ 		} else {
+ 			/* Recursion is detected! It is possible,
+ 			 * unfortunately */

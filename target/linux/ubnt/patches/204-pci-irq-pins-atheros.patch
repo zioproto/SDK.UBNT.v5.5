@@ -1,0 +1,13 @@
+Index: linux-2.6.32.29/drivers/pci/setup-irq.c
+===================================================================
+--- linux-2.6.32.29.orig/drivers/pci/setup-irq.c	2011-02-18 02:00:11.000000000 +0200
++++ linux-2.6.32.29/drivers/pci/setup-irq.c	2011-04-06 09:31:28.774065502 +0300
+@@ -34,7 +34,7 @@
+ 
+ 	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+ 	/* Cope with illegal. */
+-	if (pin > 4)
++	if (pin == 0 || pin > 4)
+ 		pin = 1;
+ 
+ 	if (pin != 0) {

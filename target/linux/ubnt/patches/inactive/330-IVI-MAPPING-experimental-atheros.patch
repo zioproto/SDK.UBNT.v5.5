@@ -1,0 +1,520 @@
+--- linux-2.6.31/net/core/dev.c	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/net/core/dev.c	2011-03-17 17:03:19.000000000 +0200
+@@ -1956,6 +1963,9 @@
+ {
+ 	struct softnet_data *queue;
+ 	unsigned long flags;
++#ifdef	CONFIG_MAPPING
++	if (skb->dev != NULL)
++#endif
+ 
+ 	/* if netpoll wants it, pretend we never saw it */
+ 	if (netpoll_rx(skb))
+@@ -1975,6 +1985,9 @@
+ 	if (queue->input_pkt_queue.qlen <= netdev_max_backlog) {
+ 		if (queue->input_pkt_queue.qlen) {
+ enqueue:
++#ifdef	CONFIG_MAPPING
++			if (skb->dev != NULL)
++#endif
+ 			__skb_queue_tail(&queue->input_pkt_queue, skb);
+ 			local_irq_restore(flags);
+ 			return NET_RX_SUCCESS;
+@@ -2252,6 +2265,9 @@
+ 		return NET_RX_SUCCESS;
+ 
+ 	/* if we've gotten here through NAPI, check netpoll */
++#ifdef	CONFIG_MAPPING
++	if (skb->dev)
++#endif
+ 	if (netpoll_receive_skb(skb))
+ 		return NET_RX_DROP;
+ 
+--- linux-2.6.31/include/net/dst.h	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/include/net/dst.h	2011-03-17 17:03:18.000000000 +0200
+@@ -83,10 +83,19 @@
+ 	 * (L1_CACHE_SIZE would be too much)
+ 	 */
+ #ifdef CONFIG_64BIT
++#ifdef CONFIG_MAPPING
++	long		mapping;
++	long		__pad_to_align_refcnt[1];
++#else
+ 	long			__pad_to_align_refcnt[2];
++#endif
++#else
++#ifdef CONFIG_MAPPING
++	long		mapping;
+ #else
+ 	long			__pad_to_align_refcnt[1];
+ #endif
++#endif
+ 	/*
+ 	 * __refcnt wants to be on a different cache line from
+ 	 * input/output/ops or performance tanks badly
+--- linux-2.6.31/net/ipv4/fib_frontend.c	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/net/ipv4/fib_frontend.c	2011-03-17 17:03:19.000000000 +0200
+@@ -529,6 +529,12 @@
+ 	cfg->fc_flags = rtm->rtm_flags;
+ 	cfg->fc_nlflags = nlh->nlmsg_flags;
+ 
++#ifdef CONFIG_MAPPING
++	cfg->fib_config_rtm_mapping = rtm->rtm_mapping;
++	cfg->fib_config_rtm_dst_prefix = rtm->rtm_dst_prefix;
++	cfg->fib_config_rtm_src_prefix = rtm->rtm_src_prefix;
++#endif
++
+ 	cfg->fc_nlinfo.pid = NETLINK_CB(skb).pid;
+ 	cfg->fc_nlinfo.nlh = nlh;
+ 	cfg->fc_nlinfo.nl_net = net;
+--- linux-2.6.31/net/ipv4/fib_semantics.c	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/net/ipv4/fib_semantics.c	2011-03-17 17:03:19.000000000 +0200
+@@ -736,6 +736,13 @@
+ 	fi->fib_priority = cfg->fc_priority;
+ 	fi->fib_prefsrc = cfg->fc_prefsrc;
+ 
++#ifdef CONFIG_MAPPING
++
++	fi->fib_mapping = cfg->fib_config_rtm_mapping;	/* Transfer mapping information from rtmsg to fib */
++	fi->fib_src_prefix = cfg->fib_config_rtm_src_prefix;
++	fi->fib_dst_prefix = cfg->fib_config_rtm_dst_prefix;
++#endif
++
+ 	fi->fib_nhs = nhs;
+ 	change_nexthops(fi) {
+ 		nh->nh_parent = fi;
+@@ -849,6 +856,11 @@
+ 		head = &fib_info_devhash[hash];
+ 		hlist_add_head(&nh->nh_hash, head);
+ 	} endfor_nexthops(fi)
++#ifdef CONFIG_MAPPING
++       fi->fib_mapping = cfg->fib_config_rtm_mapping;
++       fi->fib_src_prefix = cfg->fib_config_rtm_src_prefix;
++       fi->fib_dst_prefix = cfg->fib_config_rtm_dst_prefix;
++#endif
+ 	spin_unlock_bh(&fib_info_lock);
+ 	return fi;
+ 
+@@ -889,6 +901,11 @@
+ 
+ 			if (fi->fib_flags & RTNH_F_DEAD)
+ 				continue;
++#ifdef	CONFIG_MAPPING
++			res->mapping = fi->fib_mapping;	/* Transfer mapping information from fib to fib_result */
++			res->src_prefix = fi->fib_src_prefix;
++			res->dst_prefix = fi->fib_dst_prefix;
++#endif
+ 
+ 			switch (fa->fa_type) {
+ 			case RTN_UNICAST:
+--- linux-2.6.31/include/net/flow.h	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/include/net/flow.h	2011-03-17 17:03:18.000000000 +0200
+@@ -15,6 +15,10 @@
+ 	int	iif;
+ 	__u32	mark;
+ 
++#ifdef CONFIG_MAPPING
++	struct sk_buff *skb;
++#endif
++
+ 	union {
+ 		struct {
+ 			__be32			daddr;
+--- linux-2.6.31/include/net/route.h	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/include/net/route.h	2011-03-17 17:03:18.000000000 +0200
+@@ -75,6 +75,11 @@
+ 	/* Miscellaneous cached information */
+ 	__be32			rt_spec_dst; /* RFC1122 specific destination */
+ 	struct inet_peer	*peer; /* long-living peer info */
++#ifdef	CONFIG_MAPPING
++	unsigned char		mapping;
++	__u32			src_prefix;
++	__u32			dst_prefix;
++#endif
+ };
+ 
+ struct ip_rt_acct
+--- linux-2.6.31/net/ipv6/ip6_input.c	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/net/ipv6/ip6_input.c	2011-03-17 17:03:19.000000000 +0200
+@@ -50,6 +50,13 @@
+ {
+ 	if (skb_dst(skb) == NULL)
+ 		ip6_route_input(skb);
++#ifdef	CONFIG_MAPPING
++        struct dst_entry *rt = skb_dst(skb);
++	if (rt == NULL) {	/* To free the old sk_buff */
++		kfree_skb(skb);
++		return 0;
++	}
++#endif
+ 
+ 	return dst_input(skb);
+ }
+--- linux-2.6.31/net/ipv6/ip6_output.c	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/net/ipv6/ip6_output.c	2011-03-17 17:03:19.000000000 +0200
+@@ -54,6 +54,9 @@
+ #include <net/xfrm.h>
+ #include <net/checksum.h>
+ #include <linux/mroute6.h>
++#ifdef	CONFIG_MAPPING
++#include "proto_trans.h"
++#endif
+ 
+ static int ip6_fragment(struct sk_buff *skb, int (*output)(struct sk_buff *));
+ 
+@@ -177,6 +180,16 @@
+ 
+ int ip6_output(struct sk_buff *skb)
+ {
++#ifdef CONFIG_MAPPING
++       struct dst_entry *rt = skb_dst(skb);
++       if (rt->mapping) {
++               if (!ip6_mapping(skb))
++                       printk("Mapping6 Failed!\n");
++               kfree_skb(skb);
++               return 0;
++       }
++#endif
++
+ 	struct inet6_dev *idev = ip6_dst_idev(skb_dst(skb));
+ 	if (unlikely(idev->cnf.disable_ipv6)) {
+ 		IP6_INC_STATS(dev_net(skb_dst(skb)->dev), idev,
+--- linux-2.6.31/include/net/ip_fib.h	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/include/net/ip_fib.h	2011-03-17 17:03:18.000000000 +0200
+@@ -26,6 +26,9 @@
+ 	u8			fc_protocol;
+ 	u8			fc_scope;
+ 	u8			fc_type;
++#ifdef CONFIG_MAPPING
++	unsigned char fib_config_rtm_mapping;
++#endif
+ 	/* 3 bytes unused */
+ 	u32			fc_table;
+ 	__be32			fc_dst;
+@@ -41,7 +44,11 @@
+ 	u32			fc_flow;
+ 	u32			fc_nlflags;
+ 	struct nl_info		fc_nlinfo;
+- };
++#ifdef CONFIG_MAPPING
++	unsigned long		fib_config_rtm_src_prefix;	/* Mapping src prefix */
++	unsigned long		fib_config_rtm_dst_prefix;	/* Mapping dst prefix */
++#endif
++};
+ 
+ struct fib_info;
+ 
+@@ -86,6 +93,11 @@
+ #ifdef CONFIG_IP_ROUTE_MULTIPATH
+ 	int			fib_power;
+ #endif
++#ifdef CONFIG_MAPPING
++	unsigned char           fib_mapping;    /* For Mapping  */
++	unsigned long		fib_src_prefix;	/* Mapping src prefix */
++	unsigned long		fib_dst_prefix; /* Mapping dst prefix */
++#endif
+ 	struct fib_nh		fib_nh[0];
+ #define fib_dev		fib_nh[0].nh_dev
+ };
+@@ -104,6 +116,11 @@
+ #ifdef CONFIG_IP_MULTIPLE_TABLES
+ 	struct fib_rule	*r;
+ #endif
++#ifdef CONFIG_MAPPING
++	unsigned char	mapping;
++	unsigned long	src_prefix;
++	unsigned long	dst_prefix;
++#endif
+ };
+ 
+ struct fib_result_nl {
+--- linux-2.6.31/net/ipv4/ip_forward.c	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/net/ipv4/ip_forward.c	2011-03-17 17:03:19.000000000 +0200
+@@ -78,8 +78,10 @@
+ 	if (ip_hdr(skb)->ttl <= 1)
+ 		goto too_many_hops;
+ 
++#ifndef	CONFIG_MAPPING
+ 	if (!xfrm4_route_forward(skb))
+ 		goto drop;
++#endif
+ 
+ 	rt = skb_rtable(skb);
+ 
+--- linux-2.6.31/net/ipv4/ip_output.c	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/net/ipv4/ip_output.c	2011-03-17 17:03:19.000000000 +0200
+@@ -80,6 +80,9 @@
+ #include <linux/netlink.h>
+ #include <linux/tcp.h>
+ 
++#ifdef  CONFIG_MAPPING
++#include "proto_trans.h"        /* for ip_mapping() */
++#endif
+ int sysctl_ip_default_ttl __read_mostly = IPDEFTTL;
+ 
+ /* Generate a checksum for an outgoing IP datagram. */
+@@ -297,7 +300,16 @@
+ int ip_output(struct sk_buff *skb)
+ {
+ 	struct net_device *dev = skb_dst(skb)->dev;
+-
++#ifdef CONFIG_MAPPING
++       struct rtable *rt;
++       struct iphdr *myiph;
++       myiph = (struct iphdr *)ip_hdr(skb);
++       rt = (struct rtable *)skb_dst(skb);
++       if (rt->mapping) {      /* Packet translation for local output */
++               ip_mapping(skb, rt->src_prefix, rt->dst_prefix);
++               return 0;
++       }
++#endif
+ 	IP_UPD_PO_STATS(dev_net(dev), IPSTATS_MIB_OUT, skb->len);
+ 
+ 	skb->dev = dev;
+--- linux-2.6.31/net/Kconfig	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/net/Kconfig	2011-03-17 17:03:19.000000000 +0200
+@@ -59,6 +59,15 @@
+ 
+ endif # if INET
+ 
++config MAPPING
++       bool "IVI(test only)"
++       ---help---
++          This option enables the IVI function of the kernel.
++          It may introduce unstable factors to your system.
++          Please use mroute and mroute6 programs for configuration.
++          Recommended to read detailed information, available from
++          <http://www.ipivi.org>
++
+ config NETWORK_SECMARK
+ 	bool "Security Marking"
+ 	help
+--- linux-2.6.31/net/ipv4/Makefile	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/net/ipv4/Makefile	2011-03-17 17:03:19.000000000 +0200
+@@ -52,3 +54,4 @@
+ 
+ obj-$(CONFIG_XFRM) += xfrm4_policy.o xfrm4_state.o xfrm4_input.o \
+ 		      xfrm4_output.o
++obj-$(CONFIG_MAPPING) += mapping.o proto_trans.o
+--- linux-2.6.31/net/ipv6/Makefile	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/net/ipv6/Makefile	2011-03-17 17:03:19.000000000 +0200
+@@ -37,6 +39,7 @@
+ obj-$(CONFIG_IPV6_SIT) += sit.o
+ obj-$(CONFIG_IPV6_TUNNEL) += ip6_tunnel.o
+ 
++obj-$(CONFIG_MAPPING) += mapping.o proto_trans.o
+ obj-y += addrconf_core.o exthdrs_core.o
+ 
+ obj-$(subst m,y,$(CONFIG_IPV6)) += inet6_hashtables.o
+--- linux-2.6.31/net/ipv6/route.c	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/net/ipv6/route.c	2011-03-17 17:03:19.000000000 +0200
+@@ -59,6 +59,9 @@
+ #ifdef CONFIG_SYSCTL
+ #include <linux/sysctl.h>
+ #endif
++#ifdef CONFIG_MAPPING
++#include "proto_trans.h"
++#endif
+ 
+ /* Set to 3 to get tracing. */
+ #define RT6_DEBUG 2
+@@ -709,7 +712,9 @@
+ 	int attempts = 3;
+ 	int err;
+ 	int reachable = net->ipv6.devconf_all->forwarding ? 0 : RT6_LOOKUP_F_REACHABLE;
+-
++#ifdef CONFIG_MAPPING
++	struct sk_buff *skb = fl->skb;
++#endif
+ 	strict |= flags & RT6_LOOKUP_F_IFACE;
+ 
+ relookup:
+@@ -721,6 +726,15 @@
+ restart:
+ 	rt = rt6_select(fn, oif, strict | reachable);
+ 
++#ifdef CONFIG_MAPPING
++        if ((rt->rt6i_flags & RTF_MAPPING)) {
++               if (!ip6_mapping(skb))
++                       printk("Mapping6 Failed!\n");
++               read_unlock_bh(&table->tb6_lock);
++	       skb_dst_set(skb,NULL);
++               return NULL;
++        }
++#endif
+ 	BACKTRACK(net, &fl->fl6_src);
+ 	if (rt == net->ipv6.ip6_null_entry ||
+ 	    rt->rt6i_flags & RTF_CACHE)
+@@ -769,7 +783,12 @@
+ out2:
+ 	rt->u.dst.lastuse = jiffies;
+ 	rt->u.dst.__use++;
+-
++#ifdef	CONFIG_MAPPING
++	if (rt->rt6i_flags & RTF_MAPPING)
++		rt->u.dst.mapping = 1;
++	else
++		rt->u.dst.mapping = 0;
++#endif
+ 	return rt;
+ }
+ 
+@@ -785,6 +804,9 @@
+ 	struct net *net = dev_net(skb->dev);
+ 	int flags = RT6_LOOKUP_F_HAS_SADDR;
+ 	struct flowi fl = {
++#ifdef CONFIG_MAPPING
++		.skb = skb,
++#endif
+ 		.iif = skb->dev->ifindex,
+ 		.nl_u = {
+ 			.ip6_u = {
+@@ -1281,6 +1303,12 @@
+ 	}
+ 
+ 	rt->rt6i_flags = cfg->fc_flags;
++#ifdef	CONFIG_MAPPING
++	if (rt->rt6i_flags&RTF_MAPPING)
++		rt->u.dst.mapping = 1;
++	else
++		rt->u.dst.mapping = 0;
++#endif
+ 
+ install_route:
+ 	if (cfg->fc_mx) {
+--- linux-2.6.31/net/ipv4/route.c	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/net/ipv4/route.c	2011-03-17 17:03:19.000000000 +0200
+@@ -107,6 +107,9 @@
+ #ifdef CONFIG_SYSCTL
+ #include <linux/sysctl.h>
+ #endif
++#ifdef CONFIG_MAPPING
++#include "proto_trans.h"
++#endif
+ 
+ #define RT_FL_TOS(oldflp) \
+     ((u32)(oldflp->fl4_tos & (IPTOS_RT_MASK | RTO_ONLINK)))
+@@ -1964,6 +1967,7 @@
+ 	}
+ 
+ 
++#ifndef	CONFIG_MAPPING
+ 	err = fib_validate_source(saddr, daddr, tos, FIB_RES_OIF(*res),
+ 				  in_dev->dev, &spec_dst, &itag);
+ 	if (err < 0) {
+@@ -1976,7 +1980,9 @@
+ 
+ 	if (err)
+ 		flags |= RTCF_DIRECTSRC;
+-
++#else
++	err = 0;
++#endif
+ 	if (out_dev == in_dev && err &&
+ 	    (IN_DEV_SHARED_MEDIA(out_dev) ||
+ 	     inet_addr_onlink(out_dev, saddr, FIB_RES_GW(*res))))
+@@ -2008,6 +2014,11 @@
+ 	rth->fl.fl4_dst	= daddr;
+ 	rth->rt_dst	= daddr;
+ 	rth->fl.fl4_tos	= tos;
++#ifdef CONFIG_MAPPING
++	rth->mapping = res->mapping;	/* Make the mapping cache */
++	rth->src_prefix = res->src_prefix;
++	rth->dst_prefix = res->dst_prefix;
++#endif
+ 	rth->fl.mark    = skb->mark;
+ 	rth->fl.fl4_src	= saddr;
+ 	rth->rt_src	= saddr;
+@@ -2131,6 +2142,13 @@
+ 	free_res = 1;
+ 
+ 	RT_CACHE_STAT_INC(in_slow_tot);
++#ifdef	CONFIG_MAPPING
++	if (res.mapping) {
++		if (!ip_mapping(skb, res.src_prefix, res.dst_prefix))
++			printk("Mapping Failed!\n");
++		goto e_inval;	/* Stop the current stack running */
++	}
++#endif
+ 
+ 	if (res.type == RTN_BROADCAST)
+ 		goto brd_input;
+@@ -2148,8 +2166,10 @@
+ 		goto local_input;
+ 	}
+ 
++#ifndef        CONFIG_MAPPING
+ 	if (!IN_DEV_FORWARD(in_dev))
+ 		goto e_hostunreach;
++#endif
+ 	if (res.type != RTN_UNICAST)
+ 		goto martian_destination;
+ 
+@@ -2281,6 +2301,16 @@
+ 		    rth->fl.mark == skb->mark &&
+ 		    net_eq(dev_net(rth->u.dst.dev), net) &&
+ 		    !rt_is_expired(rth)) {
++#ifdef CONFIG_MAPPING
++			if (rth->mapping) {
++				dst_hold(&rth->u.dst);
++				RT_CACHE_STAT_INC(in_hit);
++				if (!ip_mapping(skb, rth->src_prefix, rth->dst_prefix)) {
++					printk("Mapping Failed!\n");
++				}
++				return -EINVAL;	/* Stop the stack running */
++			}
++#endif
+ 			dst_use(&rth->u.dst, jiffies);
+ 			RT_CACHE_STAT_INC(in_hit);
+ 			rcu_read_unlock();
+@@ -2402,6 +2432,11 @@
+ 	rth->rt_iif	= oldflp->oif ? : dev_out->ifindex;
+ 	/* get references to the devices that are to be hold by the routing
+ 	   cache entry */
++#ifdef CONFIG_MAPPING
++	rth->mapping	= res->mapping;
++	rth->src_prefix = res->src_prefix;
++	rth->dst_prefix = res->dst_prefix;
++#endif	
+ 	rth->u.dst.dev	= dev_out;
+ 	dev_hold(dev_out);
+ 	rth->idev	= in_dev_get(dev_out);
+--- linux-2.6.31/include/linux/route.h	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/include/linux/route.h	2011-03-17 17:03:18.000000000 +0200
+@@ -45,6 +46,10 @@
+ #endif
+ 	unsigned long	rt_window;	/* Window clamping 		*/
+ 	unsigned short	rt_irtt;	/* Initial RTT			*/
++#ifdef	CONFIG_MAPPING
++	unsigned long	src_prefix;	/* Mapping prefix for src addr	*/
++	unsigned long	dst_prefix;	/* Mapping prefix for dst addr	*/
++#endif
+ };
+ 
+ 
+@@ -60,6 +65,10 @@
+ #define RTF_IRTT	0x0100		/* Initial round trip time	*/
+ #define RTF_REJECT	0x0200		/* Reject route			*/
+ 
++#ifdef	CONFIG_MAPPING
++#define RTF_MAPPING	0x0400		/* A mapping route entry	*/
++#endif
++
+ /*
+  *	<linux/ipv6_route.h> uses RTF values >= 64k
+  */
+--- linux-2.6.31/include/linux/rtnetlink.h	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/include/linux/rtnetlink.h	2011-03-17 17:03:18.000000000 +0200
+@@ -167,6 +167,12 @@
+ 	unsigned char		rtm_type;	/* See below	*/
+ 
+ 	unsigned		rtm_flags;
++#ifdef	CONFIG_MAPPING
++	unsigned char		rtm_mapping;	/* For mapping */
++	unsigned long		rtm_src_prefix;	/* Mapping src prefix */
++	unsigned long		rtm_dst_prefix;	/* Mapping dst prefix */
++#endif
++	
+ };
+ 
+ /* rtm_type */

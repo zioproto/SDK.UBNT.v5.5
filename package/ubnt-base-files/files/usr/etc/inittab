@@ -1,0 +1,10 @@
+# Executed on startup
+::sysinit:/etc/rc.d/rc.sysinit
+# Stuff to do when restarting the init process
+::restart:/sbin/init
+# Run daemons
+::wait:/usr/etc/rc.d/rc start
+# Stuff to do before rebooting
+::shutdown:/etc/rc.d/rc stop
+::shutdown:/etc/rc.d/rc.stop
+::shutdown:/bin/umount -a -r

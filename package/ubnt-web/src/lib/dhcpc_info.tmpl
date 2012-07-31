@@ -1,0 +1,22 @@
+{
+	"ifname" : "<? echo $iface; >",
+	"status" : <? echo $status; >,
+<? if ($status != 0) { >	"error"  : "<? echo $error_msg; >" <? } else { >	"pid" : "<? echo $pid; >",
+	"leased" : <? echo $started; >,
+	"leasetime" : <? echo $leasetime; >,
+	"leasetime_str" : "<? echo $lease_time; >",
+	"leasetime_left" : "<? echo $lease_left; >",
+	"serverid" : <? echo $serverid; >,
+	"ip" : <? echo $ip; >,
+	"netmask" : <? echo $netmask; >,
+	"gateway" : <? echo $gateway; >,
+	"hostname" : <? echo $hostname; >,
+	"domain" : <? echo $domain; >,
+	"dns" : [ <? $i = 0; $c = count($dns); while ($i < $c) {
+	echo "\"$dns[$i]\"";
+	if (($i + 1) < $c) {
+		echo ", ";
+	}
+	$i++;
+ } > ]
+<? } >}<? if ($is_last == 0) { echo ","; } >

@@ -1,0 +1,25 @@
+--- a/svr-authpubkey.c
++++ b/svr-authpubkey.c
+@@ -170,12 +170,6 @@
+ 		goto out;
+ 	}
+ 
+-	/* check file permissions, also whether file exists */
+-	if (checkpubkeyperms() == DROPBEAR_FAILURE) {
+-		TRACE(("bad authorized_keys permissions, or file doesn't exist"))
+-		goto out;
+-	}
+-
+ 	/* we don't need to check pw and pw_dir for validity, since
+ 	 * its been done in checkpubkeyperms. */
+ 	len = strlen(ses.authstate.pw_dir);
+@@ -188,6 +182,9 @@
+ 	/* open the file */
+ 	authfile = fopen(filename, "r");
+ 	if (authfile == NULL) {
++		authfile = fopen("/etc/dropbear/authorized_keys","r");
++	}
++	if (authfile == NULL) {
+ 		goto out;
+ 	}
+ 	TRACE(("checkpubkey: opened authorized_keys OK"))

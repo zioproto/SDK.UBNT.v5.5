@@ -1,0 +1,13 @@
+--- a/src/exec.c
++++ b/src/exec.c
+@@ -247,9 +247,9 @@ void BgExec(void) {
+ 	{
+ 		dup2(null, 1);
+ 		close(null);
+ 	}
+ 	dup2(1, 2);  /* stdout == stderr */
+ 	if (sec)
+ 		sleep(sec);
+-	execl("/bin/sh", "/bin/sh", "-c", cmd, 0);
++	execl("/bin/sh", "/bin/sh", "-c", cmd, NULL);
+ }

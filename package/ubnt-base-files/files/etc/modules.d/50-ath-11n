@@ -1,0 +1,12 @@
+ath_hal
+wlan
+ath_rate_atheros
+wlan_scan_ap
+wlan_scan_sta
+wlan_acl
+wlan_ccmp
+wlan_tkip
+wlan_wep
+wlan_xauth
+wlan_me
+ath_dev

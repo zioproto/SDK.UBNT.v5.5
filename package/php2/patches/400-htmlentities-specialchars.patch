@@ -1,0 +1,144 @@
+--- a/src/echo.c
++++ b/src/echo.c
+@@ -474,15 +474,15 @@ void ParseEscapes(char *string) {
+ }
+ 
+ typedef struct php_extra_ents {
+ 	int code;
+ 	char str[6];
+ } php_extra_ents;
+ 
+-void HtmlSpecialChars(void) {
++void HtmlEntities(void) {
+ 	Stack *s;
+ 	int i;
+ 	char lookfor[2];
+ 	char replace[10];
+ 	char *new, *work;
+ 	char EntTable[][7] = {"nbsp","iexcl","cent","pound","curren","yen","brvbar",
+ 	                      "sect","uml","copy","ordf","laquo","not","shy","reg",
+@@ -527,7 +527,88 @@ void HtmlSpecialChars(void) {
+ 			sprintf(replace,"&%s;",EntTable[i-160]);
+ 			new = _RegReplace(lookfor,replace,work);
+ 			if(new!=work) work = new;
+ 		}
+ 	}
+ 	Push(work,STRING);
+ }
++
++/* simplified HtmlSpecialChars - it's sufficient to escape
++ * &,",<,>
++ */
++static char*
++php_htmlspecialchars(const char* s) {
++	unsigned int i, len, maxlen;
++	char* str;
++	char* p;
++	const char* ch;
++
++	if (!s || !*s)
++		return NULL;
++
++	len = strlen(s);
++	maxlen = len;
++	/* unfortunately, we do not have erealloc(), hence lets calculate
++	 * the size needed for new string */
++	for (i = 0; i < len; ++i) {
++		switch (*(s + i)) {
++		case 38: /* &amp; */
++			maxlen += 5;
++			break;
++		case 34: /* &quot; */
++			maxlen += 6;
++			break;
++		case 60: /* &lt; */
++		case 62: /* &gt; */
++			maxlen += 4;
++			break;
++		}
++	}
++	str = emalloc(1, maxlen + 1);
++	memset(str, 0, maxlen + 1);
++	ch = s;
++	p = str;
++	for (i = 0; i < len; ++i, ++ch) {
++		switch (*ch) {
++		case 38: /* &amp; */
++			strcpy(p, "&amp;");
++			p += 5;
++			break;
++		case 34: /* &quot; */
++			strcpy(p, "&quot;");
++			p += 6;
++			break;
++		case 60: /* &lt; */
++			strcpy(p, "&lt;");
++			p += 4;
++			break;
++		case 62: /* &gt; */
++			strcpy(p, "&gt;");
++			p += 4;
++			break;
++		default:
++			*p = *ch;
++			p++;
++		}
++	}
++	str[maxlen] = '\0';
++	return str;
++}
++
++void HtmlSpecialChars(void) {
++	char *str;
++	Stack* s;
++
++	s = Pop();
++	if (!s) {
++		Error("Stack Error in htmlspecialchars function");
++		return;
++	}
++	if(!*s->strval) {
++		Push("",STRING);
++		return;
++	}
++
++	str = php_htmlspecialchars(s->strval);
++	Push(str, STRING);
++}
++
+--- a/src/lex.c
++++ b/src/lex.c
+@@ -447,14 +447,15 @@ static const cmd_table_t cmd_table[PHP_M
+ #endif
+ #ifdef HAVE_ODBC
+ 	  { "sqlrowcount",INTFUNC1,ODBCrowcount },
+ #endif	  
+ 	  { NULL,0,NULL } },
+ 
+ 	{ { "getlastemail", INTFUNC0,GetLastEmail }, /* 12 */
++	  { "htmlentities", INTFUNC1,HtmlEntities},
+ 	  { "ereg_replace", INTFUNC3,ERegReplace },
+ #ifdef HAVE_LIBMSQL
+ 	  { "msql_connect", INTFUNC1,MsqlConnect },
+ 	  { "msql_numrows", INTFUNC1,MsqlNumRows },
+ 	  { "msql_regcase", INTFUNC1,MsqlRegCase },
+ #endif
+ #ifdef HAVE_LIBGD
+--- a/src/php.h
++++ b/src/php.h
+@@ -749,14 +749,15 @@ void GetAllHeaders(void);
+ /* echo.c */
+ void Echo(char *, int);
+ void StripSlashes(char *);
+ void StripDollarSlashes(char *);
+ char *AddSlashes(char *, int);
+ void ParseEscapes(char *);
+ void HtmlSpecialChars(void);
++void HtmlEntities(void);
+ int FormatCheck(char **, char **, char **);
+ void _AddSlashes(void);
+ void _StripSlashes(void);
+ 
+ /* cond.c */
+ int Compare(int);
+ void If(void);

@@ -1,0 +1,11 @@
+--- a/init/init.c
++++ b/init/init.c
+@@ -143,7 +143,7 @@ static void message(int where, const cha
+ 		if (where & L_LOG) {
+ 			/* don't out "\r" */
+ 			openlog(applet_name, 0, LOG_DAEMON);
+-			syslog(LOG_INFO, "init: %s", msg + 1);
++			syslog(LOG_INFO, "%s", msg + 1);
+ 			closelog();
+ 		}
+ 		msg[l++] = '\n';

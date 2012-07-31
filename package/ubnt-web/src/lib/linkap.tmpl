@@ -1,0 +1,427 @@
+<? include("lib/link_head.tmpl"); >
+ <tr>
+    <td colspan="2" class="centr">
+    <?if (cfg_is_modified($cfg_file)) { include("lib/modified.tmpl"); }
+      if ($netwarning == "1") { include("lib/warn-net.tmpl"); }
+      if (fileinode($emerg_file) != -1) { include("lib/warn-emerg.tmpl"); }
+      if ($secwarning == "1") { include("lib/warn-security.tmpl"); }
+      include("lib/error.tmpl");>
+    <br>
+    <form id="this_form" enctype="multipart/form-data" action="link.cgi" method="POST" onSubmit="return doAPSubmit(this);">
+    <table cellpadding="0" cellspacing="0" class="linktable">
+      <tr><th colspan="4"><input type="hidden" id="ackdistance" name="ackdistance" value="<? echo $ackdistance;>"><input type="hidden" id="cc" name="cc" value="changed" disabled="disabled"><? echo dict_translate("Basic Wireless Settings"); ></th></tr>
+	  <tr><td colspan="4" class="tdpad">&nbsp;</td></tr>
+      <!-- wireless link mode -->
+      <tr>
+        <td class="f d"><? echo dict_translate("Wireless Mode:"); ><span class="help">
+            <!--<a href="<? echo localize_help("wmode.html");>" rel="help">[?]</a></span>-->
+        </td>
+        <td>
+	  <select id="wmode" name="wmode" req="1" realname="<? echo dict_translate("Wireless Mode:"); >" onChange="onChangeAPSubmit();">
+	    <option value="sta" selected><? echo dict_translate("Station"); ></option>
+	    <option value="ap"><? echo dict_translate("Access Point"); ></option>
+	    <option value="aprepeater"><? echo dict_translate("AP-Repeater"); ></option>
+	  </select>
+	  </td>
+	  <td class="f-left" colspan="2">
+<? if ($wmode=="aprepeater") {>
+	<input type="checkbox" name="wds_auto" id="wds_auto" value="enabled"
+		<? if ($wds_auto == "enabled") { echo "checked"; }>>
+		<label for="wds_auto"><? echo dict_translate("Auto"); ></label></td>
+<? } else { >&nbsp;<? } >
+	</td>
+      </tr>
+      <!-- WDS Peers -->
+      <? if ($wmode=="aprepeater") {>
+      <tr>
+        <td class="f"><? echo dict_translate("WDS Peers:"); ></td>
+        <td colspan="3"><input type="text" class="config" name="peer1" id="peer1" maxlength="17" value="<?echo $peer1;>" req="1" callback="validateHwAddr" realname="<? echo dict_translate("WDS peer MAC address"); >"/>
+        <input type="text" class="config" name="peer2" id="peer2" maxlength="17" value="<?echo $peer2;>" req="1" callback="validateHwAddr" realname="<? echo dict_translate("WDS peer MAC address"); >"/>
+	</td>
+      </tr>
+      <tr>
+        <td class="f">&nbsp;</td>
+        <td colspan="3"><input type="text" class="config" name="peer3" id="peer3" maxlength="17" value="<?echo $peer3;>" req="1" callback="validateHwAddr" realname="<? echo dict_translate("WDS peer MAC address"); >"/>
+        <input type="text" class="config" name="peer4" id="peer4" maxlength="17" value="<?echo $peer4;>" req="1" callback="validateHwAddr" realname="<? echo dict_translate("WDS peer MAC address"); >"/>
+	</td>
+      </tr>
+      <tr>
+        <td class="f">&nbsp;</td>
+        <td colspan="3"><input type="text" class="config" name="peer5" id="peer5" maxlength="17" value="<?echo $peer5;>" req="1" callback="validateHwAddr" realname="<? echo dict_translate("WDS peer MAC address"); >"/>
+        <input type="text" class="config" name="peer6" id="peer6" maxlength="17" value="<?echo $peer6;>" req="1" callback="validateHwAddr" realname="<? echo dict_translate("WDS peer MAC address"); >"/>
+	</td>
+      </tr>
+      <? } else {>
+      <!-- WDS -->
+      <tr>
+        <td class="f"><? echo dict_translate("WDS (Transparent Bridge Mode):"); ></td>
+	<td class="f-left" colspan="3">
+	  <input type="checkbox" name="wds_chkbox" id="wds_chkbox" value="enabled"
+	  	<? if ($wds_chkbox =="enabled") { echo "checked"; }>>
+	  	<label for="wds_chkbox"><? echo dict_translate("Enable");></label>
+	</td>
+      </tr>
+      <? } >
+      <!-- SSID -->
+      <tr>
+        <td class="f"><? echo dict_translate("SSID:"); ></td>
+        <td><input type="text" class="config" name="essid" id="essid" regexp="^[ -~]{0,32}$" maxlength="32" value="<?echo $essid;>" req="1" realname="<? echo dict_translate("SSID"); >"/>
+	<input type="hidden" name="hidessid" id="hidessid" value="<? echo $hidessid;>">
+	</td>
+	<td class="f-left" colspan="2">
+	<input type="checkbox" name="hidessid_chk" id="hidessid_chk" <? if($hidessid=="enabled") { echo "checked";}>>
+	<label for="hidessid_chk"><? echo dict_translate("Hide SSID"); ></label></td>
+      </tr>
+      <tr<? if ($radio["ccode_fixed"] != 0) { echo " style=\"display:none;\"";}  >>
+        <!-- country code -->
+        <td class="f"><? echo dict_translate("Country Code:"); ></td>
+        <td colspan="2">
+	  <select id="country_ctrl" size="1" name="country_ctrl" onChange="onChangeAPSubmit();" disabled="disabled">
+<? 
+	if ($radio["ccode_fixed"] == 0 && $radio["ccode_locked"] != 1) {
+		include("lib/ccode.inc"); 
+	} else { 
+>
+		<option value="<? echo $country; >" selected>Locked</option>
+<?}>
+	  </select><input type="hidden" name="old_country" id="old_country" value="<?echo $old_country>">
+          <input type="hidden" id="country" name="country" value="<?echo $country>">
+	</td>
+        <td><input type="button" id="change_ccode" value="<? echo dict_translate("Change..."); >" onClick="change_country($('#country'));"/></td>
+      </tr>
+      <!-- IEEE mode -->
+      <tr <? if ($radio["ccode_fixed"] != 0) { echo " style=\"display:none;\"";} > >
+        <td class="f"><? echo dict_translate("IEEE 802.11 Mode:"); ></td>
+	<td colspan="3">
+	  <select id="ieee_mode_select" name="ieee_mode_select" req="1" realname="<? echo dict_translate("IEEE 802.11 Mode:"); >" onchange="onIEEEMode(this);">
+	  </select><input type="hidden" id="ieee_mode" name="ieee_mode" value="<?echo $ieee_mode>">
+	</td>
+      </tr>
+<? if ($radio["ieee_mode_a"] && !$radio["ccode_fixed"]) { >
+	<tr id="dfs_row">
+		<td class="f"><? echo dict_translate("DFS:"); ></td>
+		<td class="f-left" colspan="3">
+			<input id="dfs" name="dfs" type="checkbox" <? if ($dfs == "enabled") { echo "checked";}>>
+			<label class="f" for="dfs"><? echo dict_translate("Enable"); ></label></td>
+		</td>
+	</tr>
+<? } >
+<? if ($feature_clksel == 1) { >
+      <!-- rate mode -->
+      <tr>
+		<td class="f"><? echo dict_translate("Channel Width:"); ><span class="help"><a href="<? echo localize_help("clksel.html");>" rel="help">[?]</a></span></td>
+		<td colspan="3" style="white-space: nowrap;">
+	  <select id="clksel_select" name="clksel_select" req="1" realname="<? echo dict_translate("Channel Width:"); >" onChange="onClksel(this);">
+	  </select><input type="hidden" id="clksel" name="clksel" value="<?echo $clksel>">
+	</td>
+      </tr>
+<? } >
+      <tr>
+        <td class="f"><? echo dict_translate("Channel Shifting:"); ><span class="help"><a href="<? echo localize_help("chanshift.html");>" rel="help">[?]</a></span></td>
+	<td colspan="3">
+	  <select id="chanshift" name="chanshift" req="1" realname="<? echo dict_translate("Channel Shifting:"); >" onChange="onChanshift(this);">
+          <option value="0"><? echo dict_translate("Disable"); ></option>
+          <option value="<? if ($radio["ieee_mode_bg"] == 1) {echo 2;} else {echo 5;} >"><? echo dict_translate("Enable"); ></option>
+	  </select>
+	</td>
+      </tr>
+      <tr>
+        <td class="f"><? echo dict_translate("Frequency, MHz:"); ></td>
+	<td colspan="3">
+	  <select id="chan_freq" name="chan_freq" req="1" realname="<? echo dict_translate("Frequency, MHz:"); >" onChange="onFrequency(this); toggleObeyRegulatory();">
+	  </select>
+	</td>
+      </tr>
+<? if ($radio["legacy"] != 1) { >
+      <tr <? if ($radio["ext_channel"] == 0) { echo "style=\"display: none;\""; } > >
+      <td class="f"><? echo dict_translate("Extension Channel:"); ></td>
+        <td colspan="3">
+          <select id="extchannel_select" name="extchannel_select" req="1" realname="<? echo dict_translate("Extension Channel:"); >" onchange="onExtChannel(this);" >
+          </select>
+ 	  <input type="hidden" id="extchannel" name="extchannel" value="<? echo $extchannel;>" />
+        </td>
+      </tr>
+<? } >
+      <tr id="scan_list_row">
+        <td class="f"><? echo dict_translate("Frequency List, MHz:"); ></td>
+	<td class="f-left">
+	  <input type="checkbox" name="channel_scan_list"
+	  	id="channel_scan_list" onClick="toggleScanChannels();" value="enabled"
+	  	<? if ($channel_scan_list=="enabled") { echo "checked"; }>>
+	  	<label for="channel_scan_list"><? echo dict_translate("Enable");></label>
+	</td>
+	<td colspan="2">
+	  <input type="text" class="config" id="scan_channels" name="scan_channels" value="<? echo $scan_channels;>" req="1" realname="<? echo dict_translate("Frequency List");>" callback="validateChannelScanList">
+	  <input type="button" id="edit_scan_channels" name="edit_scan_channels" onClick="openScanChannelSelect();" value="<? echo dict_translate("Edit..."); >">
+	</td>
+      </tr>
+<? if ($feature_obey_rd == 1 && $radio["ccode_fixed"] == 0) { >
+      <tr class="obey_regulatory">
+	<td class="f"><? echo dict_translate("Auto Adjust to EIRP Limit:");></td>
+        <td colspan="3">
+    		<input type="checkbox" name="obey_regulatory_status"
+	  		id="obey_regulatory_checkbox" onClick="toggleObeyRegulatory();" value="enabled"
+                	<? if ($obey_regulatory_status=="enabled") { echo "checked";
+	  	   		if ($eirp_status != "enabled") { echo " disabled=\"disabled\" "; }
+                	}>> <label class="f" for="obey_regulatory_checkbox"><? echo dict_translate("Enable"); ></label>
+	</td>
+      </tr>
+<? } >
+<? if ($radio["antennas"] == 1) { ?>
+      <!-- Antenna -->
+      <tr>
+         <td class="f"><? echo dict_translate("Antenna:"); ></td>
+         <td colspan="3">
+          <select id="antenna" name="antenna" req="1" realname="<? echo dict_translate("Antenna:"); >" onChange="onAntennaChange(true);">
+<? $i = 0; while ($i < $radio["ant_count"]) { ?>
+		<option value="<? echo $radio["ant_id_$i"]; ?>">
+		<?
+			echo $radio["ant_name_$i"];
+			if ($radio["ant_chains_$i"] > 0) {
+				switch($radio["ant_chains_$i"]) {
+					case 3;
+						echo " (3x3)";
+						break;
+					case 2;
+						echo " (2x2)";
+						break;
+					default;
+						echo " (1x1)";
+						break;
+				}
+			}
+			if ($radio["ant_gain_$i"] > 0) {
+				echo " - " + $radio["ant_gain_$i"] + " dBi";
+			}
+		?>
+		</option>
+<? $i++; } ?>
+          </select>
+         </td>
+      </tr>
+<? } ?>
+<? if ($radio["ant_builtin_$antenna_idx"] == 0) { ?>
+	<tr>
+		<td class="f"><? echo dict_translate("Antenna Gain:"); ></td>
+		<td class="f-left">
+			<input type="text" class="std_width" size="5" id="antenna_gain" name="antenna_gain"
+                        	<? if ($eirp_status != "enabled" && $radio["ccode_fixed"] == 0) { echo " disabled=\"disabled\" "; } >
+				req="1" realname="<? echo dict_translate("Antenna Gain:"); >" maxvalue="40" minvalue="0" />
+			<label for="antenna_gain">dBi</label>
+		</td>
+		<td class="f-left" colspan="2"><? echo dict_translate("Cable Loss:"); >
+			<input type="text" class="std_width" size="5" id="cable_loss" name="cable_loss"
+                        	<? if ($eirp_status != "enabled" && $radio["ccode_fixed"] == 0) { echo " disabled=\"disabled\" "; } >
+				req="1" realname="<? echo dict_translate("Cable Loss:"); >" maxvalue="40" minvalue="0" />
+			<label for="cable_loss">dB</label>
+		</td>
+	</tr>
+<? } ?>
+      <!-- output power -->
+      <tr>
+        <td class="f"><? echo dict_translate("Output Power:");></td>
+        <td class="d2" style="padding: 0px 0px 0px 0px;">
+			<div class="slider" id="slider-2" tabIndex="1">
+				<input class="slider-input" id="slider-input-2" name="slider-input-2"/>
+	 		</div>
+	 	</td>
+	 	<td colspan="2" class="f-left">
+		<input type="text" class="std_width" id="txpower" name="txpower" size="5" value="<?echo $txpower>" req="1" realname="<? echo dict_translate("Output power"); >" /> dBm
+		</td>
+      </tr>
+<? if ($feature_datarate == 1) { >
+      <!-- data rate -->
+      <tr>
+        <td class="f"><? echo dict_translate("Max TX Rate, Mbps:"); ></td>
+        <td colspan="3" class="f-left">
+	  <select id="rate" name="rate" req="1" realname="<? echo dict_translate("Transmission Rate, Mbps:"); >"></select>
+	  <input type="checkbox" name="rate_auto" id="rate_auto" value="enabled" <? if ($rate_auto=="enabled") { echo "checked"; }>>
+	  <label for="rate_auto"><? echo dict_translate("Automatic");></label>
+	  <input type="hidden" name="mcast_rate" id="mcast_rate" value="<?echo $mcast_rate>"></td>
+      </tr>
+<? } >
+      <tr><td colspan="4" class="tdpad">&nbsp;</td></tr>
+      <tr><th colspan="4"><? echo dict_translate("Wireless Security"); ></th></tr>
+	  <tr><td colspan="4" class="tdpad">&nbsp;</td></tr>
+
+      <!-- security settings -->
+      <tr>
+        <td class="f"><? echo dict_translate("Security:"); ></td>
+	<td colspan="3">
+	  <select name="security" id="security" onChange="onSecurity(this, true);">
+	    <option value="none"><? echo dict_translate("none"); ></option>
+	    <option value="wep"><? echo dict_translate("WEP"); ></option>
+<? if ($wmode != "aprepeater") { >
+	    <option value="wpa"><? echo dict_translate("WPA"); ></option>
+	    <option value="wpatkip"><? echo dict_translate("WPA-TKIP"); ></option>
+	    <option value="wpaaes"><? echo dict_translate("WPA-AES"); ></option>
+	    <option value="wpa2"><? echo dict_translate("WPA2"); ></option>
+	    <option value="wpa2tkip"><? echo dict_translate("WPA2-TKIP"); ></option>
+	    <option value="wpa2aes"><? echo dict_translate("WPA2-AES"); ></option>
+<? } >
+	  </select>
+	</td>
+      </tr>
+     <tr class="nosec">
+        <td class="f"><? echo dict_translate("RADIUS MAC Authentication:"); ></td>
+		<td class = "f-left" colspan="3"><input type="checkbox" name="radius_mac_acl_status" id="radius_mac_acl_status" value="enabled" onClick="toggleRadiusMACACL();"
+		<? if ($radius_mac_acl_status == "enabled") { echo "checked"; }>>
+		<label for="radius_mac_acl_status"><? echo dict_translate("Enable");></label></td>
+     </tr>
+     <tr class="nosec radaclmacform">
+        <td class="f"><? echo dict_translate("MAC Format:"); ></td>
+	<td colspan="3">
+	  <select class="std_width i_radaclmacform" name="radius_mac_acl_format" id="radius_mac_acl_format">
+	    <option value="%.2X%.2X%.2X%.2X%.2X%.2X">XXXXXXXXXXXX</option>
+	    <option value="%.2X-%.2X-%.2X-%.2X-%.2X-%.2X">XX-XX-XX-XX-XX-XX</option>
+	    <option value="%.2X:%.2X:%.2X:%.2X:%.2X:%.2X">XX:XX:XX:XX:XX:XX</option>
+	  </select>
+	</td>
+      </tr>
+     <tr class="nosec radaclmacform">
+        <td class="f"><? echo dict_translate("Use Empty Password:"); ></td>
+	<td class="f-left" colspan="3">
+		<input type="checkbox" name="radius_mac_acl_passwd" id="radius_mac_acl_passwd" value="disabled"
+		<? if ($radius_mac_acl_passwd == "disabled") { echo "checked"; }>>
+		<label for="radius_mac_acl_passwd"><? echo dict_translate("Enable");></label>
+	</td>
+      </tr>
+      <tr class="wep">
+        <td class="f"><? echo dict_translate("Authentication Type:"); ></td>
+        <td class="f-left" colspan="3">
+	  <input type="radio" name="authtype" id="authtype" value="1" checked><? echo dict_translate("Open"); >
+	  <input type="radio" name="authtype" id="authtype" value="2"><? echo dict_translate("Shared Key"); >
+	</td>
+      </tr>
+      <!-- WEP settings -->
+      <tr class="wep">
+        <td class="f"><? echo dict_translate("WEP Key Length:"); ></td>
+	<td>
+	  <select name="wep_key_length" id="wep_key_length" onChange="updateWepError();">
+	    <option value="wep64"><? echo dict_translate("64 bit"); ></option>
+	    <option value="wep128"><? echo dict_translate("128 bit"); ></option>
+	  </select>
+	</td>
+	<td class="f"><? echo dict_translate("Key Type:"); ></td>
+	<td>
+	  <select name="wep_key_type" id="wep_key_type" onChange="updateWepError();">
+	    <option value="1" selected><? echo dict_translate("HEX"); ></option>
+	    <option value="2"><? echo dict_translate("ASCII"); ></option>
+	  </select>
+	</td>
+      </tr>
+
+      <tr class="wep">
+        <td class="f"><? echo dict_translate("WEP Key:"); ></td>
+        <td><input type="text" class="config" name="wep_key" id="wep_key" value="<?echo $wep_key>" req="1" callback="validateWepKey" realname="<? echo dict_translate("msg_wep_key_format|WEP key (5 HEX pairs)"); >"/></td>
+	<td class="f"><? echo dict_translate("Key Index:"); ></td>
+	<td>
+	  <select name="wep_key_id" id="wep_key_id">
+	    <option value="1">1</option>
+	    <option value="2">2</option>
+	    <option value="3">3</option>
+	    <option value="4">4</option>
+	  </select>
+	</td>
+      </tr>
+      <tr class="wpa">
+        <td class="f"><? echo dict_translate("WPA Authentication:"); ></td>
+	<td colspan="3">
+	  <select class="std_width" name="wpa_auth" id="wpa_auth" onChange="chooseWPA(this, true);">
+	    <option value="WPA-PSK"><? echo dict_translate("PSK"); ></option>
+	    <option value="WPA-EAP"><? echo dict_translate("EAP"); ></option>
+	  </select>
+	</td>
+      </tr>
+     <tr class="wpa wpapsk">
+        <td class="f"><? echo dict_translate("WPA Preshared Key:"); ></td>
+        <td class="f-left" colspan="3"><input type="password" class="config pwd i_wpapsk" name="wpa_key" id="wpa_key" value="<?echo $wpa_key>" req="1" callback="validateWpaKey" realname="<? echo dict_translate("msg_wpa_passphrase_format|WPA passphrase (minimum 8 printable ASCII chars, maximum 63)"); >" autocomplete="off"/></td>
+      </tr>
+     <tr class="wpa wpaeap radmacacl">
+        <td class="f"><? echo dict_translate("Auth Server IP/Port:"); ></td>
+        <td colspan="3"><input type="text" class="config i_wpaeap i_radaclmac" name="radius_auth_ip"
+        id="radius_auth_ip" value="<?echo $radius_auth_ip>" req="1"
+        callback="validateLanIP" realname="<? echo dict_translate("Authentication Server IP"); >"/>
+        <input type="text" class="std_width i_wpaeap i_radaclmac" maxlength="5" size="5"
+        name="radius_auth_port"
+        id="radius_auth_port" value="<?echo $radius_auth_port>" req="1"
+        realname="<? echo dict_translate("Authentication Server Port"); >"
+        minvalue="1" maxvalue="65535"/></td>
+      </tr>
+     <tr class="wpa wpaeap radmacacl">
+        <td class="f"><? echo dict_translate("Auth Server Secret:"); ></td>
+        <td colspan="3"><input type="password" class="config pwd i_wpaeap i_radaclmac" name="radius_auth_secret"
+        id="radius_auth_secret" value="<?echo $radius_auth_secret>" req="1"
+	callback="validateRadiusSecret" realname="<? echo dict_translate("msg_radius_auth_secret_format|Authentication Server Secret (ASCII chars only, maximum 32)"); >"
+        autocomplete="off"/></td>
+      </tr>
+      <tr class="wpa wpaeap radmacacl">
+        <td class="f"><? echo dict_translate("Accounting Server:"); ></td>
+		<td class = "f-left" colspan="3"><input type="checkbox" name="radius_acct_status" id="radius_acct_status" value="enabled" onClick="toggleRadiusAcct();"
+		<? if ($radius_acct_status == "enabled") { echo "checked"; }>>
+		<label for="radius_acct_status"><? echo dict_translate("Enable");></label></td>
+      </tr>
+     <tr class="wpa wpaeap radmacacl radacct">
+        <td class="f"><? echo dict_translate("Acct Server IP/Port:"); ></td>
+        <td colspan="3"><input type="text" class="config i_wpaeap i_radaclmac i_radacct" name="radius_acct_ip"
+        id="radius_acct_ip" value="<?echo $radius_acct_ip>" req="1"
+        callback="validateLanIP" realname="<? echo dict_translate("Accounting Server IP"); >"/>
+        <input type="text" class="std_width i_wpaeap i_radaclmac i_radacct" maxlength="5" size="5"
+        name="radius_acct_port"
+        id="radius_acct_port" value="<?echo $radius_acct_port>" req="1"
+        realname="<? echo dict_translate("Server Accounting Port"); >"
+        minvalue="1" maxvalue="65535"/></td>
+      </tr>
+     <tr class="wpa wpaeap radmacacl radacct">
+        <td class="f"><? echo dict_translate("Acct Server Secret:"); ></td>
+        <td colspan="3"><input type="password" class="config pwd i_wpaeap i_radaclmac i_radacct" name="radius_acct_secret"
+        id="radius_acct_secret" value="<?echo $radius_acct_secret>" req="1"
+	callback="validateRadiusSecret" realname="<? echo dict_translate("msg_radius_acct_secret_format|Accounting Server Secret (ASCII chars only, maximum 32)"); >"
+        autocomplete="off"/></td>
+      </tr>
+      <tr>
+        <td class="f"><? echo dict_translate("MAC ACL:"); ></td>
+		<td class = "f-left" colspan="3"><input type="checkbox" name="mac_acl_status" id="mac_acl_status" value="enabled" onClick="toggleMACACL();"
+		<? if ($mac_acl_status == "enabled") { echo "checked"; }>>
+		<label for="mac_acl_status"><? echo dict_translate("Enable");></label></td>
+      </tr>
+      <tr class="macacl">
+        <td class="f"><? echo dict_translate("Policy:"); ></td>
+		<td colspan="3"><select class="i_macacl" name="mac_acl_policy" id="mac_acl_policy">
+		    <option value="allow"
+		    <? if ($mac_acl_policy == "allow") { echo "selected";}>
+		    >
+		    <? echo dict_translate("Allow"); ></option>
+	    	<option value="deny"
+	    	<? if ($mac_acl_policy == "deny") { echo "selected";}>
+	    	>
+	    	<? echo dict_translate("Deny"); ></option>
+	      </select>
+              <input type="button" id="macacl_configure" name="macacl_configure" class="i_macacl"
+                    value="<? echo dict_translate("ACL..."); >"
+                    onClick="return openPage('macacl.cgi');" />
+	</td>
+      </tr>
+      <tr><td colspan="4" class="tdpad">&nbsp;</td></tr>
+      <tr><th colspan="4">&nbsp;</th></tr>
+      <tr>
+		<td colspan="4" class="change"><input type="submit" value="<? echo dict_translate("Change"); >" /></td>
+      </tr>
+      </table>
+    </form>
+    </td>
+  </tr>
+  <tr> 
+   <td colspan="2">
+      <table cellpadding="0" align="center" cellspacing="0" width="100%">
+      <tr>
+	<td height="10" class="footlogo"><img src="/glogo.cgi" border="0"></td>
+	<td height="10" class="foottext"><? echo dict_translate($oem_copyright); ></td>
+      </tr>
+      </table>
+   </td>
+  </tr>
+</table>
+
+</body>
+</html>

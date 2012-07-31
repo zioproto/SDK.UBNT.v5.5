@@ -1,0 +1,6 @@
+#!/bin/sh
+[ \! -z "$1" -a -d /usr/etc/hotplug.d/$1 ] && {
+	for script in $(ls /usr/etc/hotplug.d/$1/* 2>&-); do (
+		[ -f $script ] && . $script
+	); done
+}

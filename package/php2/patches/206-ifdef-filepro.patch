@@ -1,0 +1,259 @@
+--- a/src/filepro.c
++++ b/src/filepro.c
+@@ -43,26 +43,25 @@ typedef struct fp_field {
+ 
+ static char *fp_database = NULL;			/* Database directory */
+ static signed int fp_fcount = -1;			/* Column count */
+ static signed int fp_keysize = -1;			/* Size of key records */
+ static FP_FIELD *fp_fieldlist = NULL;		/* List of fields */
+ #endif
+ 
+-
++#ifdef HAVE_FILEPRO
+ /*
+  * LNUMBER filePro(STRING directory)
+  * 
+  * Read and verify the map file.  We store the field count and field info
+  * internally, which means we become unstable if you modify the table while
+  * a user is using it!  We cannot lock anything since Web connections don't
+  * provide the ability to later unlock what we locked.  Be smart, be safe.
+  */
+ void filePro(void)
+ {
+-#ifdef HAVE_FILEPRO
+ 	FILE *fp;
+ 	Stack *st;
+ 	char workbuf[256]; /* FIX - should really be the max filename length */
+ 	char readbuf[256];
+ 	int i;
+ 	FP_FIELD *new_field, *tmp;
+ 	
+@@ -126,18 +125,14 @@ void filePro(void)
+ 			}
+ 		}
+ 	}
+ 	fclose(fp);
+ 		
+ 	fp_database = estrdup(0, st->strval);
+ 	Push("1", LNUMBER);
+-#else
+-	Push("0", LNUMBER);
+-	Error("No filePro support");
+-#endif
+ 	return;
+ }
+ 
+ 
+ /*
+  * LNUMBER filePro_rowcount(void)
+  * 
+@@ -145,15 +140,14 @@ void filePro(void)
+  * as deleted; they are not removed.  Since no counts are maintained we need
+  * to go in and count records ourselves.  <sigh>
+  * 
+  * Errors return -1, success returns the row count.
+  */
+ void filePro_rowcount(void)
+ {
+-#ifdef HAVE_FILEPRO
+ 	FILE *fp;
+ 	char workbuf[256]; /* FIX - should really be the max filename length */
+ 	char readbuf[256];
+ 	int recsize = 0, bytes = 0, records = 0;
+ 	
+ 	if (!fp_database) {
+ 		Error("filePro: must set database directory first!\n");
+@@ -177,30 +171,25 @@ void filePro_rowcount(void)
+ 			fseek(fp, recsize, SEEK_CUR);
+ 		}
+ 	}
+     fclose(fp);
+ 	
+ 	sprintf(workbuf, "%d", records);
+ 	Push(workbuf, LNUMBER);
+-#else
+-	Push("-1", LNUMBER);
+-	Error("No filePro support");
+-#endif
+ 	return;
+ }
+ 
+ 
+ /*
+  * STRING filePro_fieldname(int field_number)
+  * 
+  * Errors return an empty string, success returns the name of the field.
+  */
+ void filePro_fieldname(void)
+ {
+-#ifdef HAVE_FILEPRO
+ 	Stack *st;
+ 	int i;
+ 	FP_FIELD *lp;
+ 	
+ 	if (!fp_database) {
+ 		Error("filePro: must set database directory first!\n");
+ 		Push("-1", LNUMBER);
+@@ -217,30 +206,25 @@ void filePro_fieldname(void)
+ 		if (i == st->intval) {
+ 			Push(lp->name, STRING);
+ 			return;
+ 		}
+ 	}
+ 	Error("filePro: unable to locate field number %d.\n", st->intval);
+ 	Push("", STRING);
+-#else
+-	Push("", STRING);
+-	Error("No filePro support");
+-#endif
+ 	return;
+ }
+ 
+ 
+ /*
+  * STRING filePro_fieldtype(int field_number)
+  * 
+  * Errors return an empty string, success returns the type (edit) of the field
+  */
+ void filePro_fieldtype(void)
+ {
+-#ifdef HAVE_FILEPRO
+ 	Stack *st;
+ 	int i;
+ 	FP_FIELD *lp;
+ 	
+ 	if (!fp_database) {
+ 		Error("filePro: must set database directory first!\n");
+ 		Push("-1", LNUMBER);
+@@ -257,30 +241,25 @@ void filePro_fieldtype(void)
+ 		if (i == st->intval) {
+ 			Push(lp->format, STRING);
+ 			return;
+ 		}
+ 	}
+ 	Error("filePro: unable to locate field number %d.\n", st->intval);
+ 	Push("", STRING);
+-#else
+-	Push("", STRING);
+-	Error("No filePro support");
+-#endif
+ 	return;
+ }
+ 
+ 
+ /*
+  * STRING filePro_fieldwidth(int field_number)
+  * 
+  * Errors return -1, success returns the character width of the field.
+  */
+ void filePro_fieldwidth(void)
+ {
+-#ifdef HAVE_FILEPRO
+ 	Stack *st;
+ 	int i;
+ 	FP_FIELD *lp;
+ 	char workbuf[256];
+ 	
+ 	if (!fp_database) {
+ 		Error("filePro: must set database directory first!\n");
+@@ -299,57 +278,47 @@ void filePro_fieldwidth(void)
+ 			sprintf(workbuf, "%d", lp->width);
+ 			Push(workbuf, LNUMBER);
+ 			return;
+ 		}
+ 	}
+ 	Error("filePro: unable to locate field number %d.\n", st->intval);
+ 	Push("-1", LNUMBER);
+-#else
+-	Push("-1", LNUMBER);
+-	Error("No filePro support");
+-#endif
+ 	return;
+ }
+ 
+ 
+ /*
+  * LNUMBER filePro_fieldcount(void)
+  * 
+  * Errors return -1, success returns the field count.
+  */
+ void filePro_fieldcount(void)
+ {
+-#ifdef HAVE_FILEPRO
+ 	char workbuf[256];
+ 	
+ 	if (!fp_database) {
+ 		Error("filePro: must set database directory first!\n");
+ 		Push("-1", LNUMBER);
+ 	    return;
+ 	}
+ 	
+ 	/* Read in the first line from the map file */
+ 	sprintf(workbuf, "%d", fp_fcount);
+ 	Push(workbuf, LNUMBER);
+-#else
+-	Push("-1", LNUMBER);
+-	Error("No filePro support");
+-#endif
+ 	return;
+ }
+ 
+ 
+ /*
+  * STRING filePro_retrieve(int row_number, int field_number)
+  * 
+  * Errors return and empty string, success returns the datum.
+  */
+ void filePro_retrieve(void)
+ {
+-#ifdef HAVE_FILEPRO
+     Stack *st;
+     FILE *fp;
+     char workbuf[256], readbuf[1024]; /* FIX - Work out better buffering! */
+     long offset;
+     FP_FIELD *lp;
+     int i, fnum, rnum;
+ 	
+@@ -394,14 +363,11 @@ void filePro_retrieve(void)
+         Push("", STRING);
+ 	    fclose(fp);
+         return;
+     }
+     readbuf[lp->width] = '\0';
+ 	Push(readbuf, STRING);
+     fclose(fp);
+-#else
+-	Push("-1", LNUMBER);
+-	Error("No filePro support");
+-#endif
+ 	return;
+ }
++#endif
+ 
+--- a/src/php.h
++++ b/src/php.h
+@@ -1327,21 +1327,24 @@ void php_init_oracle(void);
+ void OraCloseAll(void);
+ #else
+ #define php_init_oracle()
+ #define OraCloseAll()
+ #endif
+ 
+ /* filepro.c */
++#ifdef HAVE_FILEPRO
+ void filePro(void);
+ void filePro_rowcount(void);
+ void filePro_fieldcount(void);
+ void filePro_fieldtype(void);
+ void filePro_fieldname(void);
+ void filePro_fieldwidth(void);
+ void filePro_retrieve(void);
++#else
++#endif
+ 
+ /* illustra.c */
+ #ifdef ILLUSTRA
+ void MIconnect(void);
+ void MIdbname(void);
+ void MIclose(void);
+ void MIexec(void);

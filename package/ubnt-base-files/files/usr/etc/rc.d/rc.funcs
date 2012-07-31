@@ -1,0 +1,94 @@
+run_plugin() {
+	. /etc/sysinit/$1.conf
+	case "$2" in
+		start)
+		plugin_start
+		;;
+		stop)
+		plugin_stop
+		;;
+		*)
+		return -1
+		;;
+	esac
+}
+
+log_msg() {
+       	tag=$1
+        shift
+       	pidof syslogd > /dev/null 2>&1
+       	if [ $? -eq 0 ]; then
+               	logger -t $tag $*
+	else
+               	date +"%b %d %X $tag: $*" >> /var/log/messages
+	fi
+}
+
+log_err() {
+	err_no=$?
+	if [ $err_no -ne 0 ]; then
+        	log_msg $* "[error: $err_no]"
+        fi
+}
+
+run_plugins() {
+	cmd=$1
+	shift
+	for app in $*; do
+		if [ -e /etc/sysinit/${app}.conf ]; then
+			run_plugin ${app} ${cmd}
+		else
+			echo "Cannot run $cmd for plugin ${app}!"
+		fi
+	done
+}
+
+STARTUP_LIST=/etc/startup.list
+
+rc_start() {
+	if [ -f /etc/persistent/rc.prestart ]; then
+		. /etc/persistent/rc.prestart
+	fi
+	startuplist=`grep -v '#' ${STARTUP_LIST}`
+
+	run_plugins start $startuplist
+
+	/sbin/sysled -r 1
+	/sbin/bgnd -r garp -- /sbin/garp -s 2 &
+
+	if [ -f /etc/persistent/rc.poststart ]; then
+		. /etc/persistent/rc.poststart
+	fi
+        log_msg system Start
+}
+
+rc_stop() {
+        log_msg system Stop
+	if [ -f /etc/persistent/rc.prestop ]; then
+		. /etc/persistent/rc.prestop
+	fi
+
+	origlist=`grep -v '#' ${STARTUP_LIST}`
+	startuplist=""
+	for a in ${origlist}; do 
+		startuplist="$a ${startuplist}"
+	done
+
+	run_plugins stop $startuplist
+
+	/sbin/sysled -r 0
+
+	if [ -f /etc/persistent/rc.poststop ]; then
+		. /etc/persistent/rc.poststop
+	fi
+}
+
+watchdog_start() {
+	if [ -e /dev/watchdog -a -x /bin/watchdog ]; then
+		nice -n -19 /bin/watchdog -t 1 /dev/watchdog
+	fi
+}
+
+watchdog_stop() {
+	killall -9 watchdog
+}

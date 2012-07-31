@@ -1,0 +1,12 @@
+--- a/tdb.mk
++++ b/tdb.mk
+@@ -1,7 +1,8 @@
+ dirs::
+ 	@mkdir -p bin common tools
+ 
+-PROGS = bin/tdbtool$(EXEEXT) bin/tdbdump$(EXEEXT) bin/tdbbackup$(EXEEXT)
++#PROGS = bin/tdbtool$(EXEEXT) bin/tdbdump$(EXEEXT) bin/tdbbackup$(EXEEXT)
++PROGS=
+ PROGS_NOINSTALL = bin/tdbtest$(EXEEXT) bin/tdbtorture$(EXEEXT)
+ ALL_PROGS = $(PROGS) $(PROGS_NOINSTALL)
+ 

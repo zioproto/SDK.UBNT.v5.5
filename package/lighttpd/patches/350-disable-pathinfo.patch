@@ -1,0 +1,13 @@
+Index: lighttpd-1.4.30/src/response.c
+===================================================================
+--- lighttpd-1.4.30.orig/src/response.c	2012-01-30 15:07:32.000000000 +0200
++++ lighttpd-1.4.30/src/response.c	2012-01-30 15:08:39.000000000 +0200
+@@ -666,7 +666,7 @@
+ 				if (slash) pathinfo = slash;
+ 			} while ((found == 0) && (slash != NULL) && ((size_t)(slash - srv->tmp_buf->ptr) > (con->physical.basedir->used - 2)));
+ 
+-			if (found == 0) {
++			if (found == 0 || pathinfo) {
+ 				/* no it really doesn't exists */
+ 				con->http_status = 404;
+ 

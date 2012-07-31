@@ -1,0 +1,297 @@
+#!/bin/sh
+#
+# HTB control script with add and clear actions
+# add action REQUIRES the following parameters:
+#	-t direction [ingress|egress]
+#	-d devices
+#	-r rate
+# Optional parameters for start action:
+#	-b burst
+#	-c ceil
+#	-x cburst
+#
+# clear action does not take any parameters
+#
+
+DEVICESFILE=/tmp/htb_devices.txt
+CLASS=1
+
+# these TOS values will place packet to high priority queue
+# 0x10 means low latency
+# 0x18, 0xb8 - low latency variations, used by voip
+HIGH_TOS="0x10 0x18 0xb8"
+# 4569 - default voip server port
+HIGH_PORTS="4569"
+
+# ports (source or dest) that go to low priority queue
+LOW_PORTS="25 22 110 143 943"
+
+# CEIL rates
+LANCEIL="100Mbit"
+WANCEIL="100Mbit"
+
+LG="echo"
+
+usage() {
+	echo "Usage: $0 add|clear [<args>]"
+}
+
+usage_add() {
+	echo -e "Usage: $0 add -t [ingress|egress] -d <lan device> \n\t\t-r <rate>\n\t\t-c <ceil rate>\n\t\t-b <burst> -x <cburst>\n
+Example: $0 add -t egress -d 'ath0' -r 2000Kbit -c 54Mbit -b 100Kb -x 50Kb\n
+Note: default ceil rate is 100Mbit\n"
+}
+
+do_clear() {
+	if [ -s $DEVICESFILE ]; then
+		DEVICES=`cat $DEVICESFILE`
+		echo "devices: $DEVICES"
+	else
+		echo Error: $DEVICESFILE is empty or not existing
+		return 1
+	fi
+
+	# remove stale crap
+	for dev in $DEVICES; do
+		tc qdisc del dev $dev root > /dev/null 2>&1
+		tc qdisc del dev $dev ingress > /dev/null 2>&1
+	done
+
+	# remove file
+	rm -f $DEVICESFILE
+}
+
+setup_ingress_for_device() {
+	CLASS=$1
+	dev=$2
+	RATE=$3
+	BURST=$4
+        BURST_VAL=${BURST:6}
+        RBURST=$((${BURST_VAL%KB}*8)) #in kbit
+        [ ${RBURST} -le ${RATE} ] && RBURST=${RATE}
+	CEIL_VAL=$((90*1024)) #assuming max 90Mbps for now
+        [ ${CEIL_VAL} -le ${RBURST} ] && RBURST=${CEIL_VAL}
+        RBURST="burst ${RBURST}kbit"
+
+	TC="tc qdisc add dev $dev handle ffff: ingress"
+	$TC || $LG "'${TC}' has failed."
+
+	for tos in ${HIGH_TOS}; do
+		# TOS Minimum Delay (ssh, NOT scp)
+		TC="tc filter add dev $dev parent ffff: protocol ip prio 10 \
+			u32 match ip tos ${tos} 0xff \
+                        police rate ${RATE}kbit ${RBURST} drop flowid ${CLASS}:"
+		$TC || $LG "'${TC}' has failed."
+	done
+
+	for port in ${HIGH_PORTS}; do
+		TC="tc filter add dev $dev parent ffff: protocol ip prio 11 \
+			u32 match ip dport ${port} 0xffff \
+                        police rate ${RATE}kbit ${RBURST} drop flowid ${CLASS}:"
+		$TC || $LG "'${TC}' has failed."
+		TC="tc filter add dev $dev parent ffff: protocol ip prio 11 \
+			u32 match ip sport ${port} 0xffff \
+                        police rate ${RATE}kbit ${RBURST} drop flowid ${CLASS}:"
+		$TC || $LG "'${TC}' has failed."
+	done
+
+	# ICMP (ip protocol 1)
+	TC="tc filter add dev $dev parent ffff: protocol ip prio 12 \
+		u32 match ip protocol 1 0xff \
+                police rate ${RATE}kbit ${RBURST} drop flowid ${CLASS}:"
+	$TC || $LG "'${TC}' has failed."
+
+	# put ACK packets in the interactive class:
+	TC="tc filter add dev $dev parent ffff: protocol ip prio 15 u32 \
+		match ip protocol 6 0xff \
+		match u8 0x05 0x0f at 0 \
+		match u16 0x0000 0xffc0 at 2 \
+		match u8 0x10 0xff at 33 \
+		police rate ${RATE}kbit ${RBURST} drop \
+		flowid ${CLASS}:"
+	$TC || $LG "'${TC}' has failed."
+
+	# low priority stuff
+	for port in ${LOW_PORTS}; do
+		TC="tc filter add dev $dev parent ffff: protocol ip prio 40 u32 \
+			match ip sport ${port} 0xffff \
+			police rate $((8*${RATE}/10))kbit ${RBURST} drop flowid ${CLASS}:"
+		$TC || $LG "'${TC}' has failed."
+		TC="tc filter add dev $dev parent ffff: protocol ip prio 40 u32 \
+			match ip dport ${port} 0xffff \
+			police rate $((8*${RATE}/10))kbit ${RBURST} drop flowid ${CLASS}:"
+		$TC || $LG "'${TC}' has failed."
+	done
+
+	# Use strict policy for ip by now 
+	TC="tc filter add dev $dev parent ffff: protocol ip prio 30 \
+		u32 match ip src 0.0.0.0/0 \
+		police rate $((9*${RATE}/10))kbit ${RBURST} drop flowid ${CLASS}:"
+	$TC || $LG "'${TC}' has failed."
+}
+
+setup_htb_for_device() {
+	CLASS=$1
+	dev=$2
+	RATE=$3
+	BURST=$4
+	CEIL=$5
+	CL_RATE=$((${RATE}/4))
+        QUANTUM=$((${CL_RATE}/80))
+
+	[ ${QUANTUM} -le 1500 ] && R2Q="r2q $((${CL_RATE}8/1500))"
+
+	TC="tc qdisc add dev $dev root handle $CLASS:0 htb default 30 ${R2Q}"
+	$TC || $LG "'${TC}' has failed."
+
+	TC="tc class add dev $dev parent $CLASS:0 classid $CLASS:1 \
+		htb rate ${RATE}kbit ${CEIL} ${BURST}"
+	$TC || $LG "'${TC}' has failed."
+
+	# now add high/norm/low classes
+	TC="tc class add dev $dev parent $CLASS:1 classid $CLASS:10 \
+		htb rate ${CL_RATE}kbit ${CEIL} ${BURST} prio 1"
+	$TC || $LG "'${TC}' has failed."
+
+	TC="tc class add dev $dev parent $CLASS:1 classid $CLASS:20 \
+		htb rate ${CL_RATE}kbit ${CEIL} ${BURST} prio 2"
+	$TC || $LG "'${TC}' has failed."
+
+	TC="tc class add dev $dev parent $CLASS:1 classid $CLASS:30 \
+		htb rate ${CL_RATE}kbit ${CEIL} ${BURST} prio 3"
+	$TC || $LG "'${TC}' has failed."
+
+	TC="tc class add dev $dev parent $CLASS:1 classid $CLASS:40 \
+		htb rate ${CL_RATE}kbit ${CEIL} ${BURST} prio 4"
+	$TC || $LG "'${TC}' has failed."
+
+	# all get Stochastic Fairness:
+	for id in 10 20 30 40; do
+		TC="tc qdisc add dev $dev parent $CLASS:${id} handle ${id}: sfq perturb 10"
+		$TC || $LG "'${TC}' has failed."
+	done
+
+	#EAPOL highest priority
+	TC="tc filter add dev $dev parent $CLASS:0 protocol all prio 5 \
+		u32 match u16 0x888e 0xffff at -2 flowid $CLASS:10"
+	$TC || $LG "'${TC}' has failed."
+
+	for tos in ${HIGH_TOS}; do
+		# TOS Minimum Delay (ssh, NOT scp) in :10
+		TC="tc filter add dev $dev parent $CLASS:0 protocol ip prio 10 \
+			u32 match ip tos ${tos} 0xff  flowid $CLASS:20"
+		$TC || $LG "'${TC}' has failed."
+	done
+
+	for port in ${HIGH_PORTS}; do
+		TC="tc filter add dev $dev parent $CLASS:0 protocol ip prio 11 \
+			u32 match ip dport ${port} 0xffff flowid $CLASS:20"
+		$TC || $LG "'${TC}' has failed."
+		TC="tc filter add dev $dev parent $CLASS:0 protocol ip prio 11 \
+			u32 match ip sport ${port} 0xffff flowid $CLASS:20"
+		$TC || $LG "'${TC}' has failed."
+	done
+
+	# ICMP (ip protocol 1) in the interactive class :10 so we
+	# can do measurements & impress our friends:
+	TC="tc filter add dev $dev parent $CLASS:0 protocol ip prio 12 \
+		u32 match ip protocol 1 0xff flowid $CLASS:20"
+	$TC || $LG "'${TC}' has failed."
+
+	# put ACK packets in the interactive class:
+	TC="tc filter add dev $dev parent $CLASS: protocol ip prio 15 u32 \
+		match ip protocol 6 0xff \
+		match u8 0x05 0x0f at 0 \
+		match u16 0x0000 0xffc0 at 2 \
+		match u8 0x10 0xff at 33 \
+		flowid $CLASS:20"
+	$TC || $LG "'${TC}' has failed."
+
+	# low priority stuff
+	for port in ${LOW_PORTS}; do
+		TC="tc filter add dev $dev parent $CLASS: protocol ip prio 30 u32 \
+			match ip sport ${port} 0xffff flowid $CLASS:40"
+		$TC || $LG "'${TC}' has failed."
+		TC="tc filter add dev $dev parent $CLASS: protocol ip prio 30 u32 \
+			match ip dport ${port} 0xffff flowid $CLASS:40"
+		$TC || $LG "'${TC}' has failed."
+	done
+	#rest will endup in 1:30 class (see root qdisc setting)
+
+} # end of setup_htb_for_device()
+
+do_add() {
+	while getopts "t:d:r:b:c:x:" options; do
+	    case $options in
+		t ) TYPE=$OPTARG;;
+		d ) DEVICE=$OPTARG;;
+		r ) RATE=$OPTARG;;
+		b ) BURST=$OPTARG;;
+		c ) CEIL=$OPTARG;;
+		x ) CBURST=$OPTARG;;
+		* ) usage_add
+			return 1;;
+	    esac
+	done
+
+	if [ -z "$DEVICE" ] || [ -z "$RATE" ]
+	then
+		usage_add
+		return 1
+	fi
+
+	## calculate bursts
+	if [ -z $BURST ]; then
+		BURST="burst 6KB"
+	else
+		if [ -z $CBURST ]; then
+			CBURST="cburst $BURST"
+			BURST="burst $BURST"
+		else
+			BURST="burst $BURST"
+			CBURST="cburst $CBURST"
+		fi
+	fi
+	if [ -z ${CEIL} ]; then
+		CEIL="ceil ${RATE}kbit"
+	else
+		CEIL="ceil ${CEIL}"
+	fi
+
+	case $TYPE in
+	egress)
+		setup_htb_for_device $CLASS $DEVICE $RATE "$BURST $CBURST" "$CEIL"
+		;;
+	ingress)
+		setup_ingress_for_device $CLASS $DEVICE $RATE "$BURST"
+		;;
+	*)
+		usage_add
+		return 1;; 
+	esac
+
+	# save devices for other scripts
+	grep -q $DEVICE $DEVICESFILE  > /dev/null 2>&1 || echo $DEVICE >> $DEVICESFILE
+}
+
+main() {
+	CMD="$1"
+	shift
+	case "$CMD" in
+	clear)
+		do_clear "$@"
+		return $?
+		;;
+	add)
+		do_add "$@"
+		return $?
+		;;
+	*)
+		usage
+		return 255
+		;;
+	esac
+}
+
+main "$@"
+exit $?

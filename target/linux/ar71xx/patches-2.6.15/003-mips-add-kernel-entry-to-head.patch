@@ -1,0 +1,11 @@
+--- a/arch/mips/kernel/head.S
++++ b/arch/mips/kernel/head.S
+@@ -113,6 +113,8 @@
+ 	 */
+ 	.fill	0x400
+ 
++/* hack - jump anyway, in case someone jumps here */
++	j	kernel_entry
+ EXPORT(stext)					# used for profiling
+ EXPORT(_stext)
+ 

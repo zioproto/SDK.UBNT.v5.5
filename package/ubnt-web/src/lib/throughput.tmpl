@@ -1,0 +1,50 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/DTD/loose.dtd">
+<html>
+<head>
+<title><? echo get_title($cfg, dict_translate("Throughput")); ></title>
+<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" >
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Pragma" content="no-cache">
+<link rel="shortcut icon" href="FULL_VERSION_LINK/favicon.ico" >
+<link href="FULL_VERSION_LINK/style.css" rel="stylesheet" type="text/css">
+<style type="text/css">
+
+.graph-border {
+	border: 1px solid #ffffff;
+}
+
+.graph-canvas {
+	position: relative;
+	height: 150px;
+	width: 350px;
+}
+
+</style>
+
+</head>
+<body class="popup">
+<script type="text/javascript" language="javascript" src="FULL_VERSION_LINK/signal.js"></script>
+<script type="text/javascript" language="javascript" src="FULL_VERSION_LINK/util.js"></script>
+<!--[if lte IE 8]><script type="text/javascript" src="FULL_VERSION_LINK/js/excanvas.js"></script><![endif]-->
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.js"></script>
+<script type="text/javascript" language="javascript" src="FULL_VERSION_LINK/js/jquery.cookie.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.flot.js"></script>
+<script type="text/javascript" language="javascript" src="FULL_VERSION_LINK/common.js"></script>
+<script type="text/javascript" language="javascript" src="FULL_VERSION_LINK/throughput.js"></script>
+<form action="througput.cgi" method="GET">
+<table id="throughput">
+	<tfoot>
+		<tr>
+			<td id="refresh" class="change" colspan="2">
+				<input type="button" onClick="return refreshAll();"
+					value="<? echo dict_translate("Refresh"); >">
+			</td>
+		</tr>
+	</tfoot>
+	<tbody>
+	</tbody>
+</table>
+</form>
+</body>
+</html>

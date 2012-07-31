@@ -1,0 +1,33 @@
+--- a/wpa_supplicant/wpa_supplicant.c
++++ b/wpa_supplicant/wpa_supplicant.c
+@@ -1017,28 +1017,29 @@ void wpa_supplicant_associate(struct wpa
+ 			if (ssid->non_leap == 0)
+ 				algs = AUTH_ALG_LEAP;
+ 			else
+ 				algs |= AUTH_ALG_LEAP;
+ 		}
+ 	}
+ #endif /* IEEE8021X_EAPOL */
++#ifdef CONFIG_AUTO_AUTH_ALG_SELECT
+ 	wpa_printf(MSG_DEBUG, "Automatic auth_alg selection: 0x%x", algs);
+ 	if (ssid->auth_alg) {
+ 		algs = 0;
+ 		if (ssid->auth_alg & WPA_AUTH_ALG_OPEN)
+ 			algs |= AUTH_ALG_OPEN_SYSTEM;
+ 		if (ssid->auth_alg & WPA_AUTH_ALG_SHARED)
+ 			algs |= AUTH_ALG_SHARED_KEY;
+ 		if (ssid->auth_alg & WPA_AUTH_ALG_LEAP)
+ 			algs |= AUTH_ALG_LEAP;
+ 		wpa_printf(MSG_DEBUG, "Overriding auth_alg selection: 0x%x",
+ 			   algs);
+ 	}
+ 	wpa_drv_set_auth_alg(wpa_s, algs);
+-
++#endif /* CONFIG_AUTO_AUTH_ALG_SELECT */
+ 	if (bss && (wpa_scan_get_vendor_ie(bss, WPA_IE_VENDOR_TYPE) ||
+ 		    wpa_scan_get_ie(bss, WLAN_EID_RSN)) &&
+ 	    (ssid->key_mgmt & (WPA_KEY_MGMT_IEEE8021X | WPA_KEY_MGMT_PSK |
+ 			       WPA_KEY_MGMT_FT_IEEE8021X |
+ 			       WPA_KEY_MGMT_FT_PSK |
+ 			       WPA_KEY_MGMT_IEEE8021X_SHA256 |
+ 			       WPA_KEY_MGMT_PSK_SHA256))) {

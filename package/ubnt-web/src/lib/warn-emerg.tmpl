@@ -1,0 +1,30 @@
+<div id="emerg_warning">
+<script type="text/javascript" language="javascript">
+//<!--
+function handle_dismiss(event) {
+	$.ajax({
+		url: event.data.url,
+		cache: false,
+		success: function(){$('#emerg_warning').hide();}
+	});
+}
+
+$(document).ready(function() {
+	$('#dismiss_button').bind('click', { url: 'dismiss.cgi' }, handle_dismiss);
+});
+
+// -->
+</script>
+
+<table class=warn>
+<tr>
+<td>
+    <strong><? echo dict_translate("WARNING:"); ></strong>
+    <? echo dict_translate("warn_emergency_info|Device was rebooted by PING Watchdog. Support Info file can be downloaded."); >
+</td>
+<td style="text-align: right; vertical-align: middle;">
+    <input type="button" class="cfg_btn" id="dismiss_button" value="<? echo dict_translate("Acknowledge");>" >
+</td>
+</tr>
+</table>
+</div>

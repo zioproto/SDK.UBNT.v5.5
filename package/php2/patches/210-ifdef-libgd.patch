@@ -1,0 +1,640 @@
+--- a/src/gd.c
++++ b/src/gd.c
+@@ -107,16 +107,17 @@ void del_image(int count) {
+ 		}
+ 		prev=new;
+ 		new=next;
+ 	}
+ }
+ #endif
+ 
+-void ImageCreate(void) {
+ #ifdef HAVE_LIBGD
++
++void ImageCreate(void) {
+ 	Stack *s;
+ 	int dx, dy, ind;
+ 	gdImagePtr im;
+ 	char temp[8];
+ 
+ 	s = Pop();
+ 	if(!s) {
+@@ -133,24 +134,17 @@ void ImageCreate(void) {
+ 	dx = s->intval;
+ 
+ 	im = gdImageCreate(dx,dy);
+ 	ind = add_image(im);		
+ 
+ 	sprintf(temp,"%d",ind);
+ 	Push(temp,LNUMBER);
+-#else
+-	Pop();
+-	Pop();
+-	Error("No GD support available");
+-	Push("-1",LNUMBER);
+-#endif
+ }
+ 
+ void ImageCreateFromGif(void) {
+-#ifdef HAVE_LIBGD
+ 	Stack *s;
+ 	int ind;
+ 	gdImagePtr im;
+ 	char temp[8];
+ 	char *fn=NULL;
+ 	FILE *fp;
+ 
+@@ -178,41 +172,30 @@ void ImageCreateFromGif(void) {
+ 	fflush(fp);
+ 	fclose(fp);
+ 
+ 	ind = add_image(im);
+ 
+ 	sprintf(temp,"%d",ind);
+ 	Push(temp,LNUMBER);
+-#else
+-	Pop();
+-	Error("No GD support available");
+-	Push("-1",LNUMBER);
+-#endif
+ }
+ 
+ void ImageDestroy(void) {
+-#ifdef HAVE_LIBGD
+ 	Stack *s;
+ 	int ind;
+ 
+ 	s = Pop();
+ 	if(!s) {
+ 		Error("Stack error in imagedestroy");
+ 		return;
+ 	}
+ 	ind = s->intval;
+ 	del_image(ind);
+-#else
+-	Pop();
+-	Error("No GD support available");
+-#endif
+ }
+ 
+ void ImageColorAllocate(void) {
+-#ifdef HAVE_LIBGD
+ 	Stack *s;
+ 	int ind;
+ 	int col;
+ 	int r, g, b;
+ 	char temp[8];
+ 	gdImagePtr im;
+ 
+@@ -249,23 +232,16 @@ void ImageColorAllocate(void) {
+ 		Error("Unable to find image pointer");
+ 		Push("-1", LNUMBER);
+ 		return;
+ 	}
+ 	col = gdImageColorAllocate(im, r, g, b);
+ 	sprintf(temp,"%d",col);
+ 	Push(temp,LNUMBER);
+-#else
+-	Pop();
+-	Pop();
+-	Pop();
+-	Pop();
+-	Error("No GD support available");
+-	Push("-1",LNUMBER);
+-#endif
+ }
++#endif
+ 
+ void ImageGif(int args) {
+ #ifdef HAVE_LIBGD
+ 	Stack *s;
+ 	gdImagePtr im;
+ 	char *fn=NULL;
+ 	FILE *fp;
+@@ -364,16 +340,16 @@ void ImageGif(int args) {
+ #else
+ 	Pop();
+ 	Error("No GD support available");
+ 	Push("-1", LNUMBER);
+ #endif
+ }
+ 
+-void ImageSetPixel(void) {
+ #ifdef HAVE_LIBGD
++void ImageSetPixel(void) {
+ 	Stack *s;
+ 	gdImagePtr im;
+ 	int col, y, x;
+ 
+ 	s = Pop();
+     if(!s) {
+         Error("Stack error in imagesetpixel");
+@@ -405,26 +381,17 @@ void ImageSetPixel(void) {
+ 		Error("Unable to find image pointer");
+ 		Push("-1", LNUMBER);
+ 		return;
+ 	}
+ 
+ 	gdImageSetPixel(im,x,y,col);
+ 	Push("0", LNUMBER);
+-#else
+-	Pop();
+-	Pop();
+-	Pop();
+-	Pop();
+-	Error("No GD support available");
+-	Push("-1", LNUMBER);
+-#endif
+ }	
+ 
+ void ImageLine(void) {
+-#ifdef HAVE_LIBGD
+ 	Stack *s;
+ 	gdImagePtr im;
+ 	int col, y2, x2, y1, x1;
+ 
+ 	s = Pop();
+     if(!s) {
+         Error("Stack error in imageline");
+@@ -470,28 +437,17 @@ void ImageLine(void) {
+ 		Error("Unable to find image pointer");
+ 		Push("-1", LNUMBER);
+ 		return;
+ 	}
+ 
+ 	gdImageLine(im,x1,y1,x2,y2,col);
+ 	Push("0", LNUMBER);
+-#else
+-	Pop();
+-	Pop();
+-	Pop();
+-	Pop();
+-	Pop();
+-	Pop();
+-	Error("No GD support available");
+-	Push("-1", LNUMBER);
+-#endif
+ }	
+ 
+ void ImageRectangle(void) {
+-#ifdef HAVE_LIBGD
+ 	Stack *s;
+ 	gdImagePtr im;
+ 	int col, y2, x2, y1, x1;
+ 
+ 	s = Pop();
+     if(!s) {
+         Error("Stack error in imagerectangle");
+@@ -537,28 +493,17 @@ void ImageRectangle(void) {
+ 		Error("Unable to find image pointer");
+ 		Push("-1", LNUMBER);
+ 		return;
+ 	}
+ 
+ 	gdImageRectangle(im,x1,y1,x2,y2,col);
+ 	Push("0", LNUMBER);
+-#else
+-	Pop();
+-	Pop();
+-	Pop();
+-	Pop();
+-	Pop();
+-	Pop();
+-	Error("No GD support available");
+-	Push("-1", LNUMBER);
+-#endif
+ }	
+ 
+ void ImageFilledRectangle(void) {
+-#ifdef HAVE_LIBGD
+ 	Stack *s;
+ 	gdImagePtr im;
+ 	int col, y2, x2, y1, x1;
+ 
+ 	s = Pop();
+     if(!s) {
+         Error("Stack error in imagefilledrectangle");
+@@ -604,25 +549,16 @@ void ImageFilledRectangle(void) {
+ 		Error("Unable to find image pointer");
+ 		Push("-1", LNUMBER);
+ 		return;
+ 	}
+ 
+ 	gdImageFilledRectangle(im,x1,y1,x2,y2,col);
+ 	Push("0", LNUMBER);
+-#else
+-	Pop();
+-	Pop();
+-	Pop();
+-	Pop();
+-	Pop();
+-	Pop();
+-	Error("No GD support available");
+-	Push("-1", LNUMBER);
+-#endif
+ }	
++#endif
+ 
+ void ImageArc(void) {
+ #ifdef HAVE_LIBGD
+ 	Stack *s;
+ 	gdImagePtr im;
+ 	int col, e, st, h, w, cy, cx;
+ 
+@@ -699,16 +635,16 @@ void ImageArc(void) {
+ 	Pop();
+ 	Pop();
+ 	Error("No GD support available");
+ 	Push("-1", LNUMBER);
+ #endif
+ }	
+ 
+-void ImageFillToBorder(void) {
+ #ifdef HAVE_LIBGD
++void ImageFillToBorder(void) {
+ 	Stack *s;
+ 	gdImagePtr im;
+ 	int col, border, y, x;
+ 
+ 	s = Pop();
+     if(!s) {
+         Error("Stack error in imagefilltoborder");
+@@ -747,27 +683,17 @@ void ImageFillToBorder(void) {
+ 		Error("Unable to find image pointer");
+ 		Push("-1", LNUMBER);
+ 		return;
+ 	}
+ 
+ 	gdImageFillToBorder(im,x,y,border,col);
+ 	Push("0", LNUMBER);
+-#else
+-	Pop();
+-	Pop();
+-	Pop();
+-	Pop();
+-	Pop();
+-	Error("No GD support available");
+-	Push("-1", LNUMBER);
+-#endif
+ }	
+ 
+ void ImageFill(void) {
+-#ifdef HAVE_LIBGD
+ 	Stack *s;
+ 	gdImagePtr im;
+ 	int col, y, x;
+ 
+ 	s = Pop();
+     if(!s) {
+         Error("Stack error in imagefill");
+@@ -799,26 +725,17 @@ void ImageFill(void) {
+ 		Error("Unable to find image pointer");
+ 		Push("-1", LNUMBER);
+ 		return;
+ 	}
+ 
+ 	gdImageFill(im,x,y,col);
+ 	Push("0", LNUMBER);
+-#else
+-	Pop();
+-	Pop();
+-	Pop();
+-	Pop();
+-	Error("No GD support available");
+-	Push("-1", LNUMBER);
+-#endif
+ }	
+ 
+ void ImageColorTransparent(void) {
+-#ifdef HAVE_LIBGD
+ 	Stack *s;
+ 	gdImagePtr im;
+ 	int col;
+ 
+ 	s = Pop();
+     if(!s) {
+         Error("Stack error in imagecolortransparent");
+@@ -836,24 +753,17 @@ void ImageColorTransparent(void) {
+ 		Error("Unable to find image pointer");
+ 		Push("-1", LNUMBER);
+ 		return;
+ 	}
+ 
+ 	gdImageColorTransparent(im,col);
+ 	Push("0", LNUMBER);
+-#else
+-	Pop();
+-	Pop();
+-	Error("No GD support available");
+-	Push("-1", LNUMBER);
+-#endif
+ }	
+ 
+ void ImageInterlace(void) {
+-#ifdef HAVE_LIBGD
+ 	Stack *s;
+ 	gdImagePtr im;
+ 	int interlace;
+ 
+ 	s = Pop();
+     if(!s) {
+         Error("Stack error in imageinterlace");
+@@ -871,21 +781,16 @@ void ImageInterlace(void) {
+ 		Error("Unable to find image pointer");
+ 		Push("-1", LNUMBER);
+ 		return;
+ 	}
+ 
+ 	gdImageInterlace(im,interlace);
+ 	Push("0", LNUMBER);
+-#else
+-	Pop();
+-	Pop();
+-	Error("No GD support available");
+-	Push("-1", LNUMBER);
+-#endif
+ }	
++#endif
+ 
+ /* arg = 0  normal polygon
+    arg = 1  filled polygon */
+ void ImagePolygon(int arg) {
+ #ifdef HAVE_LIBGD
+ 	Stack *s;
+ 	gdImagePtr im;
+@@ -1234,16 +1139,17 @@ void ImageCopyResized(void) {
+ 	Pop();
+ 	Pop();
+ 	Error("No GD support available");
+ 	Push("-1", LNUMBER);
+ #endif
+ }	
+ 
+-void ImageSXFN(void) {
+ #ifdef HAVE_LIBGD
++
++void ImageSXFN(void) {
+ 	Stack *s;
+ 	int ind;
+ 	gdImagePtr im;
+ 	char temp[8];
+ 
+ 	s = Pop();
+ 	if(!s) {
+@@ -1257,23 +1163,17 @@ void ImageSXFN(void) {
+ 		Error("Unable to find image pointer");
+ 		Push("-1", LNUMBER);
+ 		return;
+ 	}
+ 
+ 	sprintf(temp,"%d",gdImageSX(im));
+ 	Push(temp,LNUMBER);
+-#else
+-	Pop();
+-	Error("No GD support available");
+-	Push("-1",LNUMBER);
+-#endif
+ }
+ 
+ void ImageSYFN(void) {
+-#ifdef HAVE_LIBGD
+ 	Stack *s;
+ 	int ind;
+ 	gdImagePtr im;
+ 	char temp[8];
+ 
+ 	s = Pop();
+ 	if(!s) {
+@@ -1287,14 +1187,10 @@ void ImageSYFN(void) {
+ 		Error("Unable to find image pointer");
+ 		Push("-1", LNUMBER);
+ 		return;
+ 	}
+ 
+ 	sprintf(temp,"%d",gdImageSY(im));
+ 	Push(temp,LNUMBER);
+-#else
+-	Pop();
+-	Error("No GD support available");
+-	Push("-1",LNUMBER);
+-#endif
+ }
+ 
++#endif /* HAVE_LIBGD */
+--- a/src/lex.c
++++ b/src/lex.c
+@@ -229,16 +229,18 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "fgetss",INTFUNC2,Fgetss },
+ 	  { "uniqid",INTFUNC1,UniqId },
+ 	  { "syslog",INTFUNC2,Syslog },
+ 	  { "arsort",PHPARSORT,NULL },
+ 	  { NULL,0,NULL } }, 
+ 
+ 	{ { "default", DEFAULT,NULL }, /* 7 */
++#ifdef HAVE_LIBGD
+ 	  { "imagesx", INTFUNC1,ImageSXFN },
+ 	  { "imagesy", INTFUNC1,ImageSYFN },
++#endif
+ 	  { "include", INCLUDE,NULL },
+ 	  { "dbmopen", INTFUNC2,dbmOpen },
+ 	  { "strrchr", INTFUNC2,StrrChr },
+ 	  { "sprintf", SPRINTF,NULL },
+ 	  { "opendir", INTFUNC1,OpenDir },
+ 	  { "readdir", INTFUNC0,ReadDir },
+ 	  { "tempnam", INTFUNC2,TempNam }, 
+@@ -323,17 +325,19 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "filegroup", FILEGROUP,NULL },
+ 	  { "fileatime", FILEATIME,NULL },
+ 	  { "filemtime", FILEMTIME,NULL },
+ 	  { "filectime", FILECTIME,NULL },
+ 	  { "getlogdir", INTFUNC0,GetLogDir },
+ 	  { "getloghost", INTFUNC0,GetLogHost },
+ 	  { "getaccdir", INTFUNC0,GetAccDir },
++#ifdef HAVE_LIBGD
+ 	  { "imageline", INTFUNC6,ImageLine },
+ 	  { "imagefill", INTFUNC4,ImageFill },
+ 	  { "imagechar", IMAGECHAR,NULL },
++#endif
+ 	  { "doubleval", INTFUNC1,DoubleVal }, 
+ 	  { "securevar", INTFUNC1,SecureVar }, 
+ 	  { "fsockopen", INTFUNC2,FSockOpen },
+ 	  { "microtime", INTFUNC0,MicroTime },
+ 	  { "urlencode", INTFUNC1,UrlEncode },
+ 	  { "urldecode", INTFUNC1,UrlDecode },
+ 	  { "quotemeta", INTFUNC1,QuoteMeta },
+@@ -406,17 +410,19 @@ static const cmd_table_t cmd_table[PHP_M
+ 	{ /* 11 */
+ #ifdef HAVE_LIBMSQL
+ 	  { "msql_result", INTFUNC3,MsqlResult },
+ #endif
+ 	  { "reg_replace", INTFUNC3,RegReplace },
+ 	  { "dbmfirstkey", INTFUNC1,dbmFirstKey },
+ 	  { "getlasthost", INTFUNC0,GetLastHost },
++#ifdef HAVE_LIBGD
+ 	  { "imagecreate", INTFUNC2,ImageCreate },
+ 	  { "imagecharup", IMAGECHAR,NULL },
+ 	  { "imagestring", IMAGESTRING,NULL },
++#endif
+ 	  { "setshowinfo", INTFUNC1,SetShowInfo },
+ #ifdef HAVE_LIBMSQL
+ 	  { "msql_dbname", INTFUNC2,MsqlDBName },
+ 	  { "msql_dropdb", INTFUNC1,MsqlDropDB },
+ #endif
+ #ifdef HAVE_LIBPQ
+ 	  { "pg_fieldnum", INTFUNC2,PGfieldNum },
+@@ -447,16 +453,18 @@ static const cmd_table_t cmd_table[PHP_M
+ 	{ { "getlastemail", INTFUNC0,GetLastEmail }, /* 12 */
+ 	  { "ereg_replace", INTFUNC3,ERegReplace },
+ #ifdef HAVE_LIBMSQL
+ 	  { "msql_connect", INTFUNC1,MsqlConnect },
+ 	  { "msql_numrows", INTFUNC1,MsqlNumRows },
+ 	  { "msql_regcase", INTFUNC1,MsqlRegCase },
+ #endif
++#ifdef HAVE_LIBGD
+ 	  { "imagedestroy", INTFUNC1,ImageDestroy },
+ 	  { "imagepolygon", IMAGEPOLYGON,NULL },
++#endif
+ #ifdef HAVE_LIBMSQL
+ 	  { "msql_listdbs", INTFUNC0,MsqlListDBs },
+ #endif
+ #ifdef HAVE_LIBPQ
+ 	  { "pg_numfields", INTFUNC1,PGnumFields },
+ 	  { "pg_fieldname", INTFUNC2,PGfieldName },
+ 	  { "pg_fieldtype", INTFUNC2,PGfieldType },
+@@ -493,16 +501,18 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { NULL,0,NULL } }, 
+ 
+ 	{ { "gethostbyaddr", INTFUNC1,GetHostByAddr }, /* 13 */
+ 	  { "gethostbyname", INTFUNC1,GetHostByName },
+ 	  { "getlastaccess", INTFUNC0,GetLastAccess },
+ 	  { "eregi_replace", INTFUNC3,ERegiReplace },
+ 	  { "msql_fieldlen", MSQL_FIELDLEN,NULL },
++#ifdef HAVE_LIBGD
+ 	  { "imagesetpixel", INTFUNC4,ImageSetPixel },
+ 	  { "imagestringup", IMAGESTRINGUP,NULL },
++#endif
+ #ifdef HAVE_LIBMSQL
+ 	  { "msql_createdb", INTFUNC1,MsqlCreateDB },
+ #endif
+ #ifdef HAVE_LIBPQ
+ 	  { "pg_freeresult", INTFUNC1,PGfreeResult },
+ 	  { "pg_getlastoid", INTFUNC0,PGgetlastoid },
+ #endif
+@@ -537,16 +547,18 @@ static const cmd_table_t cmd_table[PHP_M
+ 
+ 	{ { "getlastbrowser", INTFUNC0,GetLastBrowser }, /* 14 */
+ #ifdef HAVE_LIBMSQL
+ 	  { "msql_fieldname", MSQL_FIELDNAME,NULL },
+ 	  { "msql_fieldtype", MSQL_FIELDTYPE,NULL },
+ 	  { "msql_numfields", INTFUNC1,MsqlNumFields },
+ #endif
++#ifdef HAVE_LIBGD
+ 	  { "imagerectangle", INTFUNC6,ImageRectangle },
+ 	  { "imageinterlace", INTFUNC2,ImageInterlace },
++#endif
+ #ifdef HAVE_LIBMSQL
+ 	  { "msql_tablename", INTFUNC2,MsqlTableName },
+ #endif
+ #ifdef HAVE_LIBPQ
+ 	  { "pg_fieldprtlen", INTFUNC3,PGfieldPrtLen },
+ #endif
+ 	  { "escapeshellcmd", INTFUNC1,EscapeShellCmd },
+@@ -616,28 +628,34 @@ static const cmd_table_t cmd_table[PHP_M
+ #endif
+ #if HAVE_FILEPRO
+ 	  { "filepro_rowcount", INTFUNC0,filePro_rowcount},
+ 	  { "filepro_retrieve", INTFUNC2,filePro_retrieve},
+ #endif
+ 	  { NULL,0,NULL } }, /* 16 */
+ 
+-	{ { "imagefilltoborder", INTFUNC5,ImageFillToBorder }, /* 17 */
++	{ /* 17 */
++#ifdef HAVE_LIBGD
++	  { "imagefilltoborder", INTFUNC5,ImageFillToBorder },
++#endif
+ 	  { "seterrorreporting", INTFUNC1,SetErrorReporting }, 
+ #ifdef HAVE_SYBASE
+ 	  { "sybsql_result_all", INTFUNC0,SybsqlResultAll },
+ #endif
+ #if HAVE_FILEPRO
+ 	  { "filepro_fieldtype", INTFUNC1,filePro_fieldtype},
+ 	  { "filepro_fieldname", INTFUNC1,filePro_fieldname},
+ #endif
+ 	  { NULL,0,NULL } }, 
+ 
+-	{ { "imagecolorallocate", INTFUNC4,ImageColorAllocate }, /* 18 */
++	{ /* 18 */
++#ifdef HAVE_LIBGD
++	  { "imagecolorallocate", INTFUNC4,ImageColorAllocate },
+ 	  { "imagefilledpolygon", IMAGEFILLEDPOLYGON,NULL },
+ 	  { "imagecreatefromgif", INTFUNC1,ImageCreateFromGif },
++#endif
+ #if HAVE_FILEPRO
+ 	  { "filepro_fieldcount", INTFUNC0,filePro_fieldcount},
+ 	  { "filepro_fieldwidth", INTFUNC1,filePro_fieldwidth},
+ #endif
+ 	  { NULL,0,NULL } },
+ 	  
+ 	{
+@@ -645,19 +663,23 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "mysql_affected_rows", INTFUNC0, MYsqlAffectedRows }, /* 19 */
+ #endif
+ #ifdef HAVE_SYBASE
+ 	  { "sybsql_checkconnect", INTFUNC0, SybsqlCheckConnect }, /* 19 */
+ #endif
+ 	  { NULL,0,NULL } },
+ 
+-	{ { "imagefilledrectangle", INTFUNC6,ImageFilledRectangle }, /* 20 */
++#ifdef HAVE_LIBGD
++	{ /* 20 */
++	  { "imagefilledrectangle", INTFUNC6,ImageFilledRectangle },
+ 	  { NULL,0,NULL } }, 
+ 
+-	{ { "imagecolortransparent", INTFUNC2,ImageColorTransparent }, /* 21 */
++	{ /* 21 */
++	  { "imagecolortransparent", INTFUNC2,ImageColorTransparent },
+ 	  { NULL,0,NULL } }
++#endif
+ 
+ };
+ 
+ void IntFunc(char *fnc_name) {
+ 	int i=0;
+ 	int cmdlen = strlen(fnc_name);
+ 
+--- a/src/php.h
++++ b/src/php.h
+@@ -1154,14 +1154,15 @@ void php_init_dir(void);
+ 
+ /* rand.c */
+ void Srand(void);
+ void Rand(void);
+ void GetRandMax(void);
+ 
+ /* gd.c */
++#ifdef HAVE_LIBGD
+ void ImageCreate(void);
+ void ImageCreateFromGif(void);
+ void ImageDestroy(void);
+ void ImageGif(int);
+ void ImageSetPixel(void);
+ void ImageLine(void);
+ void ImageRectangle(void);
+@@ -1174,14 +1175,17 @@ void ImageColorTransparent(void);
+ void ImageInterlace(void);
+ void ImagePolygon(int);
+ void ImageChar(int);
+ void ImageCopyResized(void);
+ void php_init_gd(void);
+ void ImageSXFN(void);
+ void ImageSYFN(void);
++#else
++#define php_init_gd()
++#endif
+ 
+ /* mime.c */
+ void mime_split(char *, int, char *);
+ #if APACHE
+ void php_init_mime(php_module_conf *);
+ #endif
+ 

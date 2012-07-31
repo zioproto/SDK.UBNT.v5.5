@@ -1,0 +1,92 @@
+Index: linux-2.6.32.29/arch/mips/kernel/cevt-r4k.c
+===================================================================
+--- linux-2.6.32.29.orig/arch/mips/kernel/cevt-r4k.c	2011-04-05 16:30:01.000000000 +0300
++++ linux-2.6.32.29/arch/mips/kernel/cevt-r4k.c	2011-04-06 09:27:51.663981858 +0300
+@@ -74,6 +74,14 @@
+ 		cd = &per_cpu(mips_clockevent_device, cpu);
+ 		cd->event_handler(cd);
+ 	}
++#ifdef CONFIG_OPROFILE_WASP
++        //pkamath: oprofile-0.9.2 does not support interrupt based profiling.
++        //Therefore we will check for a profiling event every timer interrupt.
++        // Note that this may impact accuracy of the profile
++        if (!r2 || (read_c0_cause() & (1 << 26)))
++                perf_irq();
++        //End of code changes
++#endif
+ 
+ out:
+ 	return IRQ_HANDLED;
+Index: linux-2.6.32.29/arch/mips/oprofile/common.c
+===================================================================
+--- linux-2.6.32.29.orig/arch/mips/oprofile/common.c	2011-02-18 02:00:11.000000000 +0200
++++ linux-2.6.32.29/arch/mips/oprofile/common.c	2011-04-06 09:30:41.514058724 +0300
+@@ -15,7 +15,9 @@
+ #include "op_impl.h"
+ 
+ extern struct op_mips_model op_model_mipsxx_ops __attribute__((weak));
++#ifndef CONFIG_OPROFILE_WASP
+ extern struct op_mips_model op_model_rm9000_ops __attribute__((weak));
++#endif
+ extern struct op_mips_model op_model_loongson2_ops __attribute__((weak));
+ 
+ static struct op_mips_model *model;
+@@ -90,10 +92,11 @@
+ 	case CPU_R14000:
+ 		lmodel = &op_model_mipsxx_ops;
+ 		break;
+-
++#ifndef CONFIG_OPROFILE_WASP
+ 	case CPU_RM9000:
+ 		lmodel = &op_model_rm9000_ops;
+ 		break;
++#endif
+ 	case CPU_LOONGSON2:
+ 		lmodel = &op_model_loongson2_ops;
+ 		break;
+Index: linux-2.6.32.29/arch/Kconfig
+===================================================================
+--- linux-2.6.32.29.orig/arch/Kconfig	2011-02-18 02:00:11.000000000 +0200
++++ linux-2.6.32.29/arch/Kconfig	2011-04-06 09:27:51.663981858 +0300
+@@ -15,6 +15,20 @@
+ 
+ 	  If unsure, say N.
+ 
++config OPROFILE_WASP
++	bool "OProfile support for Atheros WASP chip"
++	default n
++	depends on WASP_SUPPORT
++	select HAVE_PROFILE
++	select PROFILING
++	select TRACING
++	select TRACING_SUPPORT
++	select RING_BUFFER
++	select OPROFILE
++	help
++	  Add the support for profiling linux kernel running on the
++	  atheros wasp chip
++
+ config OPROFILE_IBS
+ 	bool "OProfile AMD IBS support (EXPERIMENTAL)"
+ 	default n
+Index: linux-2.6.32.29/arch/mips/oprofile/op_model_mipsxx.c
+===================================================================
+--- linux-2.6.32.29.orig/arch/mips/oprofile/op_model_mipsxx.c	2011-04-05 16:28:57.000000000 +0300
++++ linux-2.6.32.29/arch/mips/oprofile/op_model_mipsxx.c	2011-04-06 09:27:51.663981858 +0300
+@@ -346,7 +346,16 @@
+ 		break;
+ 
+ 	case CPU_74K:
++#ifdef CONFIG_OPROFILE_WASP
++                /*
++                 * for now wasp 74k is exposed as 24k, so
++                 * that the old oprofile tool works without
++                 * whining about the processor
++                 */
++		op_model_mipsxx_ops.cpu_type = "mips/24K";
++#else
+ 		op_model_mipsxx_ops.cpu_type = "mips/74K";
++#endif
+ 		break;
+ 
+ 	case CPU_5KC:

@@ -1,0 +1,94 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title><? echo get_title($cfg, dict_translate("SSH Authorized Keys")); ></title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Pragma" content="no-cache">
+<link rel="shortcut icon" href="FULL_VERSION_LINK/favicon.ico" >
+<link href="FULL_VERSION_LINK/style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" language="javascript" src="jsl10n.cgi"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.utils.js"></script>
+<script type="text/javascript" language="javascript" src="FULL_VERSION_LINK/sorttable.js"></script>
+<script type="text/javascript" language="javascript">
+//<!--
+
+function save_changes() {
+	var data = [];
+	var i, key_count = $('#t_authkeys tr').length - 1;
+	for (i = 1; i <= key_count; i++) {
+		var st = $('#status_' + i), cm = $('#comment_' + i);
+		if (st.is(':checked') != st.data('orig'))
+			data.push('<input type="hidden" name="status_' + i +
+				'" value="' + (st.is(':checked') ? 'enabled' : 'disabled') + '"/>');
+
+		if (cm.val() != cm.data('orig'))
+			data.push('<input type="hidden" name="comment_' + i +
+				'" value="' + cm.val() + '"/>');
+	}
+
+	data.push('<input type="hidden" name="action" value="save"/>');
+	$('#keys_form').append(data.join(''));
+}
+
+$(function() {
+	var notify_parent = '<? echo $notify_parent; >';
+	if (notify_parent == '1') {
+		if (window.opener && !window.opener.closed && window.opener.doSubmit)
+			window.opener.doSubmit();
+	}
+
+	var close_window = '<? echo $close_window; >';
+	if (close_window == '1')
+		window.close();
+
+	$('#import').disable();
+	$('#keyfile').change(function(e) {
+		$('#import').enable($(this).val().length > 0);
+	});
+
+	$('.st').each(function() { $(this).data('orig', $(this).is(':checked')); });
+	$('.cm').each(function() { $(this).data('orig', $(this).val()); });
+
+	$('.rm').click(function() {
+		var idx = $(this).attr('id').substr(7);
+		$('#keys_form').append('<input type="hidden" name="rm_idx" value="' + idx + '"/>');
+		$('#keys_form').submit();
+	});
+
+	$('#btn_save').click(function() {
+		$('#keys_form').submit();
+	});
+
+	$('#keys_form').submit(function() {
+		save_changes();
+		return true;
+	});
+});
+// -->
+</script>
+</head>
+
+<body class="popup">
+<br>
+<form id="keys_form" action="<? echo $PHP_SELF; >" method="POST" enctype="multipart/form-data">
+<table cellspacing="0" cellpadding="0" align="center" class="popup">
+<tr><th colspan="3"> <? echo dict_translate("SSH Authorized Keys"); ></th></tr>
+<tr><td colspan="3"> <? include("lib/error.tmpl"); ></td></tr>
+<tr><td colspan="3" class="sep">&nbsp;</td></tr>
+<tr>
+<td class="f"><? echo dict_translate("Import Public Key File:");></td>
+<td><input id="keyfile" name="keyfile" type="file">
+<input id="import" type="submit" value="<? echo dict_translate("Import");>"></td>
+<td>&nbsp;</td>
+<tr><td colspan="3" class="sep">&nbsp;</td></tr>
+</tr>
+<tr><td colspan="3">
+<table cellspacing="0" cellpadding="0" class="listhead sortable" id="t_authkeys">
+  <tr> 
+    <th><? echo dict_translate("Enabled"); ></th>
+    <th><? echo dict_translate("Type"); ></th>
+    <th><? echo dict_translate("Key"); ></th>
+    <th><? echo dict_translate("Comment"); ></th>
+    <th><? echo dict_translate("Action"); ></th>
+  </tr>

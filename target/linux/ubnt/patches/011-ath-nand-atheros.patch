@@ -1,0 +1,28 @@
+Index: linux-2.6.32.29/drivers/mtd/nand/Kconfig
+===================================================================
+--- linux-2.6.32.29.orig/drivers/mtd/nand/Kconfig	2011-02-18 02:00:11.000000000 +0200
++++ linux-2.6.32.29/drivers/mtd/nand/Kconfig	2011-04-05 17:23:19.995223779 +0300
+@@ -482,4 +482,11 @@
+ 	  This enables the driver for the NAND Flash on evaluation board based
+ 	  on w90p910.
+ 
++config MTD_NAND_ATH
++	tristate "Support for NAND on Atheros board"
++	default n
++	depends on MTD_NAND && MACH_AR934x
++	help
++	  Enables support for NAND Flash chip on Atheros board.
++
+ endif # MTD_NAND
+Index: linux-2.6.32.29/drivers/mtd/nand/Makefile
+===================================================================
+--- linux-2.6.32.29.orig/drivers/mtd/nand/Makefile	2011-02-18 02:00:11.000000000 +0200
++++ linux-2.6.32.29/drivers/mtd/nand/Makefile	2011-04-05 17:24:03.104005699 +0300
+@@ -40,6 +40,7 @@
+ obj-$(CONFIG_MTD_NAND_MXC)		+= mxc_nand.o
+ obj-$(CONFIG_MTD_NAND_SOCRATES)		+= socrates_nand.o
+ obj-$(CONFIG_MTD_NAND_TXX9NDFMC)	+= txx9ndfmc.o
++obj-$(CONFIG_MTD_NAND_ATH)		+= ath_nand.o
+ obj-$(CONFIG_MTD_NAND_W90P910)		+= w90p910_nand.o
+ obj-$(CONFIG_MTD_NAND_NOMADIK)		+= nomadik_nand.o
+ 

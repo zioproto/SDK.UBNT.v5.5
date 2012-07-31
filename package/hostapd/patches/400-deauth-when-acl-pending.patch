@@ -1,0 +1,65 @@
+--- a/hostapd/ieee802_11_auth.c
++++ b/hostapd/ieee802_11_auth.c
+@@ -26,14 +26,17 @@
+ #include "ieee802_11_auth.h"
+ #include "radius/radius.h"
+ #include "radius/radius_client.h"
+ #include "eloop.h"
+ #include "driver.h"
+ 
+ #define RADIUS_ACL_TIMEOUT 30
++/* Ticket #1998 */
++/* How long to wait for radius response before sending deauth */
++#define RADIUS_ACL_DEAUTH_TIMEOUT 3
+ 
+ 
+ struct hostapd_cached_radius_acl {
+ 	time_t timestamp;
+ 	macaddr addr;
+ 	int accepted; /* HOSTAPD_ACL_* */
+ 	struct hostapd_cached_radius_acl *next;
+@@ -247,15 +250,24 @@ int hostapd_allowed_address(struct hosta
+ 			return HOSTAPD_ACL_REJECT;
+ 
+ 		query = hapd->acl_queries;
+ 		while (query) {
+ 			if (os_memcmp(query->addr, addr, ETH_ALEN) == 0) {
+ 				/* pending query in RADIUS retransmit queue;
+ 				 * do not generate a new one */
+-				return HOSTAPD_ACL_PENDING;
++				time_t now;
++				time(&now);
++				if (now - query->timestamp < RADIUS_ACL_DEAUTH_TIMEOUT) {
++					return HOSTAPD_ACL_PENDING;
++				}
++				else {
++					wpa_printf(MSG_DEBUG, "Access-Request pending. "
++							"Send reject for now.");
++					return HOSTAPD_ACL_REJECT;
++				}
+ 			}
+ 			query = query->next;
+ 		}
+ 
+ 		if (!hapd->conf->radius->auth_server)
+ 			return HOSTAPD_ACL_REJECT;
+ 
+@@ -329,14 +341,18 @@ static void hostapd_acl_expire_queries(s
+ {
+ 	struct hostapd_acl_query_data *prev, *entry, *tmp;
+ 
+ 	prev = NULL;
+ 	entry = hapd->acl_queries;
+ 
+ 	while (entry) {
++		if (now - entry->timestamp > RADIUS_ACL_DEAUTH_TIMEOUT) {
++			ieee802_11_mgmt(hapd, entry->auth_msg, entry->auth_msg_len,
++					WLAN_FC_STYPE_AUTH, NULL);
++		}
+ 		if (now - entry->timestamp > RADIUS_ACL_TIMEOUT) {
+ 			wpa_printf(MSG_DEBUG, "ACL query for " MACSTR
+ 				   " has expired.", MAC2STR(entry->addr));
+ 			if (prev)
+ 				prev->next = entry->next;
+ 			else
+ 				hapd->acl_queries = entry->next;

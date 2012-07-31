@@ -1,0 +1,65 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title><? echo get_title($cfg, dict_translate("Flash New Firmware")); ></title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Pragma" content="no-cache">
+<link rel="shortcut icon" href="FULL_VERSION_LINK/favicon.ico" >
+<link href="FULL_VERSION_LINK/style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+	if ($("#error").text().length == 0) {
+		$("#error").text("<? echo dict_translate("warn_downgrade|WARNING: After firmware downgrade some features and/or communication to device may be lost."); >");
+        	var c = 0;
+	        var n = 0;
+        	var c_array = "<?echo $fwversion>".replace(/.*\.v|-.*/g,".").split(".", 4).slice(1);
+	        var n_array = "<?echo $newfwversion>".replace(/.*\.v|-.*/g,".").split(".", 4).slice(1);
+        	for(var i = 0; i < 3 ; i++) {
+        		var v = parseInt(c_array[i],10);
+	                if (v != NaN)
+        	        	v <<= (8*(2-i));
+	                else
+        	        	v = 0;
+	               	c |= v;
+        		v = parseInt(n_array[i],10);
+	                if (v != NaN)
+        	        	v <<= (8*(2-i));
+	                else
+        	        	v = 0;
+	               	n |= v;
+        	}
+	        if (n < c && n < 5<<16|5<<8|0) /*v5.5.0*/
+			$("#errortbl").show();
+        }
+});
+</script>
+</head>
+
+<body class="popup">
+<br>
+<form enctype="multipart/form-data" action="fwflash.cgi" method="POST">
+<table class="popup" align="center" cellpadding="0">
+  <tr>
+    <td colspan="3">
+    <? include("lib/error.tmpl");>
+    </td>
+  </tr>
+  <tr><th colspan="2"><? echo dict_translate("FIRMWARE UPDATE"); ></th></tr>
+  <tr>
+      <td class="f"><? echo dict_translate("Current Firmware Version:"); ></td>
+      <td>&nbsp;<?echo $fwversion></td>
+  </tr>
+  <tr>
+   <td class="f"><? echo dict_translate("Uploaded Firmware Version:"); ></td>
+   <td>&nbsp;<?echo $newfwversion></td>
+  </tr>
+  <tr>
+   <td class="f">&nbsp;</td>
+   <td><input type="submit" id="update" name="update" value="<? echo dict_translate("Update"); >">&nbsp;
+       <input type="submit" id="discard" name="discard" value="<? echo dict_translate("Discard"); >"></td>
+  </tr>
+</table>
+</form>
+</body>
+</html>

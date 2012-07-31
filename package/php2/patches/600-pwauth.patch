@@ -1,0 +1,131 @@
+--- a/src/crypt.c
++++ b/src/crypt.c
+@@ -28,14 +28,19 @@
+ #include <crypt.h>
+ #endif
+ #ifdef TM_IN_SYS_TIME
+ #include <sys/time.h>
+ #else
+ #include <time.h>
+ #endif
++#ifdef HAVE_PWD_H
++#include <pwd.h>
++#endif
++#include <string.h>
++#include <errno.h>
+ #include "parse.h"
+ 
+ /*
+  * If mode is non-zero, a salt is expected.
+  * If mode is zero, a pseudo-random salt will be selected.
+  */
+ void Crypt(int mode) {
+@@ -70,7 +75,72 @@ void Crypt(int mode) {
+ #endif
+ 	Push(enc,STRING);	
+ 
+ #else
+ 	Error("No crypt support compiled into this version");
+ #endif
+ }	
++
++static const char MINUS_ONE[] = "-1";
++static const char STR_TRUE[] = "1";
++static const char STR_FALSE[] = "0";
++#define PushC(a,b) Push((char*)(a), (b))
++
++void PasswdAuth(void) {
++	Stack *s;
++	char password[64];
++	char* enc;
++	struct passwd* pwdentry;
++
++	s = Pop();
++	if (!s) {
++		Error("Stack Error in %s", __func__);
++		PushC(MINUS_ONE, LNUMBER);
++		return;
++	}
++	if (!(s->strval)) {
++		PushC(MINUS_ONE, LNUMBER);
++		return;
++	}
++	memset(password, 0, sizeof(password));
++	StripSlashes(s->strval);
++	strncpy(password, s->strval, sizeof(password) - 1);
++	s = Pop();
++	if (!s) {
++		Error("Stack Error in %s", __func__);
++		PushC(MINUS_ONE, LNUMBER);
++		return;
++	}
++	if (!*(s->strval)) {
++		PushC(MINUS_ONE, LNUMBER);
++		return;
++	}
++	StripSlashes(s->strval);
++	pwdentry = getpwnam(s->strval);
++	if (pwdentry == NULL || !pwdentry->pw_passwd) {
++		PushC(STR_FALSE, LNUMBER);
++		return;
++	}
++	/* deny disabled accounts */
++	if (pwdentry->pw_passwd[0] == '!' ||
++		pwdentry->pw_passwd[0] == '*') {
++		PushC(STR_FALSE, LNUMBER);
++		return;
++	}
++	/* don't check empty password */
++	if (!pwdentry->pw_passwd[0]) {
++		PushC(STR_TRUE, LNUMBER);
++		return;
++	}
++	/* TODO: if password is 'x' - handle shadow? */
++	enc = (char *)crypt(password, pwdentry->pw_passwd);
++	if (enc == NULL) {
++		PushC(STR_FALSE, LNUMBER);
++		return;
++	}
++
++	if (strcmp(enc, pwdentry->pw_passwd) == 0) {
++		PushC(STR_TRUE, LNUMBER);
++	} else {
++		PushC(STR_FALSE, LNUMBER);
++	}
++}
+--- a/src/lex.c
++++ b/src/lex.c
+@@ -381,14 +381,15 @@ static const cmd_table_t cmd_table[PHP_M
+ 	  { "dbmreplace", INTFUNC3,dbmReplace },
+ 	  { "dbmnextkey", INTFUNC2,dbmNextKey },
+ 	  { "getlogfile", INTFUNC0,GetLogFile },
+ 	  { "getlastref", INTFUNC0,GetLastRef },
+ 	  { "getlastmod", INTFUNC0,GetLastMod },
+ 	  { "getmyinode", INTFUNC0,GetMyInode },
+ 	  { "getrandmax", INTFUNC0,GetRandMax },
++	  { "passwdauth", INTFUNC2, PasswdAuth },
+ 	  { "setlogging", INTFUNC1,SetLogging },
+ #ifdef HAVE_LIBPQ
+ 	  { "pg_numrows", INTFUNC1,PGnumRows },
+ 	  { "pg_options", INTFUNC1,PGoptions },
+ 	  { "pg_connect", INTFUNC5,PGconnect },
+ #endif
+ 	  { "phpversion", INTFUNC0,PHPVersion },
+--- a/src/php.h
++++ b/src/php.h
+@@ -1034,14 +1034,15 @@ void FileUmask(int);
+ int CheckUid(char *, int);
+ char *GetAutoPrependFile(void);
+ char *GetAutoAppendFile(void);
+ void FPassThru(void);
+ 
+ /* crypt.c */
+ void Crypt(int);
++void PasswdAuth(void);
+ 
+ /* head.c */
+ void Header(void);
+ void php_header(int, char *);
+ void php_init_head(void);
+ void SetCookie(int);
+ void PushCookieList(char *, char *, time_t, char *, char *, int);

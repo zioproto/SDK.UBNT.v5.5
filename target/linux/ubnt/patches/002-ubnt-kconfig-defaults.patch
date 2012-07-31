@@ -1,0 +1,70 @@
+Index: linux-2.6.32.29/drivers/ssb/Kconfig
+===================================================================
+--- linux-2.6.32.29.orig/drivers/ssb/Kconfig	2011-04-05 16:28:58.000000000 +0300
++++ linux-2.6.32.29/drivers/ssb/Kconfig	2011-04-05 16:52:01.223973776 +0300
+@@ -1,7 +1,7 @@
+ config SSB_POSSIBLE
+ 	bool
+ 	depends on HAS_IOMEM && HAS_DMA
+-	default y
++	default n
+ 
+ menu "Sonics Silicon Backplane"
+ 	depends on SSB_POSSIBLE
+Index: linux-2.6.32.29/drivers/usb/Kconfig
+===================================================================
+--- linux-2.6.32.29.orig/drivers/usb/Kconfig	2011-02-18 02:00:11.000000000 +0200
++++ linux-2.6.32.29/drivers/usb/Kconfig	2011-04-05 16:53:27.044209799 +0300
+@@ -49,12 +49,15 @@
+ 	default y if CPU_SUBTYPE_SH7721
+ 	default y if CPU_SUBTYPE_SH7763
+ 	default y if CPU_SUBTYPE_SH7786
++    default y if MACH_AR7100
+ 	# more:
+ 	default PCI
+ 
+ # some non-PCI hcds implement EHCI
+ config USB_ARCH_HAS_EHCI
+ 	boolean
++	default y if MACH_HORNET
++	default y if MACH_AR7100
+ 	default y if PPC_83xx
+ 	default y if SOC_AU1200
+ 	default y if ARCH_IXP4XX
+Index: linux-2.6.32.29/init/Kconfig
+===================================================================
+--- linux-2.6.32.29.orig/init/Kconfig	2011-04-05 16:28:58.000000000 +0300
++++ linux-2.6.32.29/init/Kconfig	2011-04-05 16:52:01.223973776 +0300
+@@ -19,7 +19,7 @@
+ config CONSTRUCTORS
+ 	bool
+ 	depends on !UML
+-	default y
++	default n
+ 
+ menu "General setup"
+ 
+Index: linux-2.6.32.29/drivers/ide/Kconfig
+===================================================================
+--- linux-2.6.32.29.orig/drivers/ide/Kconfig	2011-02-18 02:00:11.000000000 +0200
++++ linux-2.6.32.29/drivers/ide/Kconfig	2011-04-05 16:52:01.223973776 +0300
+@@ -5,6 +5,7 @@
+ # Select HAVE_IDE if IDE is supported
+ config HAVE_IDE
+ 	bool
++	default n
+ 
+ menuconfig IDE
+ 	tristate "ATA/ATAPI/MFM/RLL support"
+Index: linux-2.6.32.29/lib/Kconfig.kgdb
+===================================================================
+--- linux-2.6.32.29.orig/lib/Kconfig.kgdb	2011-02-18 02:00:11.000000000 +0200
++++ linux-2.6.32.29/lib/Kconfig.kgdb	2011-04-05 16:52:01.223973776 +0300
+@@ -1,6 +1,7 @@
+ 
+ config HAVE_ARCH_KGDB
+ 	bool
++	default n
+ 
+ menuconfig KGDB
+ 	bool "KGDB: kernel debugging with remote gdb"

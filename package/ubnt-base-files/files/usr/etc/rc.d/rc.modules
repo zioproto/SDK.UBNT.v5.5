@@ -1,0 +1,54 @@
+#!/bin/sh
+
+PERSISTENT_BLFILE="/etc/persistent/modules.blacklist"
+BLFILE="/etc/modules.blacklist"
+
+load_modules() {
+	cd /etc/modules.d
+        local block_files=""
+        [ -s $BLFILE ] && block_files=" -f "$BLFILE
+        [ -s $PERSISTENT_BLFILE ] && block_files=${block_files=}" -f "$PERSISTENT_BLFILE
+	if [ ".${block_files}" = "." ]; then
+		sed 's/^[^#]/insmod &/' $* | ash 2>&- || :
+	else
+        	grep -h -v ${block_files} $* | sed 's/^[^#]/insmod &/' | ash 2>&- || :
+	fi
+}
+unload_modules() {
+	cd /etc/modules.d
+	reverse_list=""
+	for module in `cat $1`; do
+		reverse_list="${module}\n${reverse_list}"
+	done
+	echo -e ${reverse_list} | sed 's/^[^#]/rmmod &/' | ash 2>&- || :
+}
+
+[ ! -e /etc/persistent/no-modules -a -d /etc/modules.d ] || exit 0
+
+what=$1
+if [ $# -gt 1 ]; then
+	shift
+	grp_list=""
+	for f in /etc/modules.d/$*; do
+		grp_list="$grp_list $f"
+	done
+else
+	grp_list="/etc/modules.d/*"
+fi
+
+# Sort the list, converting to newlines first because sort operates on lines
+grp_list=`echo $grp_list | tr " " "\n" | sort -n`
+
+case "$what" in
+	load)	for group in $grp_list; do
+			load_modules $group
+		done
+		;;
+	unload) for group in `echo "$grp_list" | sort -n -r`; do
+			unload_modules $group
+		done
+		;;
+	*)	echo "Usage: load|unload"
+		exit 1
+		;;
+esac

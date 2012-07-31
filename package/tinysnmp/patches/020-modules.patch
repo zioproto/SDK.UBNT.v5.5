@@ -1,0 +1,20 @@
+--- a/modules/Makefile
++++ b/modules/Makefile
+@@ -32,12 +32,15 @@
+ TOPDIR = ..
+ 
+ # subdirectories (leave as is if there is no subdirectories)
+-DIR = resources ups test
++DIR = resources
+ 
+ ifeq ($(shell uname -s),Linux)
+-DIR += interfaces dvb sensors
++DIR += interfaces
+ endif	# ifeq ($(shell uname -s),Linux)
+ 
++# ubnt added modules
++DIR += ieee802dot11 mikrotik
++
+ # names of object files
+ OBJ =
+ 

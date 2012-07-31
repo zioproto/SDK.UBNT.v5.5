@@ -1,0 +1,10 @@
+--- a/modules/resources/main.c
++++ b/modules/resources/main.c
+@@ -247,7 +247,6 @@ static int res_update (struct odb **odb)
+ {
+    if (memory_update (odb) ||
+ 	   swap_update (odb) ||
+-	   storage_update (odb) ||
+ 	   _load_update (odb))
+ 	 return (-1);
+ 

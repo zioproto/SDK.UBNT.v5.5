@@ -1,0 +1,63 @@
+#!/bin/sh
+
+MA_TICKET_ADD=/bin/ma-ticket-add
+MA_TICKET_DEL=/bin/ma-rm
+TICKET_DB=/tmp/.tickets.tdb
+TICKET_USER=mcuser
+
+usage() {
+	echo "Usage: $0 <operation> <ticketid>"
+	echo "  where <operation> is one of:"
+	echo "     add - adds the ticket"
+	echo "     del - removes the ticket"
+}
+
+if [ $# -lt 2 ]; then
+        usage
+        exit 254 
+fi
+
+ticket_add() {
+	echo "Adding ticket to authorization backend..."
+	$MA_TICKET_ADD $TICKET_DB $1 $2
+	RC=$?
+	echo "done. Status: $RC"
+	return $RC
+}
+
+ticket_del() {
+	echo "Removed ticket from authorization backend..."
+	$MA_TICKET_DEL $TICKET_DB $1
+	RC=$?
+	echo "done. Status: $RC"
+	return $RC
+}
+
+OP=$1
+TICKET=$2
+
+if [ ${#TICKET} -gt 32 ]; then
+	echo "Warning: ticket will be truncated to 32 characters"
+fi
+
+if [ ${#TICKET} -lt 32 ]; then
+	echo "Warning: ticket is expected to be of 32 characters"
+fi
+
+case "$OP" in
+	"add")
+		ticket_add $TICKET $TICKET_USER
+		RC=$?
+		;;
+	"del"|"rm")
+		ticket_del $TICKET
+		RC=$?
+		;;
+	*)
+		echo "ERROR: Unsupported operation '"$OP"'"
+		usage
+		RC=252
+		exit 252
+esac
+
+exit $RC

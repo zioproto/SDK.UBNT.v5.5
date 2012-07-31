@@ -1,0 +1,4 @@
+QUILT_DIFF_ARGS="--color=auto --minimal --speed-large-files -U 7 -E -b -w -B"
+QUILT_PATCH_ARGS="--fuzz=1 --ignore-whitespace"
+QUILT_REFRESH_ARGS="--sort -U 7"
+QUILT_NO_DIFF_TIMESTAMP="yes"

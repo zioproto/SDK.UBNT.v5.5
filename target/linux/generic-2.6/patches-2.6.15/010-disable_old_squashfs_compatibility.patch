@@ -1,0 +1,30 @@
+--- a/fs/squashfs/Makefile
++++ b/fs/squashfs/Makefile
+@@ -1,7 +1,6 @@
+ #
+ # Makefile for the linux squashfs routines.
+ #
+ 
+ obj-$(CONFIG_SQUASHFS) += squashfs.o
+ squashfs-y += inode.o
+-squashfs-y += squashfs2_0.o
+--- a/fs/squashfs/squashfs.h
++++ b/fs/squashfs/squashfs.h
+@@ -20,14 +20,17 @@
+  *
+  * squashfs.h
+  */
+ 
+ #ifdef CONFIG_SQUASHFS_1_0_COMPATIBILITY
+ #undef CONFIG_SQUASHFS_1_0_COMPATIBILITY
+ #endif
++#ifdef CONFIG_SQUASHFS_2_0_COMPATIBILITY
++#undef CONFIG_SQUASHFS_2_0_COMPATIBILITY
++#endif
+ 
+ #ifdef SQUASHFS_TRACE
+ #define TRACE(s, args...)	printk(KERN_NOTICE "SQUASHFS: "s, ## args)
+ #else
+ #define TRACE(s, args...)	{}
+ #endif
+ 

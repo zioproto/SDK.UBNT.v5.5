@@ -1,0 +1,56 @@
+--- a/configure.ac
++++ b/configure.ac
+@@ -424,14 +424,31 @@ if test "$WITH_GDBM" != "no"; then
+                  AC_DEFINE([HAVE_GDBM], [1], [libgdbm])
+ 		 AC_DEFINE([HAVE_GDBM_H], [1])
+          ])
+  ])
+  AC_SUBST(GDBM_LIB)
+ fi
+ 
++dnl Check for tdb
++AC_MSG_CHECKING(for tdb)
++AC_ARG_WITH(tdb, AC_HELP_STRING([--with-tdb],[tdb storage for mod_airos]),
++[WITH_TDB=$withval],[WITH_TDB=no])
++AC_MSG_RESULT([$WITH_TDB])
++
++if test "$WITH_TDB" != "no"; then
++ AC_CHECK_LIB(tdb, tdb_open, [
++         AC_CHECK_HEADERS([tdb.h],[
++                 TDB_LIB=-ltdb
++                 AC_DEFINE([HAVE_TDB], [1], [libtdb])
++		 AC_DEFINE([HAVE_TDB_H], [1])
++         ])
++ ])
++ AC_SUBST(TDB_LIB)
++fi
++
+ dnl Check for memcache
+ AC_MSG_CHECKING(for memcache)
+ AC_ARG_WITH(memcache, AC_HELP_STRING([--with-memcache],[memcached storage for mod_trigger_b4_dl]),
+ [WITH_MEMCACHE=$withval],[WITH_MEMCACHE=no])
+ AC_MSG_RESULT([$WITH_MEMCACHE])
+ if test "$WITH_MEMCACHE" != "no"; then
+  AC_CHECK_LIB(memcache, mc_new, [
+@@ -653,14 +670,21 @@ fi
+ features="storage-gdbm"
+ if test ! "x$GDBM_LIB" = x; then
+ 	enable_feature="$enable_feature $features"
+ else
+ 	disable_feature="$disable_feature $features"
+ fi
+ 
++features="storage-tdb"
++if test ! "x$TDB_LIB" = x; then
++	enable_feature="$enable_feature $features"
++else
++	disable_feature="$disable_feature $features"
++fi
++
+ features="storage-memcache"
+ if test ! "x$MEMCACHE_LIB" = x; then
+ 	enable_feature="$enable_feature $features"
+ else
+ 	disable_feature="$disable_feature $features"
+ fi
+ 

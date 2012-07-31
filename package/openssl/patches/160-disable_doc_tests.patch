@@ -1,0 +1,104 @@
+--- a/Makefile
++++ b/Makefile
+@@ -107,15 +107,15 @@ PERLASM_SCHEME=
+ KRB5_INCLUDES=
+ LIBKRB5=
+ 
+ # Zlib stuff
+ ZLIB_INCLUDE=
+ LIBZLIB=
+ 
+-DIRS=   crypto ssl engines apps test tools
++DIRS=   crypto ssl engines apps tools
+ ENGDIRS= ccgost
+ SHLIBDIRS= crypto ssl
+ 
+ # dirs in crypto to build
+ SDIRS=  \
+ 	objects \
+ 	md4 md5 sha mdc2 hmac ripemd whrlpool \
+@@ -125,29 +125,29 @@ SDIRS=  \
+ 	evp asn1 pem x509 x509v3 conf txt_db pkcs7 pkcs12 comp ocsp ui krb5 \
+ 	cms pqueue ts
+ # keep in mind that the above list is adjusted by ./Configure
+ # according to no-xxx arguments...
+ 
+ # tests to perform.  "alltests" is a special word indicating that all tests
+ # should be performed.
+-TESTS = alltests
++TESTS =
+ 
+ MAKEFILE= Makefile
+ 
+ MANDIR=$(OPENSSLDIR)/man
+ MAN1=1
+ MAN3=3
+ MANSUFFIX=
+ HTMLSUFFIX=html
+ HTMLDIR=$(OPENSSLDIR)/html
+ SHELL=/bin/sh
+ 
+ TOP=    .
+ ONEDIRS=out tmp
+-EDIRS=  times doc bugs util include certs ms shlib mt demos perl sf dep VMS
++EDIRS=  times bugs util include certs ms shlib mt demos perl sf dep VMS
+ WDIRS=  windows
+ LIBS=   libcrypto.a libssl.a
+ SHARED_CRYPTO=libcrypto$(SHLIB_EXT)
+ SHARED_SSL=libssl$(SHLIB_EXT)
+ SHARED_LIBS=
+ SHARED_LIBS_LINK_EXTS=
+ SHARED_LDFLAGS=
+@@ -235,15 +235,15 @@ BUILD_ONE_CMD=\
+ 		$(BUILD_CMD); \
+ 	fi
+ 
+ reflect:
+ 	@[ -n "$(THIS)" ] && $(CLEARENV) && $(MAKE) $(THIS) -e $(BUILDENV)
+ 
+ sub_all: build_all
+-build_all: build_libs build_apps build_tests build_tools
++build_all: build_libs build_apps build_tools
+ 
+ build_libs: build_crypto build_ssl build_engines
+ 
+ build_crypto:
+ 	@dir=crypto; target=all; $(BUILD_ONE_CMD)
+ build_ssl:
+ 	@dir=ssl; target=all; $(BUILD_ONE_CMD)
+@@ -490,15 +490,15 @@ dist:
+ 	@$(MAKE) dist_pem_h
+ 	@$(MAKE) SDIRS='$(SDIRS)' clean
+ 	@$(MAKE) TAR='$(TAR)' TARFLAGS='$(TARFLAGS)' tar
+ 
+ dist_pem_h:
+ 	(cd crypto/pem; $(MAKE) -e $(BUILDENV) pem.h; $(MAKE) clean)
+ 
+-install: all install_docs install_sw
++install: all install_sw
+ 
+ install_sw:
+ 	@$(PERL) $(TOP)/util/mkdir-p.pl $(INSTALL_PREFIX)$(INSTALLTOP)/bin \
+ 		$(INSTALL_PREFIX)$(INSTALLTOP)/$(LIBDIR) \
+ 		$(INSTALL_PREFIX)$(INSTALLTOP)/$(LIBDIR)/engines \
+ 		$(INSTALL_PREFIX)$(INSTALLTOP)/$(LIBDIR)/pkgconfig \
+ 		$(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl \
+--- a/Makefile.org
++++ b/Makefile.org
+@@ -488,15 +488,15 @@ dist:
+ 	@$(MAKE) dist_pem_h
+ 	@$(MAKE) SDIRS='$(SDIRS)' clean
+ 	@$(MAKE) TAR='$(TAR)' TARFLAGS='$(TARFLAGS)' tar
+ 
+ dist_pem_h:
+ 	(cd crypto/pem; $(MAKE) -e $(BUILDENV) pem.h; $(MAKE) clean)
+ 
+-install: all install_docs install_sw
++install: all install_sw
+ 
+ install_sw:
+ 	@$(PERL) $(TOP)/util/mkdir-p.pl $(INSTALL_PREFIX)$(INSTALLTOP)/bin \
+ 		$(INSTALL_PREFIX)$(INSTALLTOP)/$(LIBDIR) \
+ 		$(INSTALL_PREFIX)$(INSTALLTOP)/$(LIBDIR)/engines \
+ 		$(INSTALL_PREFIX)$(INSTALLTOP)/$(LIBDIR)/pkgconfig \
+ 		$(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl \

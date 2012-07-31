@@ -1,0 +1,148 @@
+<div id="message">
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.utils.js"></script>
+<script type="text/javascript" language="javascript">
+//<!--
+<?
+include("lib/ipcheck.inc");
+$test_time_left = is_test();
+$testmode_active = is_testmode_active();
+>
+
+var testmode = '<? if (is_test() != 0) { echo "on"; } >';
+var restart_time = 0;
+var poll_time = 2000;
+var sr_time = <? echo $soft_reboot_time + $sr_delay; >;
+var reboot_time = <? echo $reboot_time; >;
+var testmode_start = <? echo $testmode_active; >;
+var testtime_left = <? echo $test_time_left >;
+
+function page_redirect() {
+       	var http_proto = '<? echo $ipc_http_proto;>';
+       	var http_port = '<? echo $ipc_http_port;>';
+       	var iplan = '<?echo $ipc_lanipaddress>';
+       	var ip = '<?echo $ipc_ipaddress>';
+       	var uri = parseUri(window.location.href);
+
+       	if (http_proto != '')
+       		uri['protocol'] = http_proto;
+       	if (http_port != '')
+       		uri['port'] = http_port;
+       	if (uri['host'] != iplan && uri['host'] != ip) {
+       		if (ip != '' && ip != '0.0.0.0' && ip != '0')
+       			uri['host'] = ip;
+       	}
+       	var url = uri['protocol']+'://'+uri['host'];
+       	if (uri['port'] != '')
+       		url = url + ':' + uri['port'];
+       	url = url + uri['relative'];
+       	window.location.href=url+'?'+(new Date().getTime());
+}
+
+function page_reload() {
+       	window.location.href = window.location.href + '?' + (new Date().getTime());
+}
+
+function handle_click(event) {
+	$('.cfg_btn').disable();
+	$.ajax({
+		url: event.data.url,
+		cache: false,
+		data: { testmode: event.data.testmode },
+		success: event.data.fn,
+		error: event.data.fn
+	});
+}
+
+var tTimer = null;
+function update_test_counter() {
+	if (testtime_left > 1) {
+		testtime_left--;
+		$('#testmsg').text(testtime_left);
+	} else {
+		clearInterval(tTimer);
+		$('#msg_body').text("Reverting to previous settings...");
+		$('.cfg_btn').disable();
+		setTimeout(function() {
+				$('#message').hide();
+				page_redirect();
+			}, 1000 * reboot_time);
+	}
+}
+
+function restart_poll() {
+	if (poll_time < restart_time) {
+		poll_time += 1000;
+		do_poll();
+	}
+	else {
+		$('.cfg_btn').enable();
+	}
+}
+
+function do_poll() {
+	$.ajax({
+		url: 'poll.cgi',
+		cache: false,
+		timeout: 1000,
+		success: function() { $('.cfg_btn').enable(); },
+		error: restart_poll
+	});
+}
+
+function bind_click(id, data) {
+	$(id).bind('click', data, handle_click);
+}
+
+$(document).ready(function() {
+	var sr_time = parseInt('<? echo $soft_reboot_time; >');
+	restart_time = !isNaN(sr_time) ? sr_time * 1000 : 20000;
+
+	var discard_fn = (testmode.length > 0) ? page_redirect : page_reload;
+	bind_click('#test_button', { url: 'apply.cgi', testmode: 'on', fn: page_redirect });
+	bind_click('#apply_button', { url: 'apply.cgi', testmode: '', fn: page_redirect });
+	bind_click('#discard_button', { url: 'discard.cgi', testmode: testmode, fn: discard_fn });
+	
+	if (testmode.length > 0) {
+		$('.cfg_btn').disable();
+		setTimeout(do_poll, poll_time);
+
+		if (testmode_start == 0) {
+			tTimer = setInterval(update_test_counter, 1000);
+		}
+		else {
+			setTimeout(page_reload, 1000 * sr_time);
+		}
+	}
+});
+
+// -->
+</script>
+
+<div id="changedMsgDiv" class="msg info-msg round-corner">
+	<table class="msg">
+		<tr>
+			<td id="msg_body">
+<?
+if (!$test_time_left) {
+	echo dict_translate("msg_cfg_modified|Configuration contains changes. Apply these changes?");
+} else {
+	if ($testmode_active == 0) {
+		echo dict_translate("msg_cfg_testmode|Device is in Test mode. It will resume the last configuration after ");
+		echo "<span id='testmsg'>" + $test_time_left + "</span>" + " " + dict_translate("seconds.");
+		echo " " + dict_translate("Apply these changes?");
+	}
+	else {
+		echo dict_translate("Applying settings, please wait...");
+	}
+} >
+			</td>
+			<td style="white-space: nowrap; text-align: right;">
+				<input type="button" class="cfg_btn" id="test_button" value="<? echo dict_translate("Test"); >">
+				<input type="button" class="cfg_btn" id="apply_button" value="<? echo dict_translate("Apply"); >">
+				<input type="button" class="cfg_btn" id="discard_button" value="<? echo dict_translate("Discard"); >">
+			</td>
+		</tr>
+	</table>
+</div>
+
+</div>

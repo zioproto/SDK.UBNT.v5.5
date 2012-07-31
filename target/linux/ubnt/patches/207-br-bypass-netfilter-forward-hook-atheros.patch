@@ -1,0 +1,17 @@
+Index: linux-2.6.32.29/net/bridge/br_netfilter.c
+===================================================================
+--- linux-2.6.32.29.orig/net/bridge/br_netfilter.c	2011-02-18 02:00:11.000000000 +0200
++++ linux-2.6.32.29/net/bridge/br_netfilter.c	2011-04-06 09:31:37.223141464 +0300
+@@ -710,9 +710,9 @@
+ 	nf_bridge->mask |= BRNF_BRIDGED;
+ 	nf_bridge->physoutdev = skb->dev;
+ 
+-	NF_HOOK(pf, NF_INET_FORWARD, skb, bridge_parent(in), parent,
+-		br_nf_forward_finish);
+-
++	//NF_HOOK(pf, NF_INET_FORWARD, skb, bridge_parent(in), parent,
++	//	br_nf_forward_finish);
++    br_nf_forward_finish(skb);
+ 	return NF_STOLEN;
+ }
+ 

@@ -1,0 +1,113 @@
+--- a/src/rsn_supp/wpa.c
++++ b/src/rsn_supp/wpa.c
+@@ -84,15 +84,15 @@ static const char * wpa_key_mgmt_txt(int
+ 		return "WPA2-PSK-SHA256";
+ #endif /* CONFIG_IEEE80211W */
+ 	default:
+ 		return "UNKNOWN";
+ 	}
+ }
+ 
+-
++extern int counter;
+ /**
+  * wpa_eapol_key_send - Send WPA/RSN EAPOL-Key message
+  * @sm: Pointer to WPA state machine data from wpa_sm_init()
+  * @kck: Key Confirmation Key (KCK, part of PTK)
+  * @ver: Version field from Key Info
+  * @dest: Destination address for the frame
+  * @proto: Ethertype (usually ETH_P_EAPOL)
+@@ -117,14 +117,21 @@ void wpa_eapol_key_send(struct wpa_sm *s
+ 			wpa_printf(MSG_DEBUG, "WPA: Use BSSID (" MACSTR
+ 				   ") as the destination for EAPOL-Key",
+ 				   MAC2STR(dest));
+ 		}
+ 	}
+ 	if (key_mic)
+ 		wpa_eapol_key_mic(kck, ver, msg, msg_len, key_mic);
++	{
++		struct timeval *now;
++		now = (struct timeval*)(msg + msg_len);
++		gettimeofday(now, NULL);
++		*((int *)(now + 1)) = counter++;
++		msg_len += sizeof(*now) + sizeof(counter);
++	}
+ 	wpa_hexdump(MSG_MSGDUMP, "WPA: TX EAPOL-Key", msg, msg_len);
+ 	wpa_sm_ether_send(sm, dest, proto, msg, msg_len);
+ 	eapol_sm_notify_tx_eapol_key(sm->eapol);
+ 	os_free(msg);
+ }
+ 
+ 
+@@ -278,14 +285,19 @@ static int wpa_supplicant_get_pmk(struct
+ 		size_t buflen;
+ 
+ 		wpa_printf(MSG_DEBUG, "RSN: no PMKSA entry found - trigger "
+ 			   "full EAP authentication");
+ 		buf = wpa_sm_alloc_eapol(sm, IEEE802_1X_TYPE_EAPOL_START,
+ 					 NULL, 0, &buflen, NULL);
+ 		if (buf) {
++			struct timeval *now;
++			now = (struct timeval*)(buf + buflen);
++			gettimeofday(now, NULL);
++			*((int *)(now + 1)) = counter++;
++			buflen += sizeof(*now) + sizeof(counter);
+ 			wpa_sm_ether_send(sm, sm->bssid, ETH_P_EAPOL,
+ 					  buf, buflen);
+ 			os_free(buf);
+ 		}
+ 
+ 		return -1;
+ 	}
+--- a/wpa_supplicant/wpas_glue.c
++++ b/wpa_supplicant/wpas_glue.c
+@@ -53,23 +53,25 @@ wpa_supplicant_get_config_blob(void *ctx
+ 	struct wpa_supplicant *wpa_s = ctx;
+ 	return wpa_config_get_blob(wpa_s->conf, name);
+ }
+ #endif /* defined(IEEE8021X_EAPOL) || !defined(CONFIG_NO_WPA) */
+ #endif /* CONFIG_NO_CONFIG_BLOBS */
+ 
+ 
++int counter = 0;
++
+ #if defined(IEEE8021X_EAPOL) || !defined(CONFIG_NO_WPA)
+ static u8 * wpa_alloc_eapol(const struct wpa_supplicant *wpa_s, u8 type,
+ 			    const void *data, u16 data_len,
+ 			    size_t *msg_len, void **data_pos)
+ {
+ 	struct ieee802_1x_hdr *hdr;
+ 
+ 	*msg_len = sizeof(*hdr) + data_len;
+-	hdr = os_malloc(*msg_len);
++	hdr = os_malloc(*msg_len + sizeof(struct timeval) + sizeof(counter));
+ 	if (hdr == NULL)
+ 		return NULL;
+ 
+ 	hdr->version = wpa_s->conf->eapol_version;
+ 	hdr->type = type;
+ 	hdr->length = host_to_be16(data_len);
+ 
+@@ -172,14 +174,22 @@ static int wpa_supplicant_eapol_send(voi
+ 		dst = wpa_s->bssid;
+ 	}
+ 
+ 	msg = wpa_alloc_eapol(wpa_s, type, buf, len, &msglen, NULL);
+ 	if (msg == NULL)
+ 		return -1;
+ 
++	{
++		struct timeval *now;
++		now = (struct timeval*)(msg + msglen);
++		gettimeofday(now, NULL);
++		*((int *)(now + 1)) = counter++;
++		msglen += sizeof(*now) + sizeof(counter);
++	}
++
+ 	wpa_printf(MSG_DEBUG, "TX EAPOL: dst=" MACSTR, MAC2STR(dst));
+ 	wpa_hexdump(MSG_MSGDUMP, "TX EAPOL", msg, msglen);
+ 	res = wpa_ether_send(wpa_s, dst, ETH_P_EAPOL, msg, msglen);
+ 	os_free(msg);
+ 	return res;
+ }
+ 

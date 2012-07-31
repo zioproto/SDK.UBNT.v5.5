@@ -1,0 +1,14 @@
+#!/bin/sh
+
+. /usr/etc/rc.d/rc.funcs
+
+if [ -z $PLUGIN_NORUN ]; then
+	case "$1" in
+		start|stop)
+		run_plugin $2 $1
+		;;
+		*)
+		echo "Usage: /usr/etc/init.d/plugin (start|stop) plugin_name"
+		;;
+	esac
+fi

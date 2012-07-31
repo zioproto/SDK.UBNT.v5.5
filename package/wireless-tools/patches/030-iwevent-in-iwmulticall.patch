@@ -1,0 +1,62 @@
+Index: wireless_tools.29/Makefile
+===================================================================
+--- wireless_tools.29.orig/Makefile
++++ wireless_tools.29/Makefile
+@@ -197,7 +197,8 @@
+ 	  ln -f -s iwconfig iwlist ; \
+ 	  ln -f -s iwconfig iwspy ; \
+ 	  ln -f -s iwconfig iwpriv ; \
+-	  ln -f -s iwconfig iwgetid )
++	  ln -f -s iwconfig iwgetid ; \
++	  ln -f -s iwconfig iwevent )
+ 
+ clean::
+ 	$(RM_CMD) 
+Index: wireless_tools.29/iwmulticall.c
+===================================================================
+--- wireless_tools.29.orig/iwmulticall.c
++++ wireless_tools.29/iwmulticall.c
+@@ -35,6 +35,9 @@
+ 	main_iwgetid(int	argc,
+ 		     char **	argv);
+ 
++extern int
++	main_iwevent(int	argc,
++		     char **	argv);
+ /************************** MULTICALL HACK **************************/
+ /*
+  * The idea for multicall is to put all the tools and the library in
+@@ -93,11 +96,23 @@
+ /* Do we really need iwgetid ? Well, it's not like it's a big one */
+ #define main(args...) main_iwgetid(args)
+ #define iw_usage(args...) iwgetid_usage(args)
++#define long_opts iwgetid_long_opts
+ #include "iwgetid.c"
++#undef long_opts
+ #undef iw_usage
+ #undef main
+ 
+-/* iwevent is useless for most people, don't grab it ? */
++/**
++ * !!! iwevent is useless for most people, don't grab it ?
++ * iwevent is usefull for UBNT development team ! (tony@ubnt)
++ **/
++#define main(args...) main_iwevent(args)
++#define iw_usage(args...) iwevent_usage(args)
++#define long_opts iwevent_long_opts
++#include "iwevent.c"
++#undef long_opts
++#undef iw_usage
++#undef main
+ 
+ /* ifrename is big and useless for those systems */
+ 
+@@ -136,6 +151,8 @@
+     return(main_iwpriv(argc, argv));
+   if(!strcmp(call_name, "iwgetid"))
+     return(main_iwgetid(argc, argv));
++  if(!strcmp(call_name, "iwevent"))
++    return(main_iwevent(argc, argv));
+ 
+   /* Uh oh... Not supposed to come here. */
+   printf("iwmulticall : you are not supposed to call me this way...\n");

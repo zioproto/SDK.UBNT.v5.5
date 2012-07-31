@@ -1,0 +1,10 @@
+--- linux-2.6.31/include/net/netfilter/nf_conntrack_tuple.h	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/include/net/netfilter/nf_conntrack_tuple.h	2011-03-17 17:03:18.000000000 +0200
+@@ -12,7 +12,6 @@
+ 
+ #include <linux/netfilter/x_tables.h>
+ #include <linux/netfilter/nf_conntrack_tuple_common.h>
+-#include <linux/list_nulls.h>
+ 
+ /* A `tuple' is a structure containing the information to uniquely
+   identify a connection.  ie. if two packets have the same tuple, they

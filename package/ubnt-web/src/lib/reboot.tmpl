@@ -1,0 +1,217 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title><? echo get_title($cfg, $pagetitle); ></title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link href="FULL_VERSION_LINK/style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" language="javascript" src="jsl10n.cgi"></script>
+<script language="javascript1.2" type="text/javascript" src="FULL_VERSION_LINK/progress.js"></script>
+<script type="text/javascript" language="javascript" src="FULL_VERSION_LINK/ajax.js"></script>
+<script type="text/javascript" language="javascript">
+//<!--
+/*
+	parseUri 1.2.1
+	(c) 2007 Steven Levithan <stevenlevithan.com>
+	MIT License
+*/
+function parseUri (str) {
+	var	o   = parseUri.options,
+		m   = o.parser[o.strictMode ? "strict" : "loose"].exec(str),
+		uri = {},
+		i   = 14;
+
+	while (i--) uri[o.key[i]] = m[i] || "";
+
+	uri[o.q.name] = {};
+	uri[o.key[12]].replace(o.q.parser, function ($0, $1, $2) {
+		if ($1) uri[o.q.name][$1] = $2;
+	});
+
+	return uri;
+};
+
+parseUri.options = {
+	strictMode: false,
+	key: ["source","protocol","authority","userInfo","user","password","host","port","relative","path","directory","file","query","anchor"],
+	q:   {
+		name:   "queryKey",
+		parser: /(?:^|&)([^&=]*)=?([^&]*)/g
+	},
+	parser: {
+		strict: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*):?([^:@]*))?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
+		loose:  /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*):?([^:@]*))?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/
+	}
+};
+/*end of parseUri 1.2.1*/
+
+<?if (!isset($duration)) { $duration=60; }>
+var poll_url = "/poll.cgi";
+var conn = null;
+var close_tid = 0;
+var timer_id = 0;
+var progress = 0;
+var do_close = 0;
+var http_proto = "<? echo $http_proto;>";
+var http_port = "<? echo $http_port;>";
+var iplan = '<?echo $lanipaddress>';
+var ip = '<?echo $ipaddress>';
+var is_busy = false;
+var uri = parseUri(window.opener.location.href);
+
+if (http_proto != "")
+	uri["protocol"] = http_proto;
+if (http_port != "")
+	uri["port"] = http_port;
+if (uri["host"] != iplan && uri["host"] != ip) {
+	if (ip != '' && ip != '0.0.0.0' && ip != '0')
+		uri["host"] = ip;
+}
+var url = uri["protocol"]+"://"+uri["host"];
+if (uri["port"] != "")
+	url = url + ":" + uri["port"];
+poll_url = url +"/poll.cgi";
+url = url + uri["relative"];
+
+function check_close()
+{
+	if (do_close)
+	{
+		if (progress)
+		{
+			progress.set(100);
+		}
+		close_tid = setTimeout(function() { shut(true); }, 500);
+	}
+	else
+	{
+		close_tid = setTimeout(check_close, 100);
+	}
+}
+
+function polling_init()
+{
+	if (conn)
+	{
+		// abort just in case
+		abortConnection()
+	}
+	else
+	{
+		conn = new ajax();
+	}
+	return conn != null;
+}
+
+function get_poll_url()
+{
+	return poll_url + "?q="+Math.random();
+}
+
+function handleResponse(httpRequest)
+{
+	var rc = -255;
+	try
+	{
+		if (httpRequest && httpRequest.status == 200)
+		{
+			results = httpRequest.responseText;
+			if (results.length > 0)
+			{
+				rc = parseInt(results);
+			}
+		}
+	}
+	catch(e)
+	{
+		//just eat exception if any
+		return false;
+	}
+	if (rc == 0)
+	{
+		return true;
+	}
+	return false;
+}
+
+function do_poll()
+{
+	abortConnection();
+	is_busy = true;
+	if (conn && !conn.get(get_poll_url(),
+		function (httpRequest)
+		{
+			is_busy = false;
+			if (handleResponse(httpRequest))
+			{
+				do_close = 1;
+			}
+		} ))
+	{
+		is_busy = false;
+		// Display error somewhere?
+	}
+	timer_id = setTimeout(do_poll, 1000);
+	return true;
+}
+
+function init()
+{
+	progress = new Progress("progress", "FULL_VERSION_LINK/images/p.gif", 300);
+	progress.run(<?echo $duration> * 1000, "shut(true)");
+	polling_init();
+	timer_id = setTimeout(do_poll, <?echo $duration> * 333);
+	check_close();
+}
+
+function abortConnection()
+{
+	if (conn && is_busy)
+	{
+		conn.abort();
+		is_busy = false;
+		return true;
+	}
+	return false;
+}
+
+function shut(reload)
+{
+	if (close_tid)
+	{
+		clearTimeout(close_tid);
+		close_tid = 0;
+	}
+	if (timer_id)
+	{
+		clearTimeout(timer_id);
+		timer_id = 0;
+	}
+	if (progress)
+	{
+		progress.cancel();
+	}
+	abortConnection();
+	conn = null;
+	if (reload && window.opener && !window.opener.closed)
+	{
+		window.opener.location.href = url;
+	}
+	window.close();
+}
+
+window.onload = init;
+// -->
+</script>
+</head>
+<body class="popup">
+<br>
+<table cellspacing="0" cellpadding="0" align="center" class="popup">
+<tr><th><?echo $pagetitle></th></tr>
+<tr><td align="center"><?echo $message></td></tr>
+<tr><td>&nbsp;</td></tr>
+<tr><td align="left"><div id="progress"></div></td></tr>
+<tr><td>&nbsp;</td></tr>
+<tr><td align="center"><input type="button" value="<? echo dict_translate("Close this window"); >" onclick="shut(true)"></td></tr>
+</table>
+</body>
+</html>

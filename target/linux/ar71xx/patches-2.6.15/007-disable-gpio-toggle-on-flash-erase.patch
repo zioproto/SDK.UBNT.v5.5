@@ -1,0 +1,14 @@
+--- a/drivers/mtd/devices/ar7240_flash.h
++++ b/drivers/mtd/devices/ar7240_flash.h
+@@ -23,7 +23,11 @@
+ 
+ #define AR7240_FLASH_MAX_BANKS  1
+ 
++#if 0
+ #define display(_x)     ar7240_reg_wr_nf(0x18040008, (_x))
++#else
++#define display(_x)
++#endif
+ 
+ /*
+  * primitives

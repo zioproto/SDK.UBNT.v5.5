@@ -1,0 +1,24 @@
+--- a/drivers/mtd/devices/ar7240_flash.c
++++ b/drivers/mtd/devices/ar7240_flash.c
+@@ -17,9 +17,6 @@
+ #include "ar7240.h"
+ #include "ar7240_flash.h"
+ 
+-/* this is passed in as a boot parameter by bootloader */
+-extern int __ath_flash_size;
+-
+ /*
+  * statics
+  */
+@@ -176,11 +173,6 @@ static int __init ar7240_flash_init (voi
+         index = ar7240_flash_probe();
+         geom  = &flash_geom_tbl[index];
+ 
+-        /* set flash size to value from bootloader if it passed valid value */ 
+-        /* otherwise use the default 4MB.                                   */
+-        if (__ath_flash_size >= 4 && __ath_flash_size <= 16) 
+-            geom->size = __ath_flash_size * 1024 * 1024;
+-
+         mtd         =  kmalloc(sizeof(struct mtd_info), GFP_KERNEL);
+         if (!mtd) {
+             printk("Cant allocate mtd stuff\n");

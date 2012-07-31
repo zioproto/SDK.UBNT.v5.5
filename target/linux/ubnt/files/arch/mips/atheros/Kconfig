@@ -1,0 +1,93 @@
+config AR7240_EMULATION
+	bool "build system for AR7240 emulation board?"
+	depends on MACH_AR7240
+
+config WASP_SUPPORT
+	bool "build system for WASP based board"
+	depends on MACH_AR7240
+
+config ATH_SYS_TYPE
+	string "Atheros system type"
+	depends on MACH_AR724x || MACH_AR933x || MACH_AR934x
+	default "Atheros AR724x" if MACH_AR724x
+	default "Atheros AR9330 (Hornet)" if MACH_AR933x
+	default "Atheros AR934x" if MACH_AR934x
+
+config ATH_MACH_TYPE
+	int "Atheros MIPS Mach type"
+	depends on MACH_AR724x || MACH_AR933x || MACH_AR934x
+	default 1 if MACH_AR724x
+	default 2 if MACH_AR933x
+	default 3 if MACH_AR934x
+
+config ATH_EMULATION
+	bool "Build for Atheros emulation boards"
+	depends on MACH_AR724x || MACH_AR933x || MACH_AR934x
+
+config INSMOD_KSEG0
+	bool "Allocation of code segment when inserting module from KSEG0"
+	depends on MACH_AR7240 || MACH_AR724x || MACH_AR934x
+
+config PERICOM
+	bool "Pericom Switch support"
+	depends on MACH_AR7240 || MACH_AR724x || MACH_AR934x
+
+config KMALLOC_MINALIGN_64BYTE
+	bool "64 byte min alignment for kmalloc"
+	depends on MACH_AR7240 || MACH_AR724x || MACH_AR933x || MACH_AR934x
+	default n
+
+config PRIV_SKB_MEM
+	bool "Use contiguous fixed memory pool for SKBs of size less than 4KB"
+	depends on MACH_AR7240 || MACH_AR724x || MACH_AR933x || MACH_AR934x
+	default n
+
+config PRIV_SKB_MEM_2K
+	int "Size of memory pool in MB for SKBs of size 2KB - default 5MB"
+	depends on PRIV_SKB_MEM
+    default 5
+
+config PRIV_SKB_MEM_4K
+	int "Size of memory pool in MB for SKBs of size 4KB - default 9MB"
+	depends on PRIV_SKB_MEM
+    default 9
+
+config ATH_PERF
+	bool "Try to improve Performance"
+	depends on MACH_AR7240 || MACH_AR724x || MACH_AR934x
+	default n
+
+config ATH_2X8
+	bool "Build for 2x8 config"
+	depends on MACH_AR7240 || MACH_AR724x || MACH_AR934x
+	select VIRT_CPU_ACCOUNTING
+	select KMALLOC_MINALIGN_64BYTE
+	default n
+
+config WLAN_4K_SKB_OPT
+	bool "Allocate 4K-SKB with separate SKB shinfo to save memory"
+	depends on MACH_AR7240 || MACH_AR724x || MACH_AR934x
+	default n
+
+config VIRT_CPU_ACCOUNTING
+	bool "Build for 2x8 config"
+	depends on ATH_2X8
+	default n
+
+config HORNET_EMULATION
+    bool "build system for Hornet emulation board?"
+    depends on MACH_HORNET
+
+config  AR9100
+    bool "Support for Atheros ar9100 extenstions to ar7100"
+    depends on MACH_AR7100
+
+config  AR7100_LOW
+    bool "Support for loading AR7100 in low memory"
+    depends on MACH_AR7100
+
+config AR7100_EMULATION
+    bool "build system for AR7100 emulation board?"
+    depends on MACH_AR7100
+
+

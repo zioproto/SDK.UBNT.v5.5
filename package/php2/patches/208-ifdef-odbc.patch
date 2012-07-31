@@ -1,0 +1,242 @@
+--- a/src/odbc.c
++++ b/src/odbc.c
+@@ -715,22 +715,21 @@ odbcField *odbc_getFieldByNumber(HSTMT h
+   	}
+          
+   	return odbc_field;
+ }
+ #endif
+ 
+ /* Main User Functions */
+-
++#if HAVE_ODBC
+ /* 
+ 	ODBCfetch()
+ 	Fetches a row from an executed statement
+ */
+ 
+ void ODBCfetch(void) {
+-#if HAVE_ODBC
+ 	Stack 	*s;
+ 	HSTMT	hstmt;
+ 	int	res_ind, status;
+ 	
+ 		
+ 	/* get statement index from stack */		
+ 	s = Pop(); 
+@@ -768,28 +767,22 @@ void ODBCfetch(void) {
+ 	} else {
+ 		if (status == SQL_ERROR || status == SQL_INVALID_HANDLE) {
+ 			odbc_error(SQL_NULL_HDBC, hstmt, "SQLfetch");
+ 		}	
+ 	  	Push("0", LNUMBER);
+ 	  	return;
+ 	}
+-#else
+-	Pop();
+-	Push("0", LNUMBER);
+-	Error("No odbc support");
+-#endif
+ }
+ 
+ /*
+ 	ODBCexecdirect()
+ 	Does an SQLExecDirect on an SQL query
+ */
+ 
+ void ODBCexecdirect(void) {
+-#if HAVE_ODBC
+ 	Stack	*s;
+ 	int	conn;
+ 	char	*query;
+ 	int	j;
+ 	char	temp[16];
+ #if !(WINNT|WIN32)
+ 	const 	char *tmpoid;
+@@ -871,29 +864,22 @@ void ODBCexecdirect(void) {
+ 	
+ 	/* add statement to list */
+ 	j = odbc_add_hstmt(hdbc, hstmt);
+ 	
+ 	/* return statement index */
+ 	sprintf(temp, "%d", j);
+ 	Push(temp, LNUMBER);
+-#else
+-	Pop();
+-	Pop();
+-	Push("0", LNUMBER);
+-	Error("No odbc support");
+-#endif
+ }
+ 
+ /*
+ 	ODBCgetdata()
+ 	Retrieves data from a query set
+ */
+ 
+ void ODBCgetdata(void) {
+-#if HAVE_ODBC
+ 	Stack		*s;
+ 	char		*fieldname;
+ 	int		res_ind, tuple_ind;
+ 	int		field_ind = -1;
+ 	SDWORD		nchars;
+ 	HSTMT		hstmt;
+ 	char		value[8193];
+@@ -1038,31 +1024,22 @@ void ODBCgetdata(void) {
+ 	case SQL_VARCHAR:
+ 	case SQL_CHAR:
+ 	default:
+ 		Push(value, STRING);
+  	  	break;
+ 	}
+ 	return;
+-
+-#else
+-	Pop();
+-	Pop();
+-	Pop();
+-	Push("", STRING);
+-	Error("No odbc support");
+-#endif
+ }
+ 
+ /*
+ 	ODBCfree()
+ 	Frees a statement (result)
+ */
+ 
+ void ODBCfree(void) {
+-#if HAVE_ODBC
+ 	Stack		*s;
+ 
+ 	/* get index */
+ 	s = Pop();
+ 	if (!s) {
+ 		Error("Stack error in odbc_free");
+ 		return;
+@@ -1070,27 +1047,22 @@ void ODBCfree(void) {
+ 	if (s->strval) {
+ 		/* remove statement */
+ 		odbc_del_hstmt(s->intval);
+ 	} else {
+ 		Error("Invalid result index in odbc_free");
+ 		return;
+ 	}
+-#else
+-	Pop();
+-	Error("No odbc support");
+-#endif
+ }
+ 
+ /*
+ 	ODBCconnect()
+ 	Connect to an ODBC data source
+ */
+ 
+ void ODBCconnect(void) {
+-#if HAVE_ODBC
+ 	Stack		*s;
+ #if WINNT|WIN32
+ 	HDBC		hdbc;
+ 	UCHAR		*dsn=NULL;
+ 	UCHAR 		*uid=NULL;
+ 	UCHAR 		*pwd=NULL;
+ 	RETCODE		status;
+@@ -1176,29 +1148,22 @@ void ODBCconnect(void) {
+ 	    	return;
+ 	} else {
+ 		j = odbc_add_hdbc(hdbc);
+ 		temp = (char*) emalloc(1,(j%10)+3);
+ 		sprintf(temp, "%d", j);
+ 	}
+ 	Push(temp, LNUMBER);
+-#else
+-	Pop();
+-	Pop();
+-	Pop();
+-	Error("No odbc support");
+-#endif
+ }
+ 
+ /*
+ 	ODBCdisconnect()
+ 	Shuts down an ODBC connection
+ */
+ 
+ void ODBCdisconnect(void) {
+-#if HAVE_ODBC
+ 	Stack		*s;
+ 	int		conn_ind;
+ 	HDBC		hdbc;
+ 	
+ 	/* get connection index */
+ 	s = Pop();
+ 	if (!s) {
+@@ -1213,28 +1178,23 @@ void ODBCdisconnect(void) {
+ 	}
+ 
+ 	/* get connection */
+ 	hdbc = odbc_get_hdbc(conn_ind);
+ 	
+ 	/* close connection */
+ 	odbc_del_hdbc(hdbc);
+-#else
+-	Pop();
+-	Error("No odbc support");
+-#endif
+ }
+ 
+ /*
+ 	ODBCrowcount()
+ 	Returns number of rows in 
+ 	query
+ */
+ 
+ void ODBCrowcount(void) {
+-#if HAVE_ODBC
+ 	Stack		*s;
+ 	int		res_ind;
+ 	HSTMT		hstmt;
+ 	SDWORD		nrows;
+ 	char		temp[16];
+ 	int		status;
+ 
+@@ -1276,13 +1236,10 @@ void ODBCrowcount(void) {
+           	Push("-1", LNUMBER);
+           	return;
+         }
+ 	
+ 	/* return number of rows */
+ 	sprintf(temp, "%ld", nrows);
+ 	Push(temp, LNUMBER);
+-#else
+-	Pop();
+-	Error("No odbc support");
+-#endif
+ }
++#endif
+ 
+--- a/src/php.h
++++ b/src/php.h
+@@ -1358,15 +1358,20 @@ void MInumRows(void);
+ void MIfieldName(void);
+ void MIfieldNum(void);
+ void MInumFields(void);
+ #else
+ #endif
+ 
+ /* odbc.c */
++#ifdef HAVE_ODBC
+ void ODBCfetch(void);
+ void ODBCexecdirect(void);
+ void ODBCgetdata(void);
+ void ODBCfree(void);
+ void ODBCconnect(void);
+ void ODBCdisconnect(void);
+ void ODBCrowcount(void);
+ void php_init_odbc(void);
++#else
++#define php_init_odbc()
++#endif
++

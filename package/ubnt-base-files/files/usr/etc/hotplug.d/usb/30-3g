@@ -1,0 +1,180 @@
+#!/bin/sh
+local modempath_file="/var/run/3g-modem-path"
+local simpinok_file="/var/run/simpinok"
+local info="/etc/3g.inc"
+local cardlist_def="/usr/etc/cardlist.txt"
+local cardlist="/etc/persistent/cardlist.txt"
+local systemcfg="/tmp/system.cfg"
+
+local ppp_options="/etc/ppp/peers/3g"
+local ppp_chat="/etc/chatscripts/3g"
+local rssi_decode_script="/etc/ppp/rssi_decode.sh"
+
+log() {
+	logger -t "usb-3g" "$@"
+}
+
+sanitize() {
+	sed -e 's/[[:space:]]\+$//; s/[[:space:]]\+/_/g' "$@"
+}
+
+find_usb_attrs() {
+	local usb_dir="/sys/$DEVPATH"
+	[ -f "$usb_dir/idVendor" ] || usb_dir="${usb_dir%/*}"
+
+	uVid=$(cat "$usb_dir/idVendor")
+	uPid=$(cat "$usb_dir/idProduct")
+	uMa=$(sanitize "$usb_dir/manufacturer")
+	uPr=$(sanitize "$usb_dir/product")
+	uSe=$(sanitize "$usb_dir/serial")
+
+	log "$DEVICENAME: $uVid:$uPid Manufacturer=${uMa:-?} Product=${uPr:-?} Serial=${uSe:-?}"
+}
+
+check_card() {
+	[ -f $cardlist ] || ln -s $cardlist_def $cardlist
+	crd_desc=$(grep "$uVid:$uPid" $cardlist)
+	[ $? -ne 0 ] && return 1
+	crd_carrier_type=$(echo $crd_desc | awk -F: '{ print $3 }')
+	crd_ppp_dev=$(echo $crd_desc | awk -F: '{ print $4 }')
+	crd_backend_dev=$(echo $crd_desc | awk -F: '{ print $5 }')
+	crd_atcsq=$(echo $crd_desc | awk -F: '{ print $6 }')
+	crd_img=$(echo $crd_desc | awk -F: '{ print $7 }')
+	crd_comment=$(echo $crd_desc | awk -F: '{ print $8 }')
+	crd_backend_mode=$(echo $crd_desc | awk -F: '{ print $9 }')
+
+	[ -d "/sys/$DEVPATH/${crd_ppp_dev##*/}" -o -d "/sys/$DEVPATH/tty:${crd_ppp_dev##*/}" ] || return 1
+	return 0
+}
+
+
+write_info()
+{
+	cat > $info << END
+<?
+\$threeg_device="$crd_backend_dev";
+\$threeg_product="$crd_comment";
+\$threeg_img="$crd_img";
+\$threeg_iccid="$sim_iccid";
+\$threeg_simstatus=$sim_status;
+>
+END
+	echo "$DEVPATH" > $modempath_file
+}
+
+write_ppp_file()
+{
+	mkdir -p ${ppp_options%/*}
+	cat > $ppp_options << END
+nodetach
+persist
+defaultroute
+$crd_ppp_dev
+usepeerdns
+lock
+novj
+debug
+linkname 3g
+unit 0
+END
+}
+
+write_chat_file()
+{
+	case "$crd_carrier_type" in
+		gsm) 
+			apn_cmd="AT+CGDCONT=1,\"IP\",\"\$APN\""
+			dial_number="*99***1#"
+			;;
+		*) 
+			apn_cmd="AT"
+			dial_number="#777"
+			;;
+	esac
+	mkdir -p ${ppp_chat%/*}
+	cat > $ppp_chat << END
+ABORT ERROR
+ABORT CARRIER
+
+TIMEOUT 5
+'' AT
+OK $crd_atcsq
+OK $apn_cmd
+OK ATD$dial_number
+TIMEOUT 60
+CONNECT ''
+END
+}
+
+write_rssi_decode()
+{
+	case "$crd_backend_mode" in
+		2) rssi_options="-c";;
+		3) rssi_options="-c -l";;
+		*) rssi_options="";;
+	esac
+	mkdir -p ${rssi_decode_script%/*}
+	cat > $rssi_decode_script << END
+#!/bin/sh
+case \$1 in
+	start)
+		/sbin/rssi_decode $crd_backend_dev $rssi_options >/dev/null 2>/dev/null
+		;;
+	stop)
+		killall rssi_decode >/dev/null 2>/dev/null
+		sysled -b sig:0 >/dev/null 2>/dev/null
+		rm /var/log/rssi >/dev/null 2>/dev/null
+		;;
+esac
+END
+}
+
+check_pin()
+{
+	grep -q "3g\.1\.pin\.status=enabled" $systemcfg || return 1
+	piniccid=$(grep "3g\.1\.pin\.iccid=" $systemcfg | awk -F= '{print $2}')
+	pincode=$(grep "3g\.1\.pin\.code=" $systemcfg | awk -F= '{print $2}')
+	[ ${#pincode} -ge 4 -a ${#pincode} -le 8 ] && [ $piniccid == $sim_iccid ] && \
+	PINCODE=$pincode gcom -d "$crd_backend_dev" -s /usr/etc/gcom/setpin.gcom >/dev/null 2>/dev/null && \
+	return 0
+	log "Wrong SIM PIN"
+	sed -i "s/3g\.1\.pin\.status=enabled/3g\.1\.pin\.status=disabled/" $systemcfg
+	return 1
+}
+
+case "$DEVICENAME" in
+	*-*:*.*) : ;;
+	*) exit 0 ;;
+esac
+
+case "$ACTION" in
+	add)
+		find_usb_attrs
+		check_card || exit 0
+
+		sim_status=0
+		if [ "$crd_carrier_type" == "gsm" ]; then
+			sim_iccid=$(gcom -d "$crd_backend_dev" -s /usr/etc/gcom/checksim.gcom)
+			sim_status=$?
+			sim_iccid=$(echo $sim_iccid | tr -d "\"")
+			if [ $sim_status -eq 2 ]; then
+				check_pin && sim_status=0
+			fi
+		fi
+
+		write_info
+		write_ppp_file
+		write_chat_file
+		write_rssi_decode
+		[ $sim_status -eq 0 ] || exit 0
+		/usr/etc/init.d/plugin start 3g
+		;;
+	remove)
+		[ -f $modempath_file ] || exit 0
+		modempath=$(cat $modempath_file)
+		[ $modempath == $DEVPATH ] || exit 0
+
+		/usr/etc/init.d/plugin stop 3g
+		rm -f $info $modempath_file $ppp_options $ppp_chat $simpinok_file
+		;;
+esac    

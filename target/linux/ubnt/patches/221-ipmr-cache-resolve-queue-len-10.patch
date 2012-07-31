@@ -1,0 +1,13 @@
+Index: linux-2.6.32.48/net/ipv4/ipmr.c
+===================================================================
+--- linux-2.6.32.48.orig/net/ipv4/ipmr.c
++++ linux-2.6.32.48/net/ipv4/ipmr.c
+@@ -708,7 +708,7 @@ ipmr_cache_unresolved(struct net *net, v
+ 		 *	Create a new entry if allowable
+ 		 */
+ 
+-		if (atomic_read(&net->ipv4.cache_resolve_queue_len) >= 10 ||
++		if (atomic_read(&net->ipv4.cache_resolve_queue_len) >= 20 ||
+ 		    (c = ipmr_cache_alloc_unres(net)) == NULL) {
+ 			spin_unlock_bh(&mfc_unres_lock);
+ 

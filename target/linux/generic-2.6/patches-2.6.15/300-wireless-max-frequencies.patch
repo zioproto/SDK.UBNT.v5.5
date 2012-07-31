@@ -1,0 +1,14 @@
+--- a/include/linux/wireless.h
++++ b/include/linux/wireless.h
+@@ -403,10 +403,7 @@
+ /* ----------------------- OTHER CONSTANTS ----------------------- */
+ 
+ /* Maximum frequencies in the range struct */
+-#define IW_MAX_FREQUENCIES	32
+-/* Note : if you have something like 80 frequencies,
+- * don't increase this constant and don't fill the frequency list.
+- * The user will be able to set by channel anyway... */
++#define IW_MAX_FREQUENCIES	255
+ 
+ /* Maximum bit rates in the range struct */
+ #define IW_MAX_BITRATES		32

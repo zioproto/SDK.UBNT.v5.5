@@ -1,0 +1,54 @@
+#!/sbin/cgi
+<?
+include("lib/settings.inc");
+$cfg = @cfg_load($cfg_file);
+$airview_tcp_port = cfg_get_def($cfg, "airview.tcp_port", $airview_tcp_port);
+?>
+<? header("Content-Type: application/x-java-jnlp-file"); ?>
+<? header("Cache-Control: must-revalidate"); ?>
+<? header("Cache-Control: private"); ?>
+<? echo "<? xml version=\"1.0\" encoding=\"utf-8\" ?>"; ?>
+<?
+if(strstr($HTTP_HOST,":") > 0) {
+  $hostname_and_port = $HTTP_HOST;
+  $hostname_only     = substr($HTTP_HOST, 0, strlen($HTTP_HOST) - strlen(strstr($HTTP_HOST,":")));
+} else {
+  $hostname_and_port = $HTTP_HOST + ":" + $SERVER_PORT;
+  $hostname_only     = $HTTP_HOST;
+}
+if ($HTTPS == "on") { 
+  $protocol = "https";
+} else {
+  $protocol = "http";
+}
+?>
+<jnlp spec="6.0+" codebase="<? echo $protocol; ?>://<? echo $hostname_and_port; ?>/FULL_VERSION_LINK" href="airview.jnlp" version="FULL_VERSION_NUMBER">
+   <information>
+      <title>airView - <? echo $hostname_only; ?></title>
+      <vendor>Ubiquiti Networks, Inc.</vendor>
+      <description>airView Client for airOS</description>
+      <homepage href="<? echo $protocol; ?>://<? echo $hostname_and_port; ?>/index.cgi" />
+      <description kind="short">airView</description>
+      <icon href="images/airview_32.png" />
+      <icon kind="splash" href="images/airview-splash.png" />
+      <shortcut />
+   </information>
+   <update check="always" policy="always" />
+   <resources>
+      <jar href="airview.jar" main="true" download="eager" />
+      <j2se 
+        version="1.6.0_15+" 
+        href="http://java.sun.com/products/autodl/j2se"
+        initial-heap-size="64m"
+        max-heap-size="64m"
+        />
+     <property name="jnlp.packEnabled" value="true" />
+   </resources>
+   <application-desc main-class="com.ubnt.app.AirViewer">
+        <argument>ubnt://<? echo $hostname_only; ?>:<? echo $airview_tcp_port; ?></argument>
+   </application-desc>
+   <security>
+     <all-permissions />
+   </security>
+</jnlp>
+

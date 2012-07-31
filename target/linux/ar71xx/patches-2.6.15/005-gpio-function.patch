@@ -1,0 +1,25 @@
+--- a/arch/mips/ar7240/setup.c
++++ b/arch/mips/ar7240/setup.c
+@@ -273,8 +273,6 @@ void __init plat_setup(void)
+ 
+ static int serial_inited = 0;
+ 
+-#define         MY_WRITE(y, z)  ((*((volatile u32*)(y))) = z)
+-
+ void Uart16550Init()
+ {
+     int freq, div;
+@@ -282,13 +280,6 @@ void Uart16550Init()
+     ar7240_sys_frequency();
+     freq = ar7240_ahb_freq;
+ 
+-    MY_WRITE(0xb8040000, 0xcff);
+-    MY_WRITE(0xb8040008, 0x3b);
+-    /* Enable UART , SPI and Disable S26 UART */ 
+-    MY_WRITE(0xb8040028, (ar7240_reg_rd(0xb8040028) | 0x48002));
+-
+-    MY_WRITE(0xb8040008, 0x2f);
+-
+     div = freq/(AG7240_CONSOLE_BAUD*16);
+ 
+ //    div = 0xCB;

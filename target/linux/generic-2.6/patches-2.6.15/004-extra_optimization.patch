@@ -1,0 +1,20 @@
+--- a/Makefile
++++ b/Makefile
+@@ -531,14 +531,17 @@ endif
+ 
+ include $(srctree)/arch/$(ARCH)/Makefile
+ 
+ # arch Makefile may override CC so keep this after arch Makefile is included
+ NOSTDINC_FLAGS += -nostdinc -isystem $(shell $(CC) -print-file-name=include)
+ CHECKFLAGS     += $(NOSTDINC_FLAGS)
+ 
++# improve gcc optimization
++CFLAGS += $(call cc-option,-funit-at-a-time,)
++
+ # warn about C99 declaration after statement
+ #CFLAGS += $(call cc-option,-Wdeclaration-after-statement,)
+ 
+ # disable pointer signedness warnings in gcc 4.0
+ CFLAGS += $(call cc-option,-Wno-pointer-sign,)
+ 
+ # Default kernel image to build when no specific target is given.

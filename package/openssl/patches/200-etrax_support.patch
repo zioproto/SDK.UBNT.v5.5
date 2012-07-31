@@ -1,0 +1,21 @@
+--- a/Configure
++++ b/Configure
+@@ -410,14 +410,18 @@ my %table=(
+ "QNX6",       "gcc:-DTERMIOS::::-lsocket::${no_asm}:dlfcn:bsd-gcc-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+ "QNX6-i386",  "gcc:-DL_ENDIAN -DTERMIOS -O2 -Wall::::-lsocket:${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:bsd-gcc-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+ 
+ # BeOS
+ "beos-x86-r5",   "gcc:-DL_ENDIAN -DTERMIOS -O3 -fomit-frame-pointer -mcpu=pentium -Wall::-D_REENTRANT:BEOS:-lbe -lnet:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:beos:beos-shared:-fPIC -DPIC:-shared:.so",
+ "beos-x86-bone", "gcc:-DL_ENDIAN -DTERMIOS -O3 -fomit-frame-pointer -mcpu=pentium -Wall::-D_REENTRANT:BEOS:-lbe -lbind -lsocket:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:beos:beos-shared:-fPIC:-shared:.so",
+ 
++# cris
++"linux-cris",	"\$(TARGET_CC):-DL_ENDIAN -DTERMIO -fomit-frame-pointer::-D_REENTRANT::-ldl:BN_LLONG THIRTY_TWO_BIT RC4_CHAR::::::::::::dlfcn:linux-shared:-fpic::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)::",
++
++
+ #### SCO/Caldera targets.
+ #
+ # Originally we had like unixware-*, unixware-*-pentium, unixware-*-p6, etc.
+ # Now we only have blended unixware-* as it's the only one used by ./config.
+ # If you want to optimize for particular microarchitecture, bypass ./config
+ # and './Configure unixware-7 -Kpentium_pro' or whatever appropriate.
+ # Note that not all targets include assembler support. Mostly because of

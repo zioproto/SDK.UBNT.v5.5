@@ -1,0 +1,16 @@
+Index: linux-2.6.15-5.2/net/ipv6/af_inet6.c
+===================================================================
+--- linux-2.6.15-5.2.orig/net/ipv6/af_inet6.c
++++ linux-2.6.15-5.2/net/ipv6/af_inet6.c
+@@ -771,7 +771,10 @@
+ 	err = addrconf_init();
+ 	if (err)
+ 		goto addrconf_fail;
+-	sit_init();
++/**
++ * (temporary) disable automatic sit0 creation
++ * sit_init();
++ **/
+ 
+ 	/* Init v6 extension headers. */
+ 	ipv6_rthdr_init();

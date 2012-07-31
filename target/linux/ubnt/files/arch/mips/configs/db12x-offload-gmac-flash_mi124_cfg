@@ -1,0 +1,7 @@
+
+
+#
+# Offload specific configs
+#
+
+CONFIG_CMDLINE="console=ttyS0,115200 root=31:02 rootfstype=jffs2 init=/sbin/init mtdparts=ath-nor0:256k(u-boot),64k(u-boot-env),2752k(rootfs),896k(uImage),64k(mib0),64k(ART)"

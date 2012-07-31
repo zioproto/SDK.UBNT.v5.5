@@ -1,0 +1,38 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title><? echo get_title($cfg, dict_translate("Firmware upload")); ></title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link href="FULL_VERSION_LINK/style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" language="javascript" src="jsl10n.cgi"></script>
+<script language="javascript" type="text/javascript" src="FULL_VERSION_LINK/jsval.js"></script>
+</head>
+
+<body class="popup">
+<br>
+<form enctype="multipart/form-data" action="upgrade.cgi" method="POST" onSubmit="return validateStandard(this, 'error');">
+<table cellspacing="0" cellpadding="0" align="center" class="popup">
+  <tr> 
+    <td colspan="3">
+    <? include("lib/error.tmpl");>
+    </td>
+  </tr>
+  <tr><th colspan="3"><? echo dict_translate("FIRMWARE UPLOAD"); ></th></tr>
+  <tr>
+  <td class="f"><? echo dict_translate("Current Firmware:"); ></td>
+  <td colspan="2">&nbsp;<?echo $fwversion></td>
+  </tr>
+  <tr>
+    <td class="f"><? echo dict_translate("Firmware File:"); ></td>
+    <td><input name="fwfile" type="file" size="20" req="1" realname="<? echo dict_translate("Firmware File"); >"></td>
+    <td class="f"><input type="submit" value="<? echo dict_translate("Upload"); >">&nbsp;</td>
+  </tr>
+  <tr><td colspan="3">&nbsp;</td></tr>
+  <tr><td colspan="3">&nbsp;</td></tr>
+  <tr><td colspan="3">&nbsp;</td></tr>
+  <tr><td colspan="3" align="center"><input type="button" value="<? echo dict_translate("Close this window"); >" onclick="window.close();"></td></tr>
+</table>
+</form>
+
+</body>
+</html>

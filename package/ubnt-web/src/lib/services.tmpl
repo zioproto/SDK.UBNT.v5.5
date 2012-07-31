@@ -1,0 +1,360 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title><? echo get_title($cfg, dict_translate("Services")); ></title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Pragma" content="no-cache">
+<link rel="shortcut icon" href="FULL_VERSION_LINK/favicon.ico" >
+<link href="FULL_VERSION_LINK/style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" language="javascript" src="jsl10n.cgi"></script>
+<script type="text/javascript" language="javascript" src="FULL_VERSION_LINK/util.js"></script>
+<script type="text/javascript" language="javascript" src="FULL_VERSION_LINK/jsval.js"></script>
+<script type="text/javascript" language="javascript" src="FULL_VERSION_LINK/system.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.cookie.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.utils.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.passwd.js"></script>
+<script language="javascript" type="text/javascript">
+//<!--
+
+<? gen_update_check($cfg); >
+
+function doSubmit() {
+	$('#svc_form').submit();
+}
+
+function showError(msg) {
+	$("#errorpad").css("paddingTop", "10px");
+	$("#error").text(msg);
+	$("#errortbl").show();
+}
+
+function checkPorts() {
+	function portVal(id) {
+		return parseInt($(id).val());
+	}
+
+	var ports = [];
+
+	if ($("#https_status").is(":checked"))
+		ports.push({ "port" : portVal("#httpsport"), "name" : "HTTPS Server" });
+	else
+		ports.push({ "port" : portVal("#httpport"), "name" : "HTTP Server" });
+	
+	if ($("#snmpStatus").is(":checked"))
+		ports.push({ "port" : 161, "name" : "SNMP Agent" });
+	
+	if ($("#ssh_status").is(":checked"))
+		ports.push({ "port" : portVal("#sshport"), "name" : "SSH Server" });
+
+	if ($("#telnetd_status").is(":checked"))
+		ports.push({ "port" : portVal("#telnetport"), "name" : "Telnet Server" });
+	
+	if ($("#discovery_status").is(":checked"))
+		ports.push({ "port" : 10001, "name" : "Discovery Service" });
+
+	ports.sort(function(r, l) { return r.port - l.port; });
+
+	var duplicates = [];
+	for (var i = 0; i < ports.length - 1; ++i) {
+		if (ports[i].port == ports[i + 1].port) {
+			duplicates.push(ports[i].name);
+			var curr = ports[i].port;
+			while (++i < ports.length && ports[i].port == curr) {
+				duplicates.push(ports[i].name);
+			}
+		}
+	}
+
+	var last = duplicates.pop();
+	var message = duplicates.join(', ') + " and " + last + " services can not use the same source port.";
+	return {
+		"overlap" : duplicates.length > 0,
+		"message" : message
+	};
+}
+
+function validateServices(form) {
+	var valid = validateStandard(form, 'error');
+	if (!valid)
+		return false;
+	
+	var ports = checkPorts();
+	if (ports.overlap)
+		showError(ports.message);
+	return !ports.overlap;
+}
+
+$(document).ready(function() {
+	pwdogStatusClicked();
+	snmpStatusClicked();
+	ntpStatusClicked();
+	httpsStatusClicked();
+	telnetStatusClicked();
+	sshStatusClicked();
+	syslogStatusClicked();
+	dyndnsStatusClicked();
+	$('.pwd').attr('autocomplete', 'off').passwd({
+		label :  "<?echo dict_translate("Show");>",
+		migrate_attrs : [ 'req', 'callback', 'realname' ]
+	});
+
+	fwUpdateCheck(false, fw_check);
+});
+// -->
+</script>
+</head>
+<? flush(); >
+<body>
+<table class="maintable" cellpadding="0" align="center" cellspacing="0"><?
+$top_tab = "srv"; include("lib/head.tmpl");
+>  <tr>
+    <td colspan="2" class="centr">
+    <?if (cfg_is_modified($cfg_file)) { include("lib/modified.tmpl"); } 
+    if (fileinode($emerg_file) != -1) { include("lib/warn-emerg.tmpl"); }
+    include("lib/error.tmpl");>
+    <br>
+		<form id="svc_form" enctype="multipart/form-data" action="services.cgi" method="POST"
+			onSubmit="return validateServices(this);">
+	<table class="linktable" cellspacing="0" cellpadding="0">
+	<tr>
+		<th colspan="2"><? echo dict_translate("Ping Watchdog"); ></th>
+		<td>&nbsp;</td>
+		<th colspan="2"><? echo dict_translate("SNMP Agent"); ></th>
+	</tr>
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+	<tr>
+	<td class="f d"><? echo dict_translate("Ping Watchdog:"); ></td>
+	<td class="d"><input type="checkbox" name="pwdogStatus" value="enabled" id="pwdogStatus" onClick="pwdogStatusClicked();" <? if ($pwdog_status=="enabled") { echo "checked"; }>> <label class="f" for="pwdogStatus"><? echo dict_translate("Enable"); ></label></td>
+	<td class="sep">&nbsp;</td>
+	<td class="f d"><? echo dict_translate("SNMP Agent:"); ></td>
+	<td class="d"><input type="checkbox" name="snmpStatus" id="snmpStatus" value="enabled" onClick="snmpStatusClicked();" <? if ($snmp_status=="enabled") { echo "checked"; }>> <label class="f" for="snmpStatus"><? echo dict_translate("Enable"); ></label></td>
+	</tr>
+	<tr>
+	<td class="f"><? echo dict_translate("lbl_pwdog_ip|IP Address To Ping:"); ></td>
+	<td><input type="text" style="width: 145px;" name="pwdogHost" id="pwdogHost" realname="<? echo dict_translate("msg_pwdog_ip|IP Address To Ping"); >" req="1" callback="validatePwdogHost" value="<?echo $pwdog_host>"></td>
+	<td class="sep">&nbsp;</td>
+	<td class="f"><? echo dict_translate("SNMP Community:"); ></td>
+	<td><input type="text" style="width: 145px;" name="snmpCommunity" id="snmpCommunity" realname="<? echo dict_translate("SNMP Community"); >" req="1" value="<?echo $snmp_community>"></td>
+	</tr>
+	<tr>
+	<td class="f"><? echo dict_translate("Ping Interval:"); ></td>
+	<td class="f-left"><input type="text" class="f-left std_width" size="5" name="pwdogPeriod" id="pwdogPeriod" realname="<? echo dict_translate("Ping Interval"); >" req="1" minvalue="0" value="<?echo $pwdog_period>"> <? echo dict_translate("seconds"); >
+        </td>
+        <td class="sep">&nbsp;</td>
+	<td class="f"><? echo dict_translate("Contact:"); ></td>
+	<td><input type="text" style="width: 145px;" name="snmpContact" id="snmpContact" realname="<? echo dict_translate("SNMP Contact"); >" req="1" value="<?echo $snmp_contact>">
+	</td>
+	</tr>
+	<tr>
+	<td class="f"><? echo dict_translate("Startup Delay:"); ></td>
+	<td class="f-left">
+		<input type="text" class="f-left std_width" size="5" name="pwdogDelay" id="pwdogDelay"
+		realname="<? echo dict_translate("Startup Delay") + " [$soft_reboot_time-65535]"; >" req="1"
+		minvalue="<? echo $soft_reboot_time; >" maxvalue="65535"
+		value="<?echo $pwdog_delay>"> <? echo dict_translate("seconds"); >
+	</td>
+        <td class="sep">&nbsp;</td>
+	<td class="f"><? echo dict_translate("Location:"); ></td>
+	<td><input type="text" style="width: 145px;" name="snmpLocation" id="snmpLocation" realname="<? echo dict_translate("SNMP Location"); >" req="1" value="<?echo $snmp_location>"></td>
+	</tr>
+	<tr>
+	<td class="f"><? echo dict_translate("lbl_pwdog_failure_count|Failure Count To Reboot:"); ></td>
+	<td><input type="text" class="std_width" size="5" name="pwdogRetry" id="pwdogRetry" realname="<? echo dict_translate("Failure Count"); >" req="1" minvalue="0" value="<?echo $pwdog_retry>"></td>
+	<td colspan="3">&nbsp;</td>
+	</tr>
+	<tr>
+	<td class="f"><? echo dict_translate("Save Support Info:"); ></td>
+	<td><input type="checkbox" name="pwdog_supp" value="enabled" id="pwdog_supp" <? if ($pwdog_supp) { echo "checked"; }>></td>
+	<td colspan="3">&nbsp;</td>
+	</tr>
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+	<tr>
+		<th colspan="2"><? echo dict_translate("Web Server"); ></th>
+		<td>&nbsp;</td>
+		<th colspan="2"><? echo dict_translate("SSH Server"); ></th>
+	</tr>
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+	<tr>
+	<td class="f"><? echo dict_translate("lbl_use_https|Secure Connection (HTTPS):"); ></td>
+	<td><input type="checkbox" name="https_status" value="enabled" id="https_status" <? if ($https_status=="enabled") { echo "checked"; }> onClick="httpsStatusClicked();"> <label class="f" for="https_status"><? echo dict_translate("Enable"); ></label></td>
+	<td class="sep">&nbsp;</td>
+	<td class="f"><? echo dict_translate("SSH Server:"); ></td>
+	<td><input type="checkbox" name="ssh_status" value="enabled" id="ssh_status" <? if ($ssh_status=="enabled") { echo "checked"; }> onClick="sshStatusClicked();"> <label class="f" for="ssh_status"><? echo dict_translate("Enable"); ></label></td>
+	</tr>
+	<tr>
+	<td class="f"><? echo dict_translate("Secure Server Port:");></td>
+	<td><input type="text" class="std_width" maxlen="4" size="4" name="httpsport" id="httpsport"
+		realname="<? echo dict_translate("HTTPS Server Port:") + "[1-65535]";>" req="1"
+		value="<?echo $httpsport>" minvalue="1" maxvalue="65535">&nbsp;
+	</td>
+	<td class="sep">&nbsp;</td>
+        <td class="f"><? echo dict_translate("Server Port:");></td>
+        <td><input type="text" class="std_width i_sshd" maxlen="4" size="4" name="sshport" id="sshport"
+        	realname="<? echo dict_translate("SSH Server Port:") + "[1-65535]";>" req="1"
+			value="<?echo $sshport>" minvalue="1" maxvalue="65535">
+        </td>
+	</tr>
+	<tr>
+	<td class="f"><? echo dict_translate("Server Port:");></td>
+	<td><input type="text" class="std_width" maxlen="4" size="4" name="httpport" id="httpport"
+		realname="<? echo dict_translate("HTTP Server Port:") + "[1-65535]";>" req="1"
+		value="<?echo $httpport>" minvalue="1" maxvalue="65535">&nbsp;
+	</td>
+	<td class="sep">&nbsp;</td>
+	<td class="f"><? echo dict_translate("Password Authentication:");></td>
+	<td><input type="checkbox" class="i_sshd" name="ssh_passwdauth" id="ssh_passwdauth"
+		realname="<? echo dict_translate("Enable Password Authentication");>" value="enabled" <? if ($ssh_passwdauth=="enabled") { echo "checked"; }>  > <label class="f" for="ssh_passwdauth"><? echo dict_translate("Enable"); ></label>
+	</td>
+	</tr>
+	<tr>
+	<td class="f"><? echo dict_translate("Session Timeout:");></td>
+	<td class="f-left"><input type="text" class="std_width" maxlen="4" size="4" name="http_session_timeout" id="http_session_timeout"
+		realname="<? echo dict_translate("Session Timeout");> ([1 - 1440])" req="1"
+		value="<?echo $http_session_timeout>" minvalue="1" maxvalue="1440">&nbsp;<? echo dict_translate("minutes"); >
+	</td>
+	<td class="sep">&nbsp;</td>
+	<td class="f"><? echo dict_translate("Authorized Keys:");></td>
+	<td><input type="button" class="i_sshd" name="sshd_authkeys" id="sshd_authkeys" value="<? echo dict_translate("Edit..."); >" onClick="openPage('sshd-authkeys.cgi');">
+	</td>
+	</tr>
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+	<tr>
+		<th colspan="2"><? echo dict_translate("Telnet Server"); ></th>
+		<td>&nbsp;</td>
+		<th colspan="2"><? echo dict_translate("NTP Client"); ></th>
+	</tr>
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+	<tr>
+	<td class="f"><? echo dict_translate("Telnet Server:"); ></td>
+	<td><input type="checkbox" name="telnetd_status" value="enabled" id="telnetd_status" <? if ($telnetd_status=="enabled") { echo "checked"; }> onClick="telnetStatusClicked();"> <label class="f" for="telnetd_status"><? echo dict_translate("Enable"); ></label></td>
+        <td class="sep">&nbsp;</td>
+	<td class="f"><? echo dict_translate("NTP Client:"); ></td>
+	<td><input type="checkbox" name="ntpStatus" id="ntpStatus" value="enabled" onClick="ntpStatusClicked();" <? if ($ntp_status=="enabled") { echo "checked"; }>> <label class="f" for="ntpStatus"><? echo dict_translate("Enable"); ></label></td>
+	</tr>
+	<tr>
+		<td class="f"><? echo dict_translate("Server Port:");></td>
+		<td><input type="text" class="std_width" maxlen="4" size="4" name="telnetport" id="telnetport"
+			realname="<? echo dict_translate("Telnet Server Port:") + "[1-65535]";>" req="1"
+			value="<?echo $telnetport>" minvalue="1" maxvalue="65535">&nbsp;
+        </td>
+        <td class="sep">&nbsp;</td>
+	<td class="f"><? echo dict_translate("NTP Server:"); ></td>
+	<td><input type="text" style="width: 145px;" name="ntpServer" id="ntpServer"
+		realname="<? echo dict_translate("NTP Server"); >" req="1" callback="validateNTPServer"
+		value="<?echo $ntp_server>">
+	</td>
+	</tr>
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+	<tr>
+		<th colspan="2"><? echo dict_translate("Dynamic DNS"); ></th>
+		<td>&nbsp;</td>
+		<th colspan="2"><? echo dict_translate("System Log"); ></th>
+	</tr>
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+	<tr>
+		<td class="f"><? echo dict_translate("Dynamic DNS:"); ></td>
+		<td><input type="checkbox" name="dyndnsstatus" value="enabled" id="dyndnsstatus" <? if ($dyndns_status=="enabled") { echo "checked"; }> onClick="dyndnsStatusClicked();"> <label class="f" for="dyndnsstatus"><? echo dict_translate("Enable"); ></label></td>
+        <td class="sep">&nbsp;</td>
+		<td class="f"><? echo dict_translate("System Log:"); ></td>
+		<td><input type="checkbox" name="syslog_status" value="enabled" id="syslog_status" <? if ($syslog_status=="enabled") { echo "checked"; }> onClick="syslogStatusClicked();"> <label class="f" for="syslog_status"><? echo dict_translate("Enable"); ></label></td>
+	</tr>
+	<tr>
+		<td class="f"><? echo dict_translate("Host Name:"); ></td>
+		<td><input type="text" style="width: 145px;" name="dyndnshostname" id="dyndnshostname" realname="<? echo dict_translate("Host Name"); >" req="1" value="<?echo $dyndns_hostname>"></td>
+        <td class="sep">&nbsp;</td>
+		<td class="f"><? echo dict_translate("Remote Log:"); ></td>
+		<td><input type="checkbox" name="rsyslog_status" value="enabled" id="rsyslog_status" <? if ($rsyslog_status=="enabled") { echo "checked"; }> onClick="rsyslogStatusClicked();"> <label class="f" for="rsyslog_status"><? echo dict_translate("Enable"); ></label></td>
+	</tr>
+	<tr>
+		<td class="f"><? echo dict_translate("Username:"); ></td>
+		<td><input type="text" style="width: 145px;" name="dyndnsusername" id="dyndnsusername" realname="<? echo dict_translate("Username"); >" req="1" value="<?echo $dyndns_username>"></td>
+        <td class="sep">&nbsp;</td>
+		<td class="f"><? echo dict_translate("Remote Log IP Address:"); ></td>
+		<td><input type="text" style="width: 145px;" name="syslogip" id="syslogip" realname="<? echo dict_translate("Remote Log IP Address"); >" req="1" callback="validateSyslogHost" value="<?echo $syslogip>">
+	</tr>
+	<tr>
+		<td class="f"><? echo dict_translate("Password:"); ></td>
+		<td class="f"><input type="password" class="pwd" style="width: 145px;" name="dyndnspassword" id="dyndnspassword" realname="<? echo dict_translate("Password"); >" req="1" value="<?echo $dyndns_password>" autocomplete="off"></td>
+        <td class="sep">&nbsp;</td>
+		<td class="f"><? echo dict_translate("Remote Log Port:");></td>
+		<td><input type="text" class="std_width" maxlen="4" size="4" name="syslogport" id="syslogport"
+			realname="<? echo dict_translate("Remote Log Port:") + "[1-65535]";>" req="1"
+			value="<?echo $syslogport>" minvalue="1" maxvalue="65535">
+		</td>
+	</tr>
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+	<tr>
+		<th colspan="2"><? echo dict_translate("Device Discovery"); ></th>
+		<td>&nbsp;</td>
+		<td colspan="2">&nbsp;</td>
+	</tr>
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+        <tr>
+		<td class="f"><? echo dict_translate("Discovery:"); ></td>
+		<td><input type="checkbox" name="discovery_status" value="enabled" id="discovery_status"
+			<?if ($discovery_status == "enabled") { echo "checked"; }>> <label class="f" for="discovery_status"><? echo dict_translate("Enable"); ></label>
+		</td>
+                <td class="sep">&nbsp;</td>
+                <td colspan="2">&nbsp;</td>
+        </tr>
+        <tr>
+		<td class="f"><? echo dict_translate("CDP:"); ></td>
+		<td><input type="checkbox" name="cdp_status" value="enabled" id="cdp_status"
+			<?if ($cdp_status == "enabled") { echo "checked"; }>> <label class="f" for="cdp_status"><? echo dict_translate("Enable"); ></label>
+		</td>
+                <td class="sep">&nbsp;</td>
+                <td colspan="2">&nbsp;</td>
+        </tr>
+        
+<? /* we use default certificates
+	<form enctype="multipart/form-data" action="services.cgi" method="POST" onSubmit="return validateStandard(this, 'error');">
+	<table class="linktable" cellspacing="0">
+	<tr><th colspan="3"><? echo dict_translate("Web Server Certificates"); ></th></tr>
+	<tr>
+	<td class="f"><? echo dict_translate("HTTPS Certificate File:"); ></td>
+	<td><input type="file" name="https_cert_file" id="https_cert_file" realname="<? echo dict_translate("HTTPS Certificate File"); >"></td>
+	</td>
+	<td class="f">&nbsp;</td>
+	</tr>
+	<tr>
+	 <td class="f"><? echo dict_translate("HTTPS Certificate Key File:"); ></td>
+	 <td><input type="file" name="https_cert_key_file" id="https_cert_key_file" realname="<? echo dict_translate("HTTPS Certificate Key File"); >">
+	 </td>
+	  <td class="f"> &nbsp; </td>
+	</tr>
+	<tr>
+	  <td class="f">&nbsp;<input type="hidden" name="action" value="httpscertupload"></td>
+	  <td><input type="submit" value="<? echo dict_translate("Upload"); >">&nbsp;</td>
+	  <td class="f">&nbsp;</td>
+	</tr>
+	<tr>
+	 <td class="f"><? echo dict_translate("Remove Certificate Files:"); ></td>
+	 <td><input type="submit" id="httpscertdelete" name="httpscertdelete" value="<? echo dict_translate("Remove"); >"
+         onClick="return confirm('<? echo dict_translate("qst_remove_https_certificates|Do you really want to remove uploaded HTTPS certificate files?"); >');">
+	 </td>
+	  <td class="f">&nbsp;</td>
+	</tr>
+	</table>
+	</form> */ >
+	<tr><td colspan="5" class="tdpad">&nbsp;</td></tr>
+	<tr><th colspan="5">&nbsp;</th></tr>
+	<tr><td colspan="5" class="change"><input type="submit" value="<? echo dict_translate("Change"); >">&nbsp;</td></tr>
+	</table>
+        </form>
+    </td>
+  </tr>
+  <tr> 
+   <td colspan="2">
+      <table cellpadding="0" align="center" cellspacing="0" width="100%">
+      <tr>
+	<td height="10" class="footlogo"><img src="/glogo.cgi" border="0"></td>
+	<td height="10" class="foottext"><? echo dict_translate($oem_copyright); ></td>
+      </tr>
+      </table>
+   </td>
+  </tr>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,18 @@
+--- a/arch/mips/pci/ops-ar7100.c
++++ b/arch/mips/pci/ops-ar7100.c
+@@ -220,6 +220,7 @@ ar7100_local_read_config(int where, int 
+ 
+ 	return PCIBIOS_SUCCESSFUL;
+ }
++EXPORT_SYMBOL(ar7100_local_read_config);
+ 
+ int 
+ ar7100_local_write_config(int where, int size, uint32_t value)
+@@ -235,6 +236,7 @@ ar7100_local_write_config(int where, int
+ 
+ 	return PCIBIOS_SUCCESSFUL;
+ }
++EXPORT_SYMBOL(ar7100_local_write_config);
+ 
+ static uint32_t 
+ byte_lane_enable_bits(uint32_t n, int size)

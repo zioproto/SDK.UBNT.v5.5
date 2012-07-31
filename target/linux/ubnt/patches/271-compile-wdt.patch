@@ -1,0 +1,91 @@
+Index: linux-2.6.32.29/arch/mips/ar7240/wdt.c
+===================================================================
+--- linux-2.6.32.29.orig/arch/mips/ar7240/wdt.c	2011-04-08 11:21:27.803669064 +0300
++++ linux-2.6.32.29/arch/mips/ar7240/wdt.c	2011-04-08 11:28:13.252106473 +0300
+@@ -1,4 +1,4 @@
+-//#include <linux/config.h>
++#include <linux/version.h>
+ #include <linux/device.h>
+ #include <linux/platform_device.h>
+ #include <linux/kernel.h>
+@@ -24,7 +24,7 @@
+ static void wd_times_out(unsigned long dummy);
+ static DEFINE_TIMER(wd_timer, wd_times_out, 0, 0);
+ #else
+-#define AR7240_DEFAULT_WD_TMO	(20ul * USEC_PER_SEC)
++#define AR7240_DEFAULT_WD_TMO	(21ul * USEC_PER_SEC)
+ #endif
+ 
+ #define FACTORY_RESET		0x89ABCDEF
+@@ -50,8 +50,11 @@
+ 
+ static ar7240_wdt_t *wdt = &wdt_softc_array;
+ 
++#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,18)
++irqreturn_t ar7240_wdt_isr(int, void *);
++#else
+ irqreturn_t ar7240_wdt_isr(int, void *, struct pt_regs *);
+-
++#endif
+ 
+ #ifdef AR7240_WDT_TEST_CODE
+ /* Return the value present in the watchdog register */
+@@ -115,7 +118,11 @@
+ }
+ #endif /* AR7240_WDT_TEST_CODE */
+ 
++#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,18)
++irqreturn_t ar7240_wdt_isr(int cpl, void *dev_id)
++#else
+ irqreturn_t ar7240_wdt_isr(int cpl, void *dev_id, struct pt_regs *regs)
++#endif
+ {
+ 	unsigned delay;
+ 	extern int ar7240_gpio_in_val(int);
+@@ -178,7 +185,7 @@
+ 
+ 	ar7240_set_wd_timer(wdt->tmo);
+ #ifndef CONFIG_MACH_HORNET
+-	ar7240_set_wd_timer_action(AR7240_WD_ACT_NONE);
++	ar7240_set_wd_timer_action(AR7240_WD_ACT_RESET);
+ #endif
+ 	return nonseekable_open(inode, file);
+ }
+@@ -192,7 +199,7 @@
+ 		return -ENODEV;
+ 	}
+ 
+-	if (!wdt->can_close) {
++	if (wdt->can_close) {
+ 		wddbg("%s: clearing action\n", __func__);
+ #ifndef CONFIG_MACH_HORNET
+ 		ar7240_set_wd_timer_action(AR7240_WD_ACT_NONE);
+@@ -293,8 +300,7 @@
+ 	extern uint32_t ar7240_ahb_freq;
+ #endif
+ 
+-void
+-ar7240wdt_init(void)
++static int __init ar7240wdt_init(void)
+ {
+ 	int ret;
+ 	extern void ar7240_gpio_config_input(int);
+@@ -302,7 +308,7 @@
+ 	printk("%s: Registering WDT ", __func__);
+ 	if ((ret = misc_register(&ar7240wdt_miscdev))) {
+ 		printk("failed %d\n", ret);
+-		return;
++		return ret;
+ 	} else {
+ 		printk("success\n");
+ 	}
+@@ -328,7 +334,8 @@
+         wddbg("%s: request_irq %d\n", __func__, ret);
+     }
+ #endif
+-	ar7240_gpio_config_input(AR7240_GPIO_RESET);
++		ar7240_gpio_config_input(AR7240_GPIO_RESET);
++	return 0;
+ }
+ 
+ #ifdef CONFIG_MACH_HORNET

@@ -1,0 +1,97 @@
+#!/bin/sh
+
+if [ $# -eq 0 -o $# -eq 1 ]; then
+	echo "Usage: $0 <output dir> <file name> [emerg]"
+        exit 1
+fi
+
+ddir=$1
+file=$2
+emerg=0
+
+if [ $# -ge 3 -a "$3" = "emerg" ]; then
+        emerg=1
+        file=/etc/persistent/emerg.supp
+        date > /etc/persistent/emerg
+fi
+
+rm -rf $ddir
+rm -rf $file
+mkdir $ddir
+if [ $emerg -eq 1 ]; then
+	cp /usr/lib/version $ddir
+	iwconfig > $ddir/iwconfig.txt
+	athstats > $ddir/athstats.txt
+	80211stats -a > $ddir/80211stats.txt
+	wlanconfig ath0 list > $ddir/wlist.txt
+	iwlist ath0 keys > $ddir/wkeys.txt
+	ps > $ddir/ps.txt
+	uptime > $ddir/uptime.txt
+	cat /proc/sys/dev/ubnt_poll/gps_info > $ddir/gps.txt
+	iwpriv wifi0 get_dacount > $ddir/dynack.txt
+	iwpriv wifi0 get_distance >> $ddir/dynack.txt
+	iwpriv wifi0 get_acktimeout >> $ddir/dynack.txt
+	wstalist > $ddir/wstalist.txt
+	iwlist ath0 scan > $ddir/wscan.txt
+	dmesg -s 16384 > $ddir/dmesg.txt
+	cat /var/log/messages* > $ddir/syslog.txt
+	for i in meminfo slabinfo loadavg vmstat; do
+		cp /proc/$i $ddir
+	done
+else
+	cp /tmp/boot.txt $ddir
+	cp /etc/board.info $ddir
+	cp /tmp/running.cfg $ddir
+	cp /tmp/system.cfg $ddir
+	cp /usr/lib/version $ddir
+	for i in link addr route neigh ntable tunnel maddr mroute; do
+		echo "#### $i ####" >> $ddir/ip.txt
+		ip -s -d $i >> $ddir/ip.txt
+	done
+	ifconfig -a > $ddir/ifconfig.txt
+	route -n > $ddir/routes.txt
+	du -ah /var > $ddir/var.txt
+	iwconfig > $ddir/iwconfig.txt
+	athstats > $ddir/athstats.txt
+	80211stats -a > $ddir/80211stats.txt
+	wlanconfig ath0 list > $ddir/wlist.txt
+	iwlist ath0 keys > $ddir/wkeys.txt
+	ps > $ddir/ps.txt
+	uptime > $ddir/uptime.txt
+	cat /proc/sys/dev/ubnt_poll/gps_info > $ddir/gps.txt
+	iwpriv wifi0 get_dacount > $ddir/dynack.txt
+	iwpriv wifi0 get_distance >> $ddir/dynack.txt
+	iwpriv wifi0 get_acktimeout >> $ddir/dynack.txt
+	wstalist > $ddir/wstalist.txt
+	cp -R /etc/sysinit/ $ddir
+	cp -R /etc/persistent/ $ddir
+	for i in `grep eth /proc/net/dev | cut -f 1 -d ":"`; do ethtool ${i} >> $ddir/eth.txt; done
+	for i in filter nat mangle; do iptables -t ${i} -L -nv >> $ddir/iptables.txt; done
+	for i in filter nat broute; do ebtables -t ${i} -L --Lc >> $ddir/ebtables.txt; done
+	for i in `grep : /proc/net/dev | cut -f 1 -d ":"`; do 
+		echo "#### $i ####" >> $ddir/tc.txt
+	        tc -s -d qdisc show dev ${i} >> $ddir/tc.txt
+	        tc -s -d class show dev ${i} >> $ddir/tc.txt
+	done
+	df > $ddir/df.txt
+	iwpriv ath0 medump 1
+        
+	# Wireless Scan must be the last one as it could change current status
+	iwlist ath0 scan > $ddir/wscan.txt
+
+	dmesg -s 16384 > $ddir/dmesg.txt
+
+	cat /var/log/messages* > $ddir/syslog.txt
+
+	for i in meminfo slabinfo loadavg vmstat modules kallsyms net/arp mtd uptime; do
+		cp /proc/$i $ddir
+	done
+
+	i=`grep cfg /proc/mtd | cut -b 4`; dd if=/dev/mtdblock${i} of=$ddir/part.cfg > /dev/null 2>&1
+	i=`grep EEPROM /proc/mtd | cut -b 4`; dd if=/dev/mtdblock${i} of=$ddir/part.eeprom > /dev/null 2>&1
+fi
+d=`dirname $ddir`
+f=`basename $ddir`
+tar -C ${d} -zcf $file ${f}
+rm -fr $ddir
+[ $emerg -eq 1 ] && cfgmtd -w -p /etc -f /tmp/running.cfg

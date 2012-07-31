@@ -1,0 +1,10 @@
+--- linux-2.6.31/arch/mips/include/asm/bitops.h	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/arch/mips/include/asm/bitops.h	2011-03-17 17:03:06.000000000 +0200
+@@ -22,6 +22,7 @@
+ #include <asm/cpu-features.h>
+ #include <asm/sgidefs.h>
+ #include <asm/war.h>
++#include <asm/irqflags.h>
+ 
+ #if _MIPS_SZLONG == 32
+ #define SZLONG_LOG 5

@@ -1,0 +1,14 @@
+Index: linux-2.6.32.29/arch/mips/kernel/irq_cpu.c
+===================================================================
+--- linux-2.6.32.29.orig/arch/mips/kernel/irq_cpu.c	2011-02-18 02:00:11.000000000 +0200
++++ linux-2.6.32.29/arch/mips/kernel/irq_cpu.c	2011-04-06 09:31:33.954064913 +0300
+@@ -99,7 +99,8 @@
+ 
+ void __init mips_cpu_irq_init(void)
+ {
+-	int irq_base = MIPS_CPU_IRQ_BASE;
++	//int irq_base = MIPS_CPU_IRQ_BASE;
++	int irq_base = 0;
+ 	int i;
+ 
+ 	/* Mask interrupts. */

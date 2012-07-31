@@ -1,0 +1,15 @@
+Index: linux-2.6.32.29/drivers/serial/8250.c
+===================================================================
+--- linux-2.6.32.29.orig/drivers/serial/8250.c	2011-02-18 02:00:11.000000000 +0200
++++ linux-2.6.32.29/drivers/serial/8250.c	2011-04-06 09:31:58.523669096 +0300
+@@ -1224,6 +1224,10 @@
+ 		up->bugs |= UART_BUG_NOMSR;
+ #endif
+ 
++#if defined(CONFIG_AR9100) || defined(CONFIG_MACH_AR7240)
++        up->bugs |= UART_BUG_NOMSR;
++#endif
++
+ 	serial_outp(up, UART_LCR, save_lcr);
+ 
+ 	if (up->capabilities != uart_config[up->port.type].flags) {

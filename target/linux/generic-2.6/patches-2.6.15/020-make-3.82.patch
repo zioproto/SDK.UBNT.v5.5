@@ -1,0 +1,1236 @@
+--- a/Documentation/DocBook/Makefile
++++ b/Documentation/DocBook/Makefile
+@@ -24,15 +24,15 @@ DOCBOOKS := wanbook.xml z8530book.xml mc
+ # for PDF and PS output you can choose between xmlto and docbook-utils tools
+ PDF_METHOD	= $(prefer-db2x)
+ PS_METHOD	= $(prefer-db2x)
+ 
+ 
+ ###
+ # The targets that may be used.
+-.PHONY:	xmldocs sgmldocs psdocs pdfdocs htmldocs mandocs installmandocs
++PHONY += xmldocs sgmldocs psdocs pdfdocs htmldocs mandocs installmandocs
+ 
+ BOOKS := $(addprefix $(obj)/,$(DOCBOOKS))
+ xmldocs: $(BOOKS)
+ sgmldocs: xmldocs
+ 
+ PS := $(patsubst %.xml, %.ps, $(BOOKS))
+ psdocs: $(PS)
+@@ -207,7 +207,13 @@ clean-files := $(DOCBOOKS) \
+ 	$(patsubst %.xml, %.9,    $(DOCBOOKS)) \
+ 	$(C-procfs-example)
+ 
+ clean-dirs := $(patsubst %.xml,%,$(DOCBOOKS))
+ 
+ #man put files in man subdir - traverse down
+ subdir- := man/
++
++
++# Declare the contents of the .PHONY variable as phony.  We keep that
++# information in a variable se we can use it in if_changed and friends.
++
++.PHONY: $(PHONY)
+--- a/Makefile
++++ b/Makefile
+@@ -94,26 +94,26 @@ ifeq ($(KBUILD_SRC),)
+ ifdef O
+   ifeq ("$(origin O)", "command line")
+     KBUILD_OUTPUT := $(O)
+   endif
+ endif
+ 
+ # That's our default target when none is given on the command line
+-.PHONY: _all
++PHONY += _all
+ _all:
+ 
+ ifneq ($(KBUILD_OUTPUT),)
+ # Invoke a second make in the output directory, passing relevant variables
+ # check that the output directory actually exists
+ saved-output := $(KBUILD_OUTPUT)
+ KBUILD_OUTPUT := $(shell cd $(KBUILD_OUTPUT) && /bin/pwd)
+ $(if $(KBUILD_OUTPUT),, \
+      $(error output directory "$(saved-output)" does not exist))
+ 
+-.PHONY: $(MAKECMDGOALS)
++PHONY += $(MAKECMDGOALS)
+ 
+ $(filter-out _all,$(MAKECMDGOALS)) _all:
+ 	$(if $(KBUILD_VERBOSE:1=),@)$(MAKE) -C $(KBUILD_OUTPUT) \
+ 	KBUILD_SRC=$(CURDIR) \
+ 	KBUILD_EXTMOD="$(KBUILD_EXTMOD)" -f $(CURDIR)/Makefile $@
+ 
+ # Leave processing to above invocation of make
+@@ -122,15 +122,15 @@ endif # ifneq ($(KBUILD_OUTPUT),)
+ endif # ifeq ($(KBUILD_SRC),)
+ 
+ # We process the rest of the Makefile if this is the final invocation of make
+ ifeq ($(skip-makefile),)
+ 
+ # If building an external module we do not care about the all: rule
+ # but instead _all depend on modules
+-.PHONY: all
++PHONY += all
+ ifeq ($(KBUILD_EXTMOD),)
+ _all: all
+ else
+ _all: modules
+ endif
+ 
+ srctree		:= $(if $(KBUILD_SRC),$(KBUILD_SRC),$(CURDIR))
+@@ -376,22 +376,22 @@ export MODVERDIR := $(if $(KBUILD_EXTMOD
+ RCS_FIND_IGNORE := \( -name SCCS -o -name BitKeeper -o -name .svn -o -name CVS -o -name .pc -o -name .hg -o -name .git \) -prune -o
+ export RCS_TAR_IGNORE := --exclude SCCS --exclude BitKeeper --exclude .svn --exclude CVS --exclude .pc --exclude .hg --exclude .git
+ 
+ # ===========================================================================
+ # Rules shared between *config targets and build targets
+ 
+ # Basic helpers built in scripts/
+-.PHONY: scripts_basic
++PHONY += scripts_basic
+ scripts_basic:
+ 	$(Q)$(MAKE) $(build)=scripts/basic
+ 
+ # To avoid any implicit rule to kick in, define an empty command.
+ scripts/basic/%: scripts_basic ;
+ 
+-.PHONY: outputmakefile
++PHONY += outputmakefile
+ # outputmakefile generate a Makefile to be placed in output directory, if
+ # using a seperate output directory. This allows convinient use
+ # of make in output directory
+ outputmakefile:
+ 	$(Q)if test ! $(srctree) -ef $(objtree); then \
+ 	$(CONFIG_SHELL) $(srctree)/scripts/mkmakefile              \
+ 	    $(srctree) $(objtree) $(VERSION) $(PATCHLEVEL)         \
+@@ -445,28 +445,32 @@ ifeq ($(config-targets),1)
+ 
+ # Read arch specific Makefile to set KBUILD_DEFCONFIG as needed.
+ # KBUILD_DEFCONFIG may point out an alternative default configuration
+ # used for 'make defconfig'
+ include $(srctree)/arch/$(ARCH)/Makefile
+ export KBUILD_DEFCONFIG
+ 
+-config %config: scripts_basic outputmakefile FORCE
++config: scripts_basic outputmakefile FORCE
++	$(Q)mkdir -p include/linux
++	$(Q)$(MAKE) $(build)=scripts/kconfig $@
++
++%config: scripts_basic outputmakefile FORCE
+ 	$(Q)mkdir -p include/linux
+ 	$(Q)$(MAKE) $(build)=scripts/kconfig $@
+ 
+ else
+ # ===========================================================================
+ # Build targets only - this includes vmlinux, arch specific targets, clean
+ # targets and others. In general all targets except *config targets.
+ 
+ ifeq ($(KBUILD_EXTMOD),)
+ # Additional helpers built in scripts/
+ # Carefully list dependencies so we do not try to build scripts twice
+ # in parrallel
+-.PHONY: scripts
++PHONY += scripts
+ scripts: scripts_basic include/config/MARKER
+ 	$(Q)$(MAKE) $(build)=$(@)
+ 
+ scripts_basic: include/linux/autoconf.h
+ 
+ # Objects we will link into vmlinux / subdirs we need to visit
+ init-y		:= init/
+@@ -779,29 +783,29 @@ $(sort $(vmlinux-init) $(vmlinux-main)) 
+ 
+ # Handle descending into subdirectories listed in $(vmlinux-dirs)
+ # Preset locale variables to speed up the build process. Limit locale
+ # tweaks to this spot to avoid wrong language settings when running
+ # make menuconfig etc.
+ # Error messages still appears in the original language
+ 
+-.PHONY: $(vmlinux-dirs)
++PHONY += $(vmlinux-dirs)
+ $(vmlinux-dirs): prepare scripts
+ 	$(Q)$(MAKE) $(build)=$@
+ 
+ # Things we need to do before we recursively start building the kernel
+ # or the modules are listed in "prepare".
+ # A multi level approach is used. prepareN is processed before prepareN-1.
+ # archprepare is used in arch Makefiles and when processed asm symlink,
+ # version.h and scripts_basic is processed / created.
+ 
+ # Listed in dependency order
+-.PHONY: prepare archprepare prepare0 prepare1 prepare2 prepare3
++PHONY += prepare archprepare prepare0 prepare1 prepare2 prepare3
+ 
+ # prepare-all is deprecated, use prepare as valid replacement
+-.PHONY: prepare-all
++PHONY += prepare-all
+ 
+ # prepare3 is used to check if we are building in a separate output directory,
+ # and if so do:
+ # 1) Check that make has not been executed in the kernel src $(srctree)
+ # 2) Create the include2 directory, used for the second asm symlink
+ 
+ prepare3:
+@@ -896,44 +900,44 @@ define filechk_version.h
+ endef
+ 
+ include/linux/version.h: $(srctree)/Makefile FORCE
+ 	$(call filechk,version.h)
+ 
+ # ---------------------------------------------------------------------------
+ 
+-.PHONY: depend dep
++PHONY += depend dep
+ depend dep:
+ 	@echo '*** Warning: make $@ is unnecessary now.'
+ 
+ # ---------------------------------------------------------------------------
+ # Modules
+ 
+ ifdef CONFIG_MODULES
+ 
+ # 	By default, build modules as well
+ 
+ all: modules
+ 
+ #	Build modules
+ 
+-.PHONY: modules
++PHONY += modules
+ modules: $(vmlinux-dirs) $(if $(KBUILD_BUILTIN),vmlinux)
+ 	@echo '  Building modules, stage 2.';
+ 	$(Q)$(MAKE) -rR -f $(srctree)/scripts/Makefile.modpost
+ 
+ 
+ # Target to prepare building external modules
+-.PHONY: modules_prepare
++PHONY += modules_prepare
+ modules_prepare: prepare scripts
+ 
+ # Target to install modules
+-.PHONY: modules_install
++PHONY += modules_install
+ modules_install: _modinst_ _modinst_post
+ 
+-.PHONY: _modinst_
++PHONY += _modinst_
+ _modinst_:
+ 	@if [ -z "`$(DEPMOD) -V 2>/dev/null | grep module-init-tools`" ]; then \
+ 		echo "Warning: you may need to install module-init-tools"; \
+ 		echo "See http://www.codemonkey.org.uk/docs/post-halloween-2.6.txt";\
+ 		sleep 1; \
+ 	fi
+ 	@rm -rf $(MODLIB)/kernel
+@@ -952,15 +956,15 @@ _modinst_:
+ # boot a modules.dep even before / is mounted read-write.  However the
+ # boot script depmod is the master version.
+ ifeq "$(strip $(INSTALL_MOD_PATH))" ""
+ depmod_opts	:=
+ else
+ depmod_opts	:= -b $(INSTALL_MOD_PATH) -r
+ endif
+-.PHONY: _modinst_post
++PHONY += _modinst_post
+ _modinst_post: _modinst_
+ 	if [ -r System.map -a -x $(DEPMOD) ]; then $(DEPMOD) -ae -F System.map $(depmod_opts) $(KERNELRELEASE); fi
+ 
+ else # CONFIG_MODULES
+ 
+ # Modules not configured
+ # ---------------------------------------------------------------------------
+@@ -995,15 +999,15 @@ MRPROPER_FILES += .config .config.old in
+ 
+ # clean - Delete most, but leave enough to build external modules
+ #
+ clean: rm-dirs  := $(CLEAN_DIRS)
+ clean: rm-files := $(CLEAN_FILES)
+ clean-dirs      := $(addprefix _clean_,$(srctree) $(vmlinux-alldirs))
+ 
+-.PHONY: $(clean-dirs) clean archclean
++PHONY += $(clean-dirs) clean archclean
+ $(clean-dirs):
+ 	$(Q)$(MAKE) $(clean)=$(patsubst _clean_%,%,$@)
+ 
+ clean: archclean $(clean-dirs)
+ 	$(call cmd,rmdirs)
+ 	$(call cmd,rmfiles)
+ 	@find . $(RCS_FIND_IGNORE) \
+@@ -1013,25 +1017,25 @@ clean: archclean $(clean-dirs)
+ 
+ # mrproper - Delete all generated files, including .config
+ #
+ mrproper: rm-dirs  := $(wildcard $(MRPROPER_DIRS))
+ mrproper: rm-files := $(wildcard $(MRPROPER_FILES))
+ mrproper-dirs      := $(addprefix _mrproper_,Documentation/DocBook scripts)
+ 
+-.PHONY: $(mrproper-dirs) mrproper archmrproper
++PHONY += $(mrproper-dirs) mrproper archmrproper
+ $(mrproper-dirs):
+ 	$(Q)$(MAKE) $(clean)=$(patsubst _mrproper_%,%,$@)
+ 
+ mrproper: clean archmrproper $(mrproper-dirs)
+ 	$(call cmd,rmdirs)
+ 	$(call cmd,rmfiles)
+ 
+ # distclean
+ #
+-.PHONY: distclean
++PHONY += distclean
+ 
+ distclean: mrproper
+ 	@find $(srctree) $(RCS_FIND_IGNORE) \
+ 	 	\( -name '*.orig' -o -name '*.rej' -o -name '*~' \
+ 		-o -name '*.bak' -o -name '#*#' -o -name '.*.orig' \
+ 	 	-o -name '.*.rej' -o -size 0 \
+ 		-o -name '*%' -o -name '.*.cmd' -o -name 'core' \) \
+@@ -1039,15 +1043,15 @@ distclean: mrproper
+ 
+ 
+ # Packaging of the kernel to various formats
+ # ---------------------------------------------------------------------------
+ # rpm target kept for backward compatibility
+ package-dir	:= $(srctree)/scripts/package
+ 
+-.PHONY: %-pkg rpm
++PHONY += %-pkg rpm
+ 
+ %pkg: FORCE
+ 	$(Q)$(MAKE) -f $(package-dir)/Makefile $@
+ rpm: FORCE
+ 	$(Q)$(MAKE) -f $(package-dir)/Makefile $@
+ 
+ 
+@@ -1130,42 +1134,42 @@ else # KBUILD_EXTMOD
+ # make M=dir	       Same as 'make M=dir modules'
+ # make M=dir modules_install
+ #                      Install the modules build in the module directory
+ #                      Assumes install directory is already created
+ 
+ # We are always building modules
+ KBUILD_MODULES := 1
+-.PHONY: crmodverdir
++PHONY += crmodverdir
+ crmodverdir:
+ 	$(Q)mkdir -p $(MODVERDIR)
+ 
+-.PHONY: $(objtree)/Module.symvers
++PHONY += $(objtree)/Module.symvers
+ $(objtree)/Module.symvers:
+ 	@test -e $(objtree)/Module.symvers || ( \
+ 	echo; \
+ 	echo "  WARNING: Symbol version dump $(objtree)/Module.symvers"; \
+ 	echo "           is missing; modules will have no dependencies and modversions."; \
+ 	echo )
+ 
+ module-dirs := $(addprefix _module_,$(KBUILD_EXTMOD))
+-.PHONY: $(module-dirs) modules
++PHONY += $(module-dirs) modules
+ $(module-dirs): crmodverdir $(objtree)/Module.symvers
+ 	$(Q)$(MAKE) $(build)=$(patsubst _module_%,%,$@)
+ 
+ modules: $(module-dirs)
+ 	@echo '  Building modules, stage 2.';
+ 	$(Q)$(MAKE) -rR -f $(srctree)/scripts/Makefile.modpost
+ 
+-.PHONY: modules_install
++PHONY += modules_install
+ modules_install:
+ 	$(Q)$(MAKE) -rR -f $(srctree)/scripts/Makefile.modinst
+ 
+ clean-dirs := $(addprefix _clean_,$(KBUILD_EXTMOD))
+ 
+-.PHONY: $(clean-dirs) clean
++PHONY += $(clean-dirs) clean
+ $(clean-dirs):
+ 	$(Q)$(MAKE) $(clean)=$(patsubst _clean_%,%,$@)
+ 
+ clean:	rm-dirs := $(MODVERDIR)
+ clean: $(clean-dirs)
+ 	$(call cmd,rmdirs)
+ 	@find $(KBUILD_EXTMOD) $(RCS_FIND_IGNORE) \
+@@ -1281,15 +1285,15 @@ buildcheck:
+ 
+ namespacecheck:
+ 	$(PERL) $(srctree)/scripts/namespace.pl
+ 
+ endif #ifeq ($(config-targets),1)
+ endif #ifeq ($(mixed-targets),1)
+ 
+-.PHONY: checkstack
++PHONY += checkstack
+ checkstack:
+ 	$(OBJDUMP) -d vmlinux $$(find . -name '*.ko') | \
+ 	$(PERL) $(src)/scripts/checkstack.pl $(ARCH)
+ 
+ kernelrelease:
+ 	@echo $(KERNELRELEASE)
+ 
+@@ -1323,8 +1327,14 @@ endif
+ # Shorthand for $(Q)$(MAKE) -f scripts/Makefile.clean obj=dir
+ # Usage:
+ # $(Q)$(MAKE) $(clean)=dir
+ clean := -f $(if $(KBUILD_SRC),$(srctree)/)scripts/Makefile.clean obj
+ 
+ endif	# skip-makefile
+ 
++PHONY += FORCE
+ FORCE:
++
++
++# Declare the contents of the .PHONY variable as phony.  We keep that
++# information in a variable se we can use it in if_changed and friends.
++.PHONY: $(PHONY)
+--- a/arch/arm/Makefile
++++ b/arch/arm/Makefile
+@@ -1,10 +1,13 @@
+ #
+ # arch/arm/Makefile
+ #
++# This file is included by the global makefile so that you can add your own
++# architecture-specific flags and dependencies.
++#
+ # This file is subject to the terms and conditions of the GNU General Public
+ # License.  See the file "COPYING" in the main directory of this archive
+ # for more details.
+ #
+ # Copyright (C) 1995-2001 by Russell King
+ 
+ LDFLAGS_vmlinux	:=-p --no-undefined -X
+@@ -168,15 +171,15 @@ ifneq ($(KBUILD_SRC),)
+ else
+ 	$(Q)ln -fsn $(INCDIR) include/asm-arm/arch
+ endif
+ 	@touch $@
+ 
+ archprepare: maketools
+ 
+-.PHONY: maketools FORCE
++PHONY += maketools FORCE
+ maketools: include/linux/version.h include/asm-arm/.arch FORCE
+ 	$(Q)$(MAKE) $(build)=arch/arm/tools include/asm-arm/mach-types.h
+ 
+ # Convert bzImage to zImage
+ bzImage: zImage
+ 
+ zImage Image xipImage bootpImage uImage: vmlinux
+--- a/arch/arm/boot/Makefile
++++ b/arch/arm/boot/Makefile
+@@ -1,10 +1,13 @@
+ #
+ # arch/arm/boot/Makefile
+ #
++# This file is included by the global makefile so that you can add your own
++# architecture-specific flags and dependencies.
++#
+ # This file is subject to the terms and conditions of the GNU General Public
+ # License.  See the file "COPYING" in the main directory of this archive
+ # for more details.
+ #
+ # Copyright (C) 1995-2002 Russell King
+ #
+ 
+@@ -69,15 +72,15 @@ $(obj)/bootp/bootp: $(obj)/zImage initrd
+ 	$(Q)$(MAKE) $(build)=$(obj)/bootp $@
+ 	@:
+ 
+ $(obj)/bootpImage: $(obj)/bootp/bootp FORCE
+ 	$(call if_changed,objcopy)
+ 	@echo '  Kernel: $@ is ready'
+ 
+-.PHONY: initrd FORCE
++PHONY += initrd FORCE
+ initrd:
+ 	@test "$(INITRD_PHYS)" != "" || \
+ 	(echo This machine does not support INITRD; exit -1)
+ 	@test "$(INITRD)" != "" || \
+ 	(echo You must specify INITRD; exit -1)
+ 
+ install: $(obj)/Image
+--- a/arch/arm/boot/bootp/Makefile
++++ b/arch/arm/boot/bootp/Makefile
+@@ -1,10 +1,13 @@
+ #
+ # linux/arch/arm/boot/bootp/Makefile
+ #
++# This file is included by the global makefile so that you can add your own
++# architecture-specific flags and dependencies.
++#
+ 
+ LDFLAGS_bootp	:=-p --no-undefined -X \
+ 		 --defsym initrd_phys=$(INITRD_PHYS) \
+ 		 --defsym params_phys=$(PARAMS_PHYS) -T
+ AFLAGS_initrd.o :=-DINITRD=\"$(INITRD)\"
+ 
+ targets	:= bootp init.o kernel.o initrd.o
+@@ -17,8 +20,8 @@ $(obj)/bootp:	$(src)/bootp.lds $(addpref
+ # kernel.o and initrd.o includes a binary image using
+ # .incbin, a dependency which is not tracked automatically
+ 
+ $(obj)/kernel.o: arch/arm/boot/zImage FORCE
+ 
+ $(obj)/initrd.o: $(INITRD) FORCE
+ 
+-.PHONY:	$(INITRD) FORCE
++PHONY += $(INITRD) FORCE
+--- a/arch/arm26/Makefile
++++ b/arch/arm26/Makefile
+@@ -1,10 +1,13 @@
+ #
+ # arch/arm26/Makefile
+ #
++# This file is included by the global makefile so that you can add your own
++# architecture-specific flags and dependencies.
++#
+ # This file is subject to the terms and conditions of the GNU General Public
+ # License.  See the file "COPYING" in the main directory of this archive
+ # for more details.
+ #
+ # Copyright (C) 1995-2001 by Russell King
+ # Copyright (c) 2004 Ian Molton
+ 
+@@ -45,17 +48,17 @@ core-$(CONFIG_FPE_NWFPE)	+= arch/arm26/n
+ libs-y				+= arch/arm26/lib/
+ 
+ # Default target when executing plain make
+ all: zImage
+ 
+ boot := arch/arm26/boot
+ 
+-.PHONY: maketools FORCE
++PHONY += maketools FORCE
+ maketools: FORCE
+-	
++
+ 
+ # Convert bzImage to zImage
+ bzImage: vmlinux
+ 	$(Q)$(MAKE) $(build)=$(boot) $(boot)/zImage
+ 
+ zImage Image bootpImage xipImage: vmlinux
+ 	$(Q)$(MAKE) $(build)=$(boot) $(boot)/$@
+--- a/arch/arm26/boot/Makefile
++++ b/arch/arm26/boot/Makefile
+@@ -1,10 +1,13 @@
+ #
+ # arch/arm26/boot/Makefile
+ #
++# This file is included by the global makefile so that you can add your own
++# architecture-specific flags and dependencies.
++#
+ # This file is subject to the terms and conditions of the GNU General Public
+ # License.  See the file "COPYING" in the main directory of this archive
+ # for more details.
+ #
+ # Copyright (C) 1995-2002 Russell King
+ #
+ 
+@@ -56,15 +59,15 @@ $(obj)/xipImage: vmlinux FORCE
+ 	$(OBJCOPY) -S -O binary -R .data -R .pci_fixup -R .comment vmlinux vmlinux-text.bin
+ 	$(OBJCOPY) -S -O binary -R .init -R .text -R __ex_table -R .pci_fixup -R __ksymtab -R __ksymtab_gpl -R __kcrctab -R __kcrctab_gpl -R __param -R .comment vmlinux vmlinux-data.bin
+ 	cat vmlinux-text.bin vmlinux-data.bin > $@
+ 	$(RM) -f vmlinux-text.bin vmlinux-data.bin
+ 	@echo '  Kernel: $@ is ready'
+ endif
+ 
+-.PHONY: initrd
++PHONY += initrd
+ initrd:
+ 	@test "$(INITRD_PHYS)" != "" || \
+ 	(echo This machine does not support INITRD; exit -1)
+ 	@test "$(INITRD)" != "" || \
+ 	(echo You must specify INITRD; exit -1)
+ 
+ install: $(obj)/Image
+--- a/arch/i386/Makefile
++++ b/arch/i386/Makefile
+@@ -98,15 +98,15 @@ drivers-$(CONFIG_OPROFILE)		+= arch/i386
+ drivers-$(CONFIG_PM)			+= arch/i386/power/
+ 
+ CFLAGS += $(mflags-y)
+ AFLAGS += $(mflags-y)
+ 
+ boot := arch/i386/boot
+ 
+-.PHONY: zImage bzImage compressed zlilo bzlilo \
++PHONY += zImage bzImage compressed zlilo bzlilo \
+ 	zdisk bzdisk fdimage fdimage144 fdimage288 install kernel_install
+ 
+ all: bzImage
+ 
+ # KBUILD_IMAGE specify target image being built
+                     KBUILD_IMAGE := $(boot)/bzImage
+ zImage zlilo zdisk: KBUILD_IMAGE := arch/i386/boot/zImage
+--- a/arch/ia64/Makefile
++++ b/arch/ia64/Makefile
+@@ -1,10 +1,13 @@
+ #
+ # ia64/Makefile
+ #
++# This file is included by the global makefile so that you can add your own
++# architecture-specific flags and dependencies.
++#
+ # This file is subject to the terms and conditions of the GNU General Public
+ # License.  See the file "COPYING" in the main directory of this archive
+ # for more details.
+ #
+ # Copyright (C) 1998-2004 by David Mosberger-Tang <davidm@hpl.hp.com>
+ #
+ 
+@@ -63,15 +66,15 @@ drivers-$(CONFIG_IA64_HP_SIM)	+= arch/ia
+ drivers-$(CONFIG_IA64_HP_ZX1)	+= arch/ia64/hp/common/ arch/ia64/hp/zx1/
+ drivers-$(CONFIG_IA64_HP_ZX1_SWIOTLB) += arch/ia64/hp/common/ arch/ia64/hp/zx1/
+ drivers-$(CONFIG_IA64_GENERIC)	+= arch/ia64/hp/common/ arch/ia64/hp/zx1/ arch/ia64/hp/sim/ arch/ia64/sn/
+ drivers-$(CONFIG_OPROFILE)	+= arch/ia64/oprofile/
+ 
+ boot := arch/ia64/hp/sim/boot
+ 
+-.PHONY: boot compressed check
++PHONY += boot compressed check
+ 
+ all: compressed unwcheck
+ 
+ compressed: vmlinux.gz
+ 
+ vmlinux.gz: vmlinux
+ 	$(Q)$(MAKE) $(build)=$(boot) $@
+--- a/arch/m32r/Makefile
++++ b/arch/m32r/Makefile
+@@ -1,10 +1,13 @@
+ #
+ # m32r/Makefile
+ #
++# This file is included by the global makefile so that you can add your own
++# architecture-specific flags and dependencies.
++#
+ 
+ LDFLAGS		:=
+ OBJCOPYFLAGS	:= -O binary -R .note -R .comment -S
+ LDFLAGS_vmlinux	:= -e startup_32
+ 
+ CFLAGS += -pipe -fno-schedule-insns
+ CFLAGS_KERNEL += -mmodel=medium
+@@ -35,15 +38,15 @@ core-y	+= arch/m32r/kernel/	\
+ 	   arch/m32r/mm/	\
+ 	   arch/m32r/boot/
+ 
+ drivers-$(CONFIG_OPROFILE)	+= arch/m32r/oprofile/
+ 
+ boot := arch/m32r/boot
+ 
+-.PHONY: zImage
++PHONY += zImage
+ 
+ all: zImage
+ 
+ zImage: vmlinux
+ 	$(Q)$(MAKE) $(build)=$(boot) $(boot)/$@
+ 
+ compressed: zImage
+--- a/arch/powerpc/Makefile
++++ b/arch/powerpc/Makefile
+@@ -149,15 +149,15 @@ all: $(KBUILD_IMAGE)
+ CPPFLAGS_vmlinux.lds	:= -Upowerpc
+ 
+ # All the instructions talk about "make bzImage".
+ bzImage: zImage
+ 
+ BOOT_TARGETS = zImage zImage.initrd znetboot znetboot.initrd vmlinux.sm
+ 
+-.PHONY: $(BOOT_TARGETS)
++PHONY += $(BOOT_TARGETS)
+ 
+ boot := arch/$(ARCH)/boot
+ 
+ $(BOOT_TARGETS): vmlinux
+ 	$(Q)$(MAKE) ARCH=ppc64 $(build)=$(boot) $(patsubst %,$(boot)/%,$@)
+ 
+ define archhelp
+--- a/arch/ppc/Makefile
++++ b/arch/ppc/Makefile
+@@ -78,15 +78,15 @@ drivers-$(CONFIG_8xx)		+= arch/ppc/8xx_i
+ drivers-$(CONFIG_4xx)		+= arch/ppc/4xx_io/
+ drivers-$(CONFIG_CPM2)		+= arch/ppc/8260_io/
+ 
+ drivers-$(CONFIG_OPROFILE)	+= arch/powerpc/oprofile/
+ 
+ BOOT_TARGETS = zImage zImage.initrd znetboot znetboot.initrd vmlinux.sm
+ 
+-.PHONY: $(BOOT_TARGETS)
++PHONY += $(BOOT_TARGETS)
+ 
+ all: uImage zImage
+ 
+ CPPFLAGS_vmlinux.lds	:= -Upowerpc
+ 
+ # All the instructions talk about "make bzImage".
+ bzImage: zImage
+--- a/arch/ppc/boot/Makefile
++++ b/arch/ppc/boot/Makefile
+@@ -1,10 +1,13 @@
+ #
+ # arch/ppc/boot/Makefile
+ #
++# This file is included by the global makefile so that you can add your own
++# architecture-specific flags and dependencies.
++#
+ # This file is subject to the terms and conditions of the GNU General Public
+ # License.  See the file "COPYING" in the main directory of this archive
+ # for more details.
+ #
+ # Copyright (C) 1994 by Linus Torvalds
+ # Adapted for PowerPC by Gary Thomas
+ # modified by Cort (cort@cs.nmt.edu)
+@@ -21,14 +24,14 @@ subdir-y			:= lib common images
+ subdir-$(CONFIG_PPC_OF)		+= of1275
+ 
+ # for cleaning
+ subdir-				+= simple openfirmware
+ 
+ hostprogs-y := $(addprefix utils/, addnote mknote hack-coff mkprep mkbugboot mktree)
+ 
+-.PHONY: $(BOOT_TARGETS) $(bootdir-y)
++PHONY += $(BOOT_TARGETS) $(bootdir-y)
+ 
+ $(BOOT_TARGETS): $(bootdir-y)
+ 
+ $(bootdir-y): $(addprefix $(obj)/,$(subdir-y)) \
+ 		$(addprefix $(obj)/,$(hostprogs-y))
+ 	$(Q)$(MAKE) $(build)=$(obj)/$@ $(MAKECMDGOALS)
+--- a/arch/ppc/boot/openfirmware/Makefile
++++ b/arch/ppc/boot/openfirmware/Makefile
+@@ -1,9 +1,12 @@
+ # Makefile for making bootable images on various OpenFirmware machines.
+ #
++# This file is included by the global makefile so that you can add your own
++# architecture-specific flags and dependencies.
++#
+ # Paul Mackerras	January 1997
+ #	XCOFF bootable images for PowerMacs
+ # Geert Uytterhoeven	September 1997
+ #	ELF bootable iamges for CHRP machines.
+ # Tom Rini		January 2001
+ # 	Cleaned up, moved into arch/ppc/boot/pmac
+ # Tom Rini		July/August 2002
+@@ -146,15 +149,15 @@ $(images)/miboot.image: $(obj)/dummy.o $
+ 	$(call cmd,gen-miboot,image)
+ 
+ $(images)/miboot.initrd.image: $(images)/miboot.image $(images)/ramdisk.image.gz
+ 	$(call cmd,gen-miboot,initrd)
+ 
+ # The targets used on the make command-line
+ 
+-.PHONY: zImage zImage.initrd
++PHONY += zImage zImage.initrd
+ zImage:		 $(images)/vmlinux.coff 	\
+ 		 $(images)/vmlinux.elf-pmac	\
+ 		 $(images)/zImage.chrp		\
+ 		 $(images)/zImage.chrp-rs6k	\
+ 		 $(images)/miboot.image
+ 	@echo '  kernel: $@ is ready ($<)'
+ zImage.initrd:	 $(images)/vmlinux.initrd.coff 		\
+@@ -162,15 +165,15 @@ zImage.initrd:	 $(images)/vmlinux.initrd
+ 		 $(images)/zImage.initrd.chrp		\
+ 		 $(images)/zImage.initrd.chrp-rs6k	\
+ 		 $(images)/miboot.initrd.image
+ 	@echo '  kernel: $@ is ready ($<)'
+ 
+ TFTPIMAGE	:= /tftpboot/zImage
+ 
+-.PHONY: znetboot znetboot.initrd
++PHONY += znetboot znetboot.initrd
+ znetboot:	$(images)/vmlinux.coff		\
+ 		$(images)/vmlinux.elf-pmac	\
+ 		$(images)/zImage.chrp
+ 	cp $(images)/vmlinux.coff     $(TFTPIMAGE).pmac$(END)
+ 	cp $(images)/vmlinux.elf-pmac $(TFTPIMAGE).pmac$(END).elf
+ 	cp $(images)/zImage.chrp      $(TFTPIMAGE).chrp$(END)
+ 	@echo '  kernel: $@ is ready ($<)'
+--- a/arch/sh/Makefile
++++ b/arch/sh/Makefile
+@@ -142,15 +142,15 @@ else
+ 	$(Q)ln -fsn $(incdir-y) include/asm-sh/mach
+ endif
+ 	@touch $@
+ 
+ 
+ archprepare: maketools include/asm-sh/.cpu include/asm-sh/.mach
+ 
+-.PHONY: maketools FORCE
++PHONY += maketools FORCE
+ maketools:  include/linux/version.h FORCE
+ 	$(Q)$(MAKE) $(build)=arch/sh/tools include/asm-sh/machtypes.h
+ 
+ all: zImage
+ 
+ zImage: vmlinux
+ 	$(Q)$(MAKE) $(build)=$(boot) $(boot)/$@
+--- a/arch/um/Makefile
++++ b/arch/um/Makefile
+@@ -1,8 +1,11 @@
+-# 
++#
++# This file is included by the global makefile so that you can add your own
++# architecture-specific flags and dependencies.
++#
+ # Copyright (C) 2002 Jeff Dike (jdike@karaya.com)
+ # Licensed under the GPL
+ #
+ 
+ ARCH_DIR := arch/um
+ OS := $(shell uname -s)
+ # We require bash because the vmlinux link and loader script cpp use bash
+@@ -79,15 +82,15 @@ include $(srctree)/$(ARCH_DIR)/Makefile-
+ # included; the values here are meaningless
+ 
+ CONFIG_NEST_LEVEL ?= 0
+ CONFIG_KERNEL_HALF_GIGS ?= 0
+ 
+ SIZE = (($(CONFIG_NEST_LEVEL) + $(CONFIG_KERNEL_HALF_GIGS)) * 0x20000000)
+ 
+-.PHONY: linux
++PHONY += linux
+ 
+ all: linux
+ 
+ linux: vmlinux
+ 	ln -f $< $@
+ 
+ define archhelp
+--- a/arch/x86_64/Makefile
++++ b/arch/x86_64/Makefile
+@@ -58,16 +58,16 @@ core-y					+= arch/x86_64/kernel/ \
+ 					   arch/x86_64/crypto/
+ core-$(CONFIG_IA32_EMULATION)		+= arch/x86_64/ia32/
+ drivers-$(CONFIG_PCI)			+= arch/x86_64/pci/
+ drivers-$(CONFIG_OPROFILE)		+= arch/x86_64/oprofile/
+ 
+ boot := arch/x86_64/boot
+ 
+-.PHONY: bzImage bzlilo install archmrproper \
+-	fdimage fdimage144 fdimage288 archclean
++PHONY += bzImage bzlilo install archmrproper \
++	 fdimage fdimage144 fdimage288 archclean
+ 
+ #Default target when executing "make"
+ all: bzImage
+ 
+ BOOTIMAGE                     := arch/x86_64/boot/bzImage
+ KBUILD_IMAGE                  := $(BOOTIMAGE)
+ 
+--- a/include/asm-cris/arch-v32/hwregs/Makefile
++++ b/include/asm-cris/arch-v32/hwregs/Makefile
+@@ -166,22 +166,28 @@ diff_official:
+ 
+ ## doc    - Generate .axw files from register description.
+ doc: $(REGDESC)
+ 	for RDES in $^; do \
+ 		$(RDES2TXT) $$RDES; \
+ 	done
+ 
+-.PHONY: axw
++PHONY += axw
+ ## %.axw  - Generate the specified .axw file (doesn't work for all files
+ ##          due to inconsistent naming ir .r files.
+ %.axw: axw
+ 	@for RDES in $(REGDESC); do \
+ 		if echo "$$RDES" | grep $* ; then \
+ 		  $(RDES2TXT) $$RDES; \
+ 		fi \
+ 	done
+ 
+-.PHONY: clean
++PHONY += clean
+ ## clean  - Remove .h files and .axw files.
+ clean:
+ 	rm -rf $(INCL_FILES) *.axw
+ 
++
++# Declare the contents of the .PHONY variable as phony.  We keep that
++# information in a variable se we can use it in if_changed and friends.
++
++.PHONY: $(PHONY)
++
+--- a/include/asm-cris/arch-v32/hwregs/iop/Makefile
++++ b/include/asm-cris/arch-v32/hwregs/iop/Makefile
+@@ -120,27 +120,33 @@ iop_version_defs_asm.h: $(IOPROCDIR)/gui
+ 
+ ## doc    - Generate .axw files from register description.
+ doc: $(IOPROCREGDESC)
+ 	for RDES in $^; do \
+ 		$(RDES2TXT) $$RDES; \
+ 	done
+ 
+-.PHONY: axw
++PHONY += axw
+ ## %.axw  - Generate the specified .axw file (doesn't work for all files
+ ##          due to inconsistent naming of .r files.
+ %.axw: axw
+ 	@for RDES in $(IOPROCREGDESC); do \
+ 		if echo "$$RDES" | grep $* ; then \
+ 		  $(RDES2TXT) $$RDES; \
+ 		fi \
+ 	done
+ 
+-.PHONY: clean
++PHONY += clean
+ ## clean  - Remove .h files and .axw files.
+ clean:
+ 	rm -rf $(IOPROCINCL_FILES) *.axw
+ 
+-.PHONY: cleandoc
++PHONY += cleandoc
+ ## cleandoc  - Remove .axw files.
+ cleandoc:
+ 	rm -rf *.axw
+ 
++
++# Declare the contents of the .PHONY variable as phony.  We keep that
++# information in a variable se we can use it in if_changed and friends.
++
++.PHONY: $(PHONY)
++
+--- a/scripts/Kbuild.include
++++ b/scripts/Kbuild.include
+@@ -69,31 +69,34 @@ endif
+ # echo command. Short version is $(quiet) equals quiet, otherwise full command
+ echo-cmd = $(if $($(quiet)cmd_$(1)), \
+ 	echo '  $(subst ','\'',$($(quiet)cmd_$(1)))';)
+ 
+ # function to only execute the passed command if necessary
+ # >'< substitution is for echo to work, >$< substitution to preserve $ when reloading .cmd file
+ # note: when using inline perl scripts [perl -e '...$$t=1;...'] in $(cmd_xxx) double $$ your perl vars
+-# 
+-if_changed = $(if $(strip $? $(call arg-check, $(cmd_$(1)), $(cmd_$@)) ), \
++#
++if_changed = $(if $(strip $(filter-out $(PHONY),$?)          \
++		$(call arg-check, $(cmd_$(1)), $(cmd_$@)) ), \
+ 	@set -e; \
+ 	$(echo-cmd) \
+ 	$(cmd_$(1)); \
+ 	echo 'cmd_$@ := $(subst $$,$$$$,$(subst ','\'',$(cmd_$(1))))' > $(@D)/.$(@F).cmd)
+ 
+ # execute the command and also postprocess generated .d dependencies
+ # file
+-if_changed_dep = $(if $(strip $? $(filter-out FORCE $(wildcard $^),$^)\
+-	$(call arg-check, $(cmd_$(1)), $(cmd_$@)) ),                  \
++if_changed_dep = $(if $(strip $(filter-out $(PHONY),$?)  \
++		$(filter-out FORCE $(wildcard $^),$^)    \
++	$(call arg-check, $(cmd_$(1)), $(cmd_$@)) ),     \
+ 	@set -e; \
+ 	$(echo-cmd) \
+ 	$(cmd_$(1)); \
+ 	scripts/basic/fixdep $(depfile) $@ '$(subst $$,$$$$,$(subst ','\'',$(cmd_$(1))))' > $(@D)/.$(@F).tmp; \
+ 	rm -f $(depfile); \
+ 	mv -f $(@D)/.$(@F).tmp $(@D)/.$(@F).cmd)
+ 
+ # Usage: $(call if_changed_rule,foo)
+ # will check if $(cmd_foo) changed, or any of the prequisites changed,
+ # and if so will execute $(rule_foo)
+-if_changed_rule = $(if $(strip $? $(call arg-check, $(cmd_$(1)), $(cmd_$@)) ),\
++if_changed_rule = $(if $(strip $(filter-out $(PHONY),$?)            \
++			$(call arg-check, $(cmd_$(1)), $(cmd_$@)) ),\
+ 			@set -e; \
+ 			$(rule_$(1)))
+--- a/scripts/Makefile.build
++++ b/scripts/Makefile.build
+@@ -1,14 +1,14 @@
+ # ==========================================================================
+ # Building
+ # ==========================================================================
+ 
+ src := $(obj)
+ 
+-.PHONY: __build
++PHONY := __build
+ __build:
+ 
+ # Read .config if it exist, otherwise ignore
+ -include .config
+ 
+ # The filename Kbuild has precedence over Makefile
+ kbuild-dir := $(if $(filter /%,$(src)),$(src),$(srctree)/$(src))
+@@ -305,29 +305,35 @@ $(multi-used-m) : %.o: $(multi-objs-m) F
+ 
+ targets += $(multi-used-y) $(multi-used-m)
+ 
+ 
+ # Descending
+ # ---------------------------------------------------------------------------
+ 
+-.PHONY: $(subdir-ym)
++PHONY += $(subdir-ym)
+ $(subdir-ym):
+ 	$(Q)$(MAKE) $(build)=$@
+ 
+ # Add FORCE to the prequisites of a target to force it to be always rebuilt.
+ # ---------------------------------------------------------------------------
+ 
+-.PHONY: FORCE
++PHONY += FORCE
+ 
+ FORCE:
+ 
+ # Read all saved command lines and dependencies for the $(targets) we
+ # may be building above, using $(if_changed{,_dep}). As an
+ # optimization, we don't need to read them if the target does not
+ # exist, we will rebuild anyway in that case.
+ 
+ targets := $(wildcard $(sort $(targets)))
+ cmd_files := $(wildcard $(foreach f,$(targets),$(dir $(f)).$(notdir $(f)).cmd))
+ 
+ ifneq ($(cmd_files),)
+   include $(cmd_files)
+ endif
++
++
++# Declare the contents of the .PHONY variable as phony.  We keep that
++# information in a variable se we can use it in if_changed and friends.
++
++.PHONY: $(PHONY)
+--- a/scripts/Makefile.clean
++++ b/scripts/Makefile.clean
+@@ -1,14 +1,14 @@
+ # ==========================================================================
+ # Cleaning up
+ # ==========================================================================
+ 
+ src := $(obj)
+ 
+-.PHONY: __clean
++PHONY := __clean
+ __clean:
+ 
+ # Shorthand for $(Q)$(MAKE) scripts/Makefile.clean obj=dir
+ # Usage:
+ # $(Q)$(MAKE) $(clean)=dir
+ clean := -f $(if $(KBUILD_SRC),$(srctree)/)scripts/Makefile.clean obj
+ 
+@@ -83,14 +83,20 @@ endif
+ # ===========================================================================
+ # Generic stuff
+ # ===========================================================================
+ 
+ # Descending
+ # ---------------------------------------------------------------------------
+ 
+-.PHONY: $(subdir-ymn)
++PHONY += $(subdir-ymn)
+ $(subdir-ymn):
+ 	$(Q)$(MAKE) $(clean)=$@
+ 
+ # If quiet is set, only print short version of command
+ 
+ cmd = @$(if $($(quiet)cmd_$(1)),echo '  $($(quiet)cmd_$(1))' &&) $(cmd_$(1))
++
++
++# Declare the contents of the .PHONY variable as phony.  We keep that
++# information in a variable se we can use it in if_changed and friends.
++
++.PHONY: $(PHONY)
+--- a/scripts/Makefile.modinst
++++ b/scripts/Makefile.modinst
+@@ -1,29 +1,35 @@
+ # ==========================================================================
+ # Installing modules
+ # ==========================================================================
+ 
+-.PHONY: __modinst
++PHONY := __modinst
+ __modinst:
+ 
+ include scripts/Kbuild.include
+ 
+ #
+ 
+ __modules := $(sort $(shell grep -h '\.ko' /dev/null $(wildcard $(MODVERDIR)/*.mod)))
+ modules := $(patsubst %.o,%.ko,$(wildcard $(__modules:.ko=.o)))
+ 
+-.PHONY: $(modules)
++PHONY += $(modules)
+ __modinst: $(modules)
+ 	@:
+ 
+ quiet_cmd_modules_install = INSTALL $@
+       cmd_modules_install = mkdir -p $(2); cp $@ $(2)
+ 
+ # Modules built outside the kernel source tree go into extra by default
+ INSTALL_MOD_DIR ?= extra
+ ext-mod-dir = $(INSTALL_MOD_DIR)$(subst $(KBUILD_EXTMOD),,$(@D))
+ 
+ modinst_dir = $(if $(KBUILD_EXTMOD),$(ext-mod-dir),kernel/$(@D))
+ 
+ $(modules):
+ 	$(call cmd,modules_install,$(MODLIB)/$(modinst_dir))
++
++
++# Declare the contents of the .PHONY variable as phony.  We keep that
++# information in a variable se we can use it in if_changed and friends.
++
++.PHONY: $(PHONY)
+--- a/scripts/Makefile.modpost
++++ b/scripts/Makefile.modpost
+@@ -28,15 +28,15 @@
+ #     - Module alias'es (MODULE_ALIAS)
+ #     - Module license (MODULE_LICENSE)
+ #     - See include/linux/module.h for more details
+ 
+ # Step 4 is solely used to allow module versioning in external modules,
+ # where the CRC of each module is retreived from the Module.symers file.
+ 
+-.PHONY: _modpost
++PHONY := _modpost
+ _modpost: __modpost
+ 
+ include .config
+ include scripts/Kbuild.include
+ include scripts/Makefile.lib
+ 
+ symverfile := $(objtree)/Module.symvers
+@@ -53,15 +53,15 @@ _modpost: $(modules)
+ quiet_cmd_modpost = MODPOST
+       cmd_modpost = scripts/mod/modpost            \
+         $(if $(CONFIG_MODVERSIONS),-m)             \
+ 	$(if $(CONFIG_MODULE_SRCVERSION_ALL),-a,)  \
+ 	$(if $(KBUILD_EXTMOD),-i,-o) $(symverfile) \
+ 	$(filter-out FORCE,$^)
+ 
+-.PHONY: __modpost
++PHONY += __modpost
+ __modpost: $(wildcard vmlinux) $(modules:.ko=.o) FORCE
+ 	$(call cmd,modpost)
+ 
+ # Declare generated files as targets for modpost
+ $(symverfile):         __modpost ;
+ $(modules:.ko=.mod.c): __modpost ;
+ 
+@@ -90,22 +90,28 @@ $(modules): %.ko :%.o %.mod.o FORCE
+ 
+ targets += $(modules)
+ 
+ 
+ # Add FORCE to the prequisites of a target to force it to be always rebuilt.
+ # ---------------------------------------------------------------------------
+ 
+-.PHONY: FORCE
++PHONY += FORCE
+ 
+ FORCE:
+ 
+ # Read all saved command lines and dependencies for the $(targets) we
+ # may be building above, using $(if_changed{,_dep}). As an
+ # optimization, we don't need to read them if the target does not
+ # exist, we will rebuild anyway in that case.
+ 
+ targets := $(wildcard $(sort $(targets)))
+ cmd_files := $(wildcard $(foreach f,$(targets),$(dir $(f)).$(notdir $(f)).cmd))
+ 
+ ifneq ($(cmd_files),)
+   include $(cmd_files)
+ endif
++
++
++# Declare the contents of the .PHONY variable as phony.  We keep that
++# information in a variable se we can use it in if_changed and friends.
++
++.PHONY: $(PHONY)
+--- a/scripts/kconfig/Makefile
++++ b/scripts/kconfig/Makefile
+@@ -1,12 +1,12 @@
+ # ===========================================================================
+ # Kernel configuration targets
+ # These targets are used from top-level makefile
+ 
+-.PHONY: oldconfig xconfig gconfig menuconfig config silentoldconfig update-po-config
++PHONY += oldconfig xconfig gconfig menuconfig config silentoldconfig update-po-config
+ 
+ xconfig: $(obj)/qconf
+ 	$< arch/$(ARCH)/Kconfig
+ 
+ gconfig: $(obj)/gconf
+ 	$< arch/$(ARCH)/Kconfig
+ 
+@@ -38,15 +38,15 @@ update-po-config: $(obj)/kxgettext
+ 	  `find scripts/kconfig/ -type f -name linux_*.pot` \
+ 	  --output scripts/kconfig/linux_raw.pot
+ 	$(Q)msguniq --sort-by-file scripts/kconfig/linux_raw.pot \
+ 	    --output scripts/kconfig/linux.pot
+ 	$(Q)rm -f arch/um/Kconfig_arch
+ 	$(Q)rm -f scripts/kconfig/linux_*.pot scripts/kconfig/config.pot
+ 
+-.PHONY: randconfig allyesconfig allnoconfig allmodconfig defconfig
++PHONY += randconfig allyesconfig allnoconfig allmodconfig defconfig
+ 
+ randconfig: $(obj)/conf
+ 	$< -r arch/$(ARCH)/Kconfig
+ 
+ allyesconfig: $(obj)/conf
+ 	$< -y arch/$(ARCH)/Kconfig
+ 
+--- a/scripts/package/Makefile
++++ b/scripts/package/Makefile
+@@ -28,15 +28,15 @@ RPM := $(shell if [ -x "/usr/bin/rpmbuil
+ 
+ # Remove hyphens since they have special meaning in RPM filenames
+ KERNELPATH := kernel-$(subst -,,$(KERNELRELEASE))
+ MKSPEC     := $(srctree)/scripts/package/mkspec
+ PREV       := set -e; cd ..;
+ 
+ # rpm-pkg
+-.PHONY: rpm-pkg rpm
++PHONY += rpm-pkg rpm
+ 
+ $(objtree)/kernel.spec: $(MKSPEC) $(srctree)/Makefile
+ 	$(CONFIG_SHELL) $(MKSPEC) > $@
+ 
+ rpm-pkg rpm: $(objtree)/kernel.spec
+ 	$(MAKE) clean
+ 	$(PREV) ln -sf $(srctree) $(KERNELPATH)
+@@ -50,43 +50,43 @@ rpm-pkg rpm: $(objtree)/kernel.spec
+ 
+ 	$(RPM) --target $(UTS_MACHINE) -ta ../$(KERNELPATH).tar.gz
+ 	rm ../$(KERNELPATH).tar.gz
+ 
+ clean-files := $(objtree)/kernel.spec
+ 
+ # binrpm-pkg
+-.PHONY: binrpm-pkg
++PHONY += binrpm-pkg
+ $(objtree)/binkernel.spec: $(MKSPEC) $(srctree)/Makefile
+ 	$(CONFIG_SHELL) $(MKSPEC) prebuilt > $@
+-	
++
+ binrpm-pkg: $(objtree)/binkernel.spec
+ 	$(MAKE) KBUILD_SRC=
+ 	set -e; \
+ 	$(CONFIG_SHELL) $(srctree)/scripts/mkversion > $(objtree)/.tmp_version
+ 	set -e; \
+ 	mv -f $(objtree)/.tmp_version $(objtree)/.version
+ 
+ 	$(RPM) --define "_builddir $(srctree)" --target $(UTS_MACHINE) -bb $<
+ 
+ clean-files += $(objtree)/binkernel.spec
+ 
+ # Deb target
+ # ---------------------------------------------------------------------------
+ #
+-.PHONY: deb-pkg
++PHONY += deb-pkg
+ deb-pkg:
+ 	$(MAKE) KBUILD_SRC=
+ 	$(CONFIG_SHELL) $(srctree)/scripts/package/builddeb
+ 
+ clean-dirs += $(objtree)/debian/
+ 
+ 
+ # tarball targets
+ # ---------------------------------------------------------------------------
+-.PHONY: tar%pkg
++PHONY += tar%pkg
+ tar%pkg:
+ 	$(MAKE)
+ 	$(CONFIG_SHELL) $(srctree)/scripts/package/buildtar $@
+ 
+ clean-dirs += $(objtree)/tar-install/
+ 
+ 

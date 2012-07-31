@@ -1,0 +1,1025 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title><? echo get_title($cfg, dict_translate("Network")); ></title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Pragma" content="no-cache">
+<link rel="shortcut icon" href="FULL_VERSION_LINK/favicon.ico" >
+<link href="FULL_VERSION_LINK/style.css" rel="stylesheet" type="text/css">
+<link href="FULL_VERSION_LINK/jquery-ui.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" language="javascript" src="jsl10n.cgi"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/slider-min.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/jsval.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/util.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/network.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.passwd.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.utils.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.tmpl.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.cookie.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/firewall.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/ubnt.core.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/ubnt.cfg.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/ubnt.net.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/network3.js"></script>
+<link type="text/css" rel="StyleSheet" href="FULL_VERSION_LINK/bluecurve.css" />
+<script type="text/x-jquery-tmpl" id="vlanTmpl">
+        <tr>
+                <td align="middle"><input type="checkbox" class="enableVlan" {{if $data.enabled()}}checked{{/if}}/></td>
+                <td>${ubnt.cfg.devname2uidevname($data.getDevname())}</td>
+                <td>${id}</td>
+                <td>${comment} {{if !$data.comment || !$data.comment.length}}&nbsp;{{/if}} </td>
+		<td>
+			<input type="button" class="editVlan" value="<? echo dict_translate("Edit"); >" />
+			<input type="button" class="delVlan" value="<? echo dict_translate("Del"); >" />
+		</td>
+        </tr>
+</script>
+<script type="text/x-jquery-tmpl" id="vlanEditTmpl">
+        <tr>
+                <td align="middle"><input type="checkbox" class="enableVlan" {{if $data.enabled()}}checked{{/if}}/></td>
+                <td>${ubnt.cfg.devname2uidevname($data.getDevname())}</td>
+		<td>${id}</td>
+                <td><input type="text" class="comment" id="edtVlanComment" value="${comment}" /></td>
+		<td>
+			<input type="button" class="saveVlan" value="<? echo dict_translate("Save"); >" />
+			<input type="button" class="delVlan" value="<? echo dict_translate("Del"); >" />
+		</td>
+        </tr>
+</script>
+<script type="text/x-jquery-tmpl" id="ifaceTmpl">
+	<tr>
+		<td align="middle">&nbsp;</td>
+		<td>${ubnt.cfg.devname2uidevname(devname)}</td>
+		<td>${mtu}</td>
+		<td>
+			<input type="button" class="editIface" {{if !$data.enabled()}}disabled="disabled"{{/if}} value="<? echo dict_translate("Edit"); >" />
+		</td>
+	</tr>
+</script>
+<script type="text/x-jquery-tmpl" id="ifaceEditTmpl">
+        <tr>
+		<td align="middle">&nbsp;</td>
+		<td>${ubnt.cfg.devname2uidevname(devname)}</td>
+		<td><input type="text" id="ifaceMtu" value="${mtu}" class="std_width" size="5" maxlength="5" /></td>
+		<td>
+			<input type="button" class="saveIface" value="<? echo dict_translate("Save"); >" />
+			<input type="button" class="cancelIface" value="<? echo dict_translate("Cancel"); >" />
+		</td>
+        </tr>
+</script>
+<script type="text/x-jquery-tmpl" id="bridgeTmpl">
+        <tr>
+                <td align="middle"><input type="checkbox" class="enableBridge" {{if $data.enabled()}}checked{{/if}}/></td>
+                <td>${ubnt.cfg.devname2uidevname($data.getDevname())}</td>
+                <td><input type="checkbox" class="enableBridgeStp" {{if $data.stp.enabled()}}checked{{/if}}/></td>
+                <td>
+                        <select multiple size="5" name="bridgePortList" class="bridgePortList">
+                                {{each $data.getPorts()}}
+                                        <option value="${$value}">${ubnt.cfg.devname2uidevname($value)}</option>
+                                {{/each}}
+                        </select>
+                        <br/>
+                        <select name="addBridgePort" class="addBridgePort" style="width: 100px">
+                                <option value="add"><? echo dict_translate("Add"); ></option>
+                        </select>
+                        <input type="button" class="delBridgePort" style="width: auto" value="<? echo dict_translate("Del")>" />
+                </td>
+                <td><input type="text" class="comment" value="${comment}" /></td>
+                <td><input type="button" class="delBridge" value="<? echo dict_translate("Del"); >" /></td>
+        </tr>
+</script>
+<script type="text/x-jquery-tmpl" id="aliasTmpl">
+        <tr>
+		<td align="middle"><input type="checkbox" class="enableAlias" {{if $data.aliasObjRef.enabled()}}checked{{/if}}/></td>
+		<td>${ubnt.cfg.devname2uidevname(devname)}</td>
+		<td>${aliasObjRef.ip}</td>
+		<td>${aliasObjRef.netmask}</td>
+		<td>${aliasObjRef.comment}&nbsp;</td>
+		<td>
+			<input type="button" class="editAlias" value="<? echo dict_translate("Edit"); >" />
+			<input type="button" class="delAlias" value="<? echo dict_translate("Del"); >" />
+		</td>
+        </tr>
+</script>
+<script type="text/x-jquery-tmpl" id="aliasEditTmpl">
+        <tr>
+		<td align="middle"><input type="checkbox" class="enableAlias" {{if $data.aliasObjRef.enabled()}}checked{{/if}}/></td>
+		<td>${ubnt.cfg.devname2uidevname(devname)}</td>
+		<td><input type="text" class="ip" id="edtAliasIp" value="${aliasObjRef.ip}" /></td>
+		<td><input type="text" class="ip" id="edtAliasNetmask" value="${aliasObjRef.netmask}" /></td>
+		<td><input type="text" class="comment" id="edtAliasComment" value="${aliasObjRef.comment}" /></td>
+		<td>
+			<input type="button" class="saveAlias" value="<? echo dict_translate("Save"); >" />
+			<input type="button" class="delAlias" value="<? echo dict_translate("Del"); >" />
+		</td>
+        </tr>
+</script>
+<script type="text/x-jquery-tmpl" id="routeTmpl">
+	<tr>
+		<td align="middle"><input type="checkbox" class="enableRoute" {{if $data.enabled()}}checked{{/if}}/></td>
+		<td>${ip}</td>
+		<td>${netmask}</td>
+		<td>${gateway}</td>
+		<td>${comment} {{if !$data.comment || !$data.comment.length}}&nbsp;{{/if}} </td>
+		<td>
+			<input type="button" class="editRoute" value="<? echo dict_translate("Edit"); >" />
+			<input type="button" class="delRoute" value="<? echo dict_translate("Del"); >" />
+		</td>
+	</tr>
+</script>
+<script type="text/x-jquery-tmpl" id="routeTmplEdit">
+	<tr>
+		<td align="middle"><input type="checkbox" class="enableRoute" {{if $data.enabled()}}checked{{/if}}/></td>
+		<td><input type="text" id="edtIp" value="${ip}" class="ip" /></td>
+		<td><input type="text" id="edtNetmask" value="${netmask}" class="ip" /></td>
+		<td><input type="text" id="edtGateway" value="${gateway}" class="ip" /></td>
+		<td><input type="text" id="edtComment" value="${comment}" class="comment" /></td>
+		<td>
+			<input type="button" class="saveRoute" value="<? echo dict_translate("Save"); >" />
+			<input type="button" class="delRoute" value="<? echo dict_translate("Del"); >" />
+		</td>
+	</tr>
+</script>
+<script type="text/x-jquery-tmpl" id="fwRuleTmpl">
+	<tr class="fwbase">
+		<td align="middle"><input type="checkbox" class="enableFwRule" {{if $data.enabled()}}checked{{/if}}/></td>
+		<td>${_target}</td>
+		<td>${ubnt.cfg.devname2uidevname(_devname)} {{if !$data._devname.length}}&nbsp;{{/if}} </td>
+		<td>${_ipProtoStr}</td>
+		<td><input type="checkbox" {{if $data._src_inv}}checked{{/if}} disabled /></td>
+		<td>${_src} {{if !$data._src.length}}&nbsp;{{/if}} </td>
+		<td><input type="checkbox" {{if $data._sport_inv}}checked{{/if}} disabled class="fw_port" /></td>
+		<td>${_sport} {{if !$data._sport.length}}&nbsp;{{/if}} </td>
+		<td><input type="checkbox" {{if $data._dst_inv}}checked{{/if}} disabled /></td>
+		<td>${_dst} {{if !$data._dst.length}}&nbsp;{{/if}} </td>
+		<td><input type="checkbox" {{if $data._dport_inv}}checked{{/if}} disabled  class="fw_port" /></td>
+		<td>${_dport} {{if !$data._dport.length}}&nbsp;{{/if}} </td>
+		<td>
+			<input type="button" class="editFwRule" value="<? echo dict_translate("Edit"); >" />
+			<input type="button" class="delFwRule" value="<? echo dict_translate("Del"); >" />
+		</td>
+	</tr>
+	{{if !$data.comment || $data.comment.length > 0}}
+	<tr>
+		<td>&nbsp;</td>
+		<td colspan="12">${comment}</td>
+	</tr>
+	{{/if}}
+</script>
+<script type="text/x-jquery-tmpl" id="fwEditRuleTmpl">
+	<tr class="fwbase">
+		<td align="middle"><input type="checkbox" class="enableFwRule" {{if $data.enabled()}}checked{{/if}}/></td>
+		<td>
+			<select id="fweTarget" class="std_width">
+				<option value="DROP">DROP</option>
+				<option value="ACCEPT">ACCEPT</option>
+			</select>
+		</td>
+		<td><select id="fweIfc" class="std_width"></select></td>
+		<td>
+			<select id="fweProto" class="std_width">
+				<option value="0">IP</option>
+				<option value="1">ICMP</option>
+				<option value="6">TCP</option>
+				<option value="17">UDP</option>
+      				<option value="p2p">P2P</option>
+			</select>
+		</td>
+		<td><input type="checkbox" id="fweNotSrcIp" {{if $data._src_inv}}checked{{/if}} /></td>
+		<td><input type="text" id="fweSrcIp" style="width: 100px;" value="${_src}" /></td>
+		<td><input type="checkbox" id="fweNotSrcPort" {{if $data._sport_inv}}checked{{/if}} class="fwe_port" /></td>
+		<td><input type="text" id="fweSrcPort" class="fwe_port" style="width: 50px;" value="${_sport}" /></td>
+		<td><input type="checkbox" id="fweNotDstIp" {{if $data._dst_inv}}checked{{/if}} /></td>
+		<td><input type="text" id="fweDstIp" style="width: 100px;" value="${_dst}" /></td>
+		<td><input type="checkbox" id="fweNotDstPort" {{if $data._dport_inv}}checked{{/if}} class="fwe_port" /></td>
+		<td><input type="text" id="fweDstPort" class="fwe_port" style="width: 50px;" value="${_dport}" /></td>
+		<td>
+			<input type="button" class="saveFwRule" value="<? echo dict_translate("Save"); >" />
+			<input type="button" class="delFwRule" value="<? echo dict_translate("Del"); >" />
+		</td>
+</tr>
+<tr>
+	<td>&nbsp;</td>
+	<td colspan="3"><input type="text" id="fweComment" style="width: 100%;" value="${comment}" /></td>
+	<td colspan="9">&nbsp;</td>
+</tr>
+</script>
+<script type="text/x-jquery-tmpl" id="lanTmpl">
+	<div class="lanFields">
+		<div class="ui-state-error ui-corner-all initial_hide errors">
+		</div>
+		<div class="lanIfcSection row">
+			<label for="${$item.genId('lanIfc')}"><? echo dict_translate("LAN Interface:"); ></label>
+			<div class="lanIfcName">${ubnt.cfg.devname2uidevname($data.getDevname())}</div>
+			<input type="button" class="delLan" value="<? echo dict_translate("Del"); >" />
+		</div>
+		<div class="row">
+			<label for="${$item.genId('lanIpAddr')}"><? echo dict_translate("IP Address:"); ></label>
+			<input type="text" id="${$item.genId('lanIpAddr')}" class="lanIpAddr" value="${netconfObj.ip}" />
+		</div>
+		<div class="row">
+			<label for="${$item.genId('lanIpNetmask')}"><? echo dict_translate("Netmask:"); ></label>
+			<input type="text" id="${$item.genId('lanIpNetmask')}"  class="lanIpNetmask" value="${netconfObj.netmask}" />
+		</div>
+		<div class="row simple-only">
+			<label for="${$item.genId('lanMtu')}"><? echo dict_translate("MTU:"); ></label>
+			<input type="text" id="${$item.genId('lanMtu')}"  class="lanMtu std_width" maxlength="5" size="5" value="${netconfObj.mtu}" />
+		</div>
+
+		<div class="row">
+			<label for="${$item.genId('lanDhcp')}"><? echo dict_translate("DHCP Server:"); ></label>
+			<input type="radio" class="lanDhcp" id="${$item.genId('lanDhcpDisabled')}" name="${$item.genId('lanDhcp')}" value="Disabled" />
+			<label class="labelRadio" for="${$item.genId('lanDhcpDisabled')}"><? echo dict_translate("Disabled"); ></label>
+			<input type="radio" class="lanDhcp" id="${$item.genId('lanDhcpEnabled')}" name="${$item.genId('lanDhcp')}" value="Enabled" />
+			<label class="labelRadio" for="${$item.genId('lanDhcpEnabled')}"><? echo dict_translate("Enabled"); ></label>
+			<input type="radio" class="lanDhcp" id="${$item.genId('lanDhcpRelay')}" name="${$item.genId('lanDhcp')}" value="Relay" />
+			<label class="labelRadio" for="${$item.genId('lanDhcpRelay')}"><? echo dict_translate("Relay"); ></label>
+		</div>
+
+		<div class="lanDhcpEnabled initial_hide">
+			<div class="row">
+				<label for="${$item.genId('lanDhcpStart')}"><? echo dict_translate("Range Start:"); ></label>
+				<input type="text" class="lanDhcpStart" id="${$item.genId('lanDhcpStart')}" value="" />
+			</div>
+			<div class="row">
+				<label for="${$item.genId('lanDhcpEnd')}"><? echo dict_translate("Range End:"); ></label>
+				<input type="text" class="lanDhcpEnd" id="${$item.genId('lanDhcpEnd')}" value="" />
+			</div>
+			<div class="row">
+				<label for="${$item.genId('lanDhcpNetmask')}"><? echo dict_translate("Netmask:"); ></label>
+				<input type="text" class="lanDhcpNetmask" id="${$item.genId('lanDhcpNetmask')}" value="" />
+			</div>
+			<div class="row">
+				<label for="${$item.genId('lanDhcpLeaseTime')}"><? echo dict_translate("Lease Time:"); ></label>
+				<input type="text" class="lanDhcpLeaseTime" id="${$item.genId('lanDhcpLeaseTime')}" value="" />
+			</div>
+			<div class="row">
+				<label for="${$item.genId('lanDhcpDnsProxy')}"><? echo dict_translate("DNS Proxy:"); ></label>
+				<input type="checkbox" class="lanDhcpDnsProxy" id="${$item.genId('lanDhcpDnsProxy')}" /> <label class="f" for="${$item.genId('lanDhcpDnsProxy')}"><? echo dict_translate("Enable"); ></label>
+			</div>
+			<div class="lanDhcpDnsSection initial_hide">
+				<div class="row">
+					<label for="${$item.genId('lanDhcpDns1')}"><? echo dict_translate("Primary DNS"); ></label>
+					<input type="text" class="lanDhcpDns1" id="${$item.genId('lanDhcpDns1')}" value="" />
+				</div>
+				<div class="row">
+					<label for="${$item.genId('lanDhcpDns2')}"><? echo dict_translate("Secondary DNS:"); ></label>
+					<input type="text" class="lanDhcpDns2" id="${$item.genId('lanDhcpDns2')}" value="" />
+				</div>
+			</div>
+		</div>
+		<div class="lanDhcpRelay initial_hide">
+			<div class="row">
+				<label for="${$item.genId('lanDhcpSrvIp')}"><? echo dict_translate("DHCP Server IP:"); ></label>
+				<input type="text" class="lanDhcpSrvIp" id="${$item.genId('lanDhcpSrvIp')}" value="" />
+			</div>
+			<div class="row">
+				<label for="${$item.genId('lanDhcpAgent')}"><? echo dict_translate("Agent-ID:"); ></label>
+				<input type="text" class="lanDhcpAgent" id="${$item.genId('lanDhcpAgent')}" value="" />
+			</div>
+		</div>
+		<div class="row">
+			<label for="${$item.genId('lanUPnP')}"><? echo dict_translate("UPnP:"); ></label>
+			<input type="checkbox" class="lanUPnP" id="${$item.genId('lanUPnP')}" {{if $data.upnpdEnabled()}}checked{{/if}} /> <label class="f" for="${$item.genId('lanUPnP')}"><? echo dict_translate("Enable"); ></label>
+		</div>
+	</div>
+</script>
+<script type="text/x-jquery-tmpl" id="portFwdTmpl">
+	<tr>
+		<td align="middle"><input type="checkbox" class="enablePortFwd" {{if $data.enabled()}}checked{{/if}}/></td>
+		<td>${host}</td>
+		<td>${port}</td>
+		<td>${proto}</td>
+		<td>${src}</td>
+		<td>${dst}</td>
+		<td>${dport}</td>
+		<td class="comment fixed-len" title="${comment}">
+			${comment} {{if !$data.comment || !$data.comment.length}}&nbsp;{{/if}}
+		</td>
+		<td>
+			<input type="button" class="editPortFwd" value="<? echo dict_translate("Edit"); >" />
+			<input type="button" class="delPortFwd" value="<? echo dict_translate("Del"); >" />
+		</td>
+	</tr>
+</script>
+<script type="text/x-jquery-tmpl" id="portFwdTmplEdit">
+	<tr>
+		<td align="middle"><input type="checkbox" class="enablePortFwd" {{if $data.enabled()}}checked{{/if}}/></td>
+		<td><input type="text" id="edtHost" style="width: 100px" value="${host}" /></td>
+		<td><input type="text" id="edtPort" style="width: 50px" value="${port}" /></td>
+		<td>
+			<select id="edtProto" name="edtProto" style="width: 50px">
+				<option value="TCP" {{if $data.proto == "TCP"}}selected{{/if}}>TCP</option>
+				<option value="UDP" {{if $data.proto == "UDP"}}selected{{/if}}>UDP</option>
+			</select>
+		</td>
+		<td><input type="text" id="edtSrc" style="width: 100px" value="${src}" /></td>
+		<td><input type="text" id="edtDst" style="width: 100px" value="${dst}" /></td>
+		<td><input type="text" id="edtDport" style="width: 50px" value="${dport}" /></td>
+		<td><input type="text" id="edtComment" value="${comment}" /></td>
+		<td>
+			<input type="button" class="savePortFwd" value="<? echo dict_translate("Save"); >" />
+			<input type="button" class="delPortFwd" value="<? echo dict_translate("Del"); >" />
+		</td>
+	</tr>
+</script>
+<script type="text/x-jquery-tmpl" id="tshapingTmpl">
+        <tr>
+		<td align="middle"><input type="checkbox" class="enableTShaping" {{if $data.enabled()}}checked{{/if}}/></td>
+		<td>${ubnt.cfg.devname2uidevname(devname)}</td>
+		<td><input type="checkbox" {{if $data.input.enabled()}}checked{{/if}} disabled /></td>
+		<td>{{if $data.input.rate >0}}${$data.input.rate}{{else}}&nbsp;{{/if}}</td>
+		<td>${$data.input.burst}</td>
+		<td><input type="checkbox" {{if $data.output.enabled()}}checked{{/if}} disabled /></td>
+		<td>{{if $data.output.rate >0}}${$data.output.rate}{{else}}&nbsp;{{/if}}</td>
+		<td>${$data.output.burst}</td>
+		<td>
+			<input type="button" class="editTShaping" value="<? echo dict_translate("Edit"); >" />
+			<input type="button" class="delTShaping" value="<? echo dict_translate("Del"); >" />
+		</td>
+        </tr>
+</script>
+<script type="text/x-jquery-tmpl" id="tshapingEditTmpl">
+        <tr>
+		<td align="middle"><input type="checkbox" class="enableTShaping" {{if $data.enabled()}}checked{{/if}}/></td>
+		<td>${ubnt.cfg.devname2uidevname(devname)}</td>
+		<td><input type="checkbox" id="edtTSInEnable" {{if $data.input.enabled()}}checked{{/if}} /></td>
+		<td><input type="text" id="edtTSInRate" maxlength="8" size="7" value="${$data.input.rate}" {{if !$data.input.enabled()}}disabled{{/if}} /></td>
+		<td><input type="text" id="edtTSInBurst" maxlength="8" size="7" value="${$data.input.burst}" {{if !$data.input.enabled()}}disabled{{/if}} /></td>
+		<td><input type="checkbox" id="edtTSOutEnable" {{if $data.output.enabled()}}checked{{/if}} /></td>
+		<td><input type="text" id="edtTSOutRate" maxlength="8" size="7" value="${$data.output.rate}" {{if !$data.output.enabled()}}disabled{{/if}} /></td>
+		<td><input type="text" id="edtTSOutBurst" maxlength="8" size="7" value="${$data.output.burst}" {{if !$data.output.enabled()}}disabled{{/if}} /></td>
+		<td>
+			<input type="button" class="saveTShaping" value="<? echo dict_translate("Save"); >" />
+			<input type="button" class="delTShaping" value="<? echo dict_translate("Del"); >" />
+		</td>
+        </tr>
+</script>
+</head>
+<? flush(); >
+<body>
+<table class="maintable" cellpadding="0" align="center" cellspacing="0"><?
+$top_tab = "net"; include("lib/head.tmpl");
+>
+<script type="text/javascript" language="javascript">
+//<!--
+<? gen_update_check($cfg); >
+
+var g_apmode = <? if ($wmode == "master") { echo "true"; } else { echo "false"; } >;
+//-->
+</script>
+  <tr>
+    <td colspan="2" class="centr">
+    <?if (cfg_is_modified($cfg_file)) { include("lib/modified.tmpl"); } 
+    if (fileinode($emerg_file) != -1) { include("lib/warn-emerg.tmpl"); }
+    include("lib/error.tmpl");>
+    <br>
+    <form enctype="multipart/form-data" id="network" name="network" action="network.cgi" method="POST">
+	
+        <h2 id="headerNetmode" class="trigger"><a href="#"><? echo dict_translate("Network Role"); ></a></h2>
+        <div class="toggle_section">
+            <div class="block">
+                <div class="row">
+                    <label for="netmode"><? echo dict_translate("Network Mode:"); ></label>
+                    <select id="netmode" name="netmode">
+			<? if ($board_netmodes & $netmode_bridge) { >
+                        <option value="bridge"><? echo dict_translate("Bridge"); ></option>
+			<? } >
+			<? if ($board_netmodes & $netmode_router) { >
+                        <option value="router"><? echo dict_translate("Router"); ></option>
+			<? } >
+			<? if ($board_netmodes & $netmode_soho) { >
+			<option value="soho"><? echo dict_translate("SOHO Router"); ></option>
+			<? } >
+			<? if ($netmode == "3g" || $feature_3g == 1 || ($board_netmodes & $netmode_3g && $threeg_modem == 1)) { >
+			<option value="3g"><? echo dict_translate("3G Router"); ></option>
+			<? } >
+                    </select>
+                </div>
+                <div class="row">
+                    <label for="disableNet"><? echo dict_translate("Disable Network:"); ></label>
+                    <select id="disableNet" name="disableNet">
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <h2 id="headerCgfmode" class="trigger"><a href="#"><? echo dict_translate("Configuration Mode"); ></a></h2>
+        <div class="toggle_section">
+            <div class="block">
+                <div class="row">
+                    <label for="cfgmode"><? echo dict_translate("Configuration Mode:"); ></label>
+                    <select id="cfgmode" name="cfgmode">
+                        <option value="simpleMode"><? echo dict_translate("Simple"); ></option>
+                        <option value="advancedMode"><? echo dict_translate("Advanced"); ></option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+	<h2 id="headerWan" class="trigger initial_hide"><a href="#"><? echo dict_translate("WAN Network Settings"); ></a></h2>
+	<div class="toggle_section initial_hide">
+		<div class="block" id="wanSettings">
+			<div id="wanErrDiv" class="ui-state-error ui-corner-all initial_hide errors">
+			</div>
+
+			<div id="wanIfcSection" class="row">
+				<label for="wanIfc"><? echo dict_translate("WAN Interface:"); ></label>
+				<select id="wanIfc" name="wanIfc">
+				</select>
+			</div>
+
+			<div class="row">
+				<label for="wanIpMode"><? echo dict_translate("WAN IP Address:"); ></label>
+				<input type="radio" id="wanIpModeDhcpc" name="wanIpMode" value="Dhcpc" />
+				<label class="labelRadio" for="wanIpModeDhcpc"><? echo dict_translate("DHCP"); ></label>
+				<input type="radio" id="wanIpModeStatic" name="wanIpMode" value="Static" />
+				<label class="labelRadio" for="wanIpModeStatic"><? echo dict_translate("Static"); ></label>
+				<input type="radio" id="wanIpModePppoe" name="wanIpMode" value="Pppoe" />
+				<label class="labelRadio" for="wanIpModePppoe"><? echo dict_translate("PPPoE"); ></label>
+			</div>
+
+			<div id="wanDhcpc" class="initial_hide">
+				<div class="row">
+					<label for="wanDhcpcFallbackIp"><? echo dict_translate("DHCP Fallback IP:"); ></label>
+					<input type="text" name="wanDhcpcFallbackIp" id="wanDhcpcFallbackIp" value="" />
+				</div>
+				<div class="row">
+					<label for="wanDhcpcFallbackNetmask"><? echo dict_translate("DHCP Fallback NetMask:"); ></label>
+					<input type="text" name="wanDhcpcFallbackNetmask" id="wanDhcpcFallbackNetmask" value="" />
+				</div>
+			</div>
+			<div id="wanStatic" class="initial_hide">
+				<div class="row">
+					<label for="wanIpAddr"><? echo dict_translate("IP Address:"); ></label>
+					<input type="text" name="wanIpAddr" id="wanIpAddr" value="" />
+				</div>
+				<div class="row">
+					<label for="wanIpNetmask"><? echo dict_translate("Netmask:"); ></label>
+					<input type="text" name="wanIpNetmask" id="wanIpNetmask" value="" />
+				</div>
+				<div class="row">
+					<label for="wanGateway"><? echo dict_translate("Gateway IP:"); ></label>
+					<input type="text" name="wanGateway" id="wanGateway" value="" />
+				</div>
+				<div class="row">
+					<label for="wanDns1"><? echo dict_translate("Primary DNS IP:"); ></label>
+					<input type="text" name="wanDns1" id="wanDns1" value="" />
+				</div>
+				<div class="row">
+					<label for="wanDns2"><? echo dict_translate("Secondary DNS IP:"); ></label>
+					<input type="text" name="wanDns2" id="wanDns2" value="" />
+				</div>
+			</div>
+			<div id="wanPppoe" class="initial_hide">
+				<div class="row">
+					<label for="wanPppoeUser"><? echo dict_translate("Username:"); ></label>
+					<input type="text" name="wanPppoeUser" id="wanPppoeUser" value="" />
+				</div>
+				<div class="row">
+					<label for="wanPppoePassw"><? echo dict_translate("Password:"); ></label>
+					<input type="password" autocomplete="off" class="pwd" name="wanPppoePassw" id="wanPppoePassw" value="" />
+				</div>
+				<div class="row">
+					<label for="wanPppoeService"><? echo dict_translate("Service Name:"); ></label>
+					<input type="text" name="wanPppoeService" id="wanPppoeService" value="" />
+				</div>
+				<div class="row">
+					<label for="wanPppoeFallbackIp"><? echo dict_translate("Fallback IP:"); ></label>
+					<input type="text" name="wanPppoeFallbackIp" id="wanPppoeFallbackIp" value="" />
+				</div>
+				<div class="row">
+					<label for="wanPppoeFallbackNetmask"><? echo dict_translate("Fallback NetMask:"); ></label>
+					<input type="text" name="wanPppoeFallbackNetmask" id="wanPppoeFallbackNetmask" value="" />
+				</div>
+				<div class="row">
+					<label for="wanPppoeMtu"><? echo dict_translate("MTU/MRU:"); ></label>
+					<input type="text" class="std_width" name="wanPppoeMtu" id="wanPppoeMtu" value="" size="5" maxlength="4">/
+					<input type="text" class="std_width" name="wanPppoeMru" id="wanPppoeMru" value="" size="5" maxlength="4">
+				</div>
+				<div class="row">
+					<label for="wanPppoeEncryption"><? echo dict_translate("Encryption:"); ></label>
+					<input type="checkbox" name="wanPppoeEncryption" id="wanPppoeEncryption" /> <label class="f" for="wanPppoeEncryption"><? echo dict_translate("Enable"); ></label>
+				</div>
+			</div>
+			<div class="row" id="wanMtuSection">
+				<label for="wanMtu"><? echo dict_translate("MTU:"); ></label>
+				<input type="text" name="wanMtu" id="wanMtu" class="std_width" size="5" maxlength="5" value="" />
+			</div>
+			<div class="row">
+				<label for="wanNat"><? echo dict_translate("NAT:"); ></label>
+				<input type="checkbox" name="wanNat" id="wanNat" /> <label class="f" for="wanNat"><? echo dict_translate("Enable"); ></label>
+			</div>
+			<div id="wanNatProtocols" class="row initial_hide">
+				<label for="wanNat"><? echo dict_translate("NAT Protocol:"); ></label>
+				<input type="checkbox" id="wanNatSip" />
+				<label class="labelRadio" for="wanNatSip"><? echo dict_translate("SIP"); ></label>
+				<input type="checkbox" id="wanNatPptp" />
+				<label class="labelRadio" for="wanNatPptp"><? echo dict_translate("PPTP"); ></label>
+				<input type="checkbox" id="wanNatFtp" />
+				<label class="labelRadio" for="wanNatFtp"><? echo dict_translate("FTP"); ></label>
+				<input type="checkbox" id="wanNatRtsp" />
+				<label class="labelRadio" for="wanNatPptp"><? echo dict_translate("RTSP"); ></label>
+			</div>
+			<div class="row">
+				<label for="wanBlockMgmt"><? echo dict_translate("Block management access:"); ></label>
+				<input type="checkbox" name="wanBlockMgmt" id="wanBlockMgmt" /> <label class="f" for="wanBlockMgmt"><? echo dict_translate("Enable"); ></label>
+			</div>
+			<div class="row">
+				<label for="wanDmz"><? echo dict_translate("DMZ:"); ></label>
+				<input type="checkbox" name="wanDmz" id="wanDmz" /> <label class="f" for="wanDmz"><? echo dict_translate("Enable"); ></label>
+			</div>
+			<div id="wanDmzSection" class="initial_hide">
+				<div class="row">
+					<label for="wanDmzMgmt"><? echo dict_translate("DMZ Management Ports:"); ></label>
+					<input type="checkbox" name="wanDmzMgmt" id="wanDmzMgmt" /> <label class="f" for="wanDmzMgmt"><? echo dict_translate("Enable"); ></label>
+				</div>
+				<div class="row">
+					<label for="wanDmzIp"><? echo dict_translate("DMZ IP:"); ></label>
+					<input type="text" name="wanDmzIp" id="wanDmzIp" value="" />
+				</div>
+			</div>
+			<div class="row">
+				<label for="wanAutoIp"><? echo dict_translate("Auto IP Aliasing:"); ></label>
+				<input type="checkbox" name="wanAutoIp" id="wanAutoIp" /> <label class="f" for="wanAutoIp"><? echo dict_translate("Enable"); ></label>
+			</div>
+			<div class="row">
+				<label for="wanChangeMac"><? echo dict_translate("MAC Address Cloning:"); ></label>
+				<input type="checkbox" name="wanChangeMac" id="wanChangeMac" /> <label class="f" for="wanChangeMac"><? echo dict_translate("Enable"); ></label>
+			</div>
+			<div id="wanChangeMacSection" class="row initial_hide">
+				<label for="wanMac"><? echo dict_translate("MAC Address:"); ></label>
+				<input type="text" name="wanMac" id="wanMac" value="" />
+			</div>
+		</div>
+	</div>
+
+	<h2 id="headerThreeG" class="trigger initial_hide"><a href="#"><? echo dict_translate("3G Settings"); ></a></h2>
+	<div class="toggle_section initial_hide">
+		<div class="block" id="threegSettings">
+			<div id="threegErrDiv" class="ui-state-error ui-corner-all initial_hide errors">
+			</div>
+
+			<div id="threegPinSection" class="row initial_hide">
+				<label for="threegPin"><? echo dict_translate("SIM Card PIN Code:"); ></label>
+				<input type="password" name="threegPin" id="threegPin" class="pwd" value="" maxLength="8" />
+			</div>
+			<div class="row">
+				<label for="threegUser"><? echo dict_translate("GSM Username:"); ></label>
+				<input type="text" name="threegUser" id="threegUser" value="" maxLength="64" />
+			</div>
+			<div class="row">
+				<label for="threegPassword"><? echo dict_translate("GSM Password:"); ></label>
+				<input type="text" name="threegPassword" id="threegPassword" value="" maxLength="64" />
+			</div>
+			<div class="row">
+				<label for="threegApn"><? echo dict_translate("GSM APN:"); ></label>
+				<input type="text" name="threegApn" id="threegApn" value="" maxLength="64" />
+			</div>
+		</div>
+	</div>
+
+	<h2 id="headerLan" class="trigger initial_hide"><a href="#"><? echo dict_translate("LAN Network Settings"); ></a></h2>
+	<div class="toggle_section initial_hide">
+		<div class="block">
+			<div id="lanSettings">
+			</div>
+			<div id="addLanSection" class="row">
+				<label for="lanIfc"><? echo dict_translate("Add LAN:"); ></label>
+				<select name="lanIfc" id="lanIfc"></select>
+				<input type="button" id="lanAdd" value="<? echo dict_translate("Add")>" />
+			</div>
+		</div>
+	</div>
+
+        <h2 id="headerMgmt" class="trigger"><a href="#"><? echo dict_translate("Management Network Settings"); ></a></h2>
+        <div class="toggle_section">
+            <div class="block" id="mgmtSettings">
+		<div id="mgmtErrDiv" class="ui-state-error ui-corner-all initial_hide errors">
+		</div>
+                <div id="mgmtIfcSection" class="row">
+                    <label for="mgmtIfc"><? echo dict_translate("Management Interface:"); ></label>
+                    <select id="mgmtIfc" name="mgmtIfc">
+                    </select>
+                </div>
+
+                <div id="mgmtDetails">
+                    <div class="row">
+                        <label for="mgmtIpMode"><? echo dict_translate("Management IP Address:"); ></label>
+                        <input type="radio" id="mgmtIpModeDhcpc" name="mgmtIpMode" value="Dhcpc" />
+                        <label class="labelRadio" for="mgmtIpModeDhcpc"><? echo dict_translate("DHCP"); ></label>
+                        <input type="radio" id="mgmtIpModeStatic" name="mgmtIpMode" value="Static" />
+                        <label class="labelRadio" for="mgmtIpModeStatic"><? echo dict_translate("Static"); ></label>
+                    </div>
+
+                    <div id="mgmtDhcpc" class="initial_hide">
+                        <div class="row">
+                            <label for="mgmtDhcpcFallbackIp"><? echo dict_translate("DHCP Fallback IP:"); ></label>
+                            <input type="text" name="mgmtDhcpcFallbackIp" id="mgmtDhcpcFallbackIp" value="" />
+                        </div>
+                        <div class="row">
+                            <label for="mgmtDhcpcFallbackNetmask"><? echo dict_translate("DHCP Fallback NetMask:"); ></label>
+                            <input type="text" name="mgmtDhcpcFallbackNetmask" id="mgmtDhcpcFallbackNetmask" value="" />
+                        </div>
+                    </div>
+                    <div id="mgmtStatic" class="initial_hide">
+                        <div class="row">
+                            <label for="mgmtIpAddr"><? echo dict_translate("IP Address:"); ></label>
+                            <input type="text" name="mgmtIpAddr" id="mgmtIpAddr" value="" />
+                        </div>
+                        <div class="row">
+                            <label for="mgmtIpNetmask"><? echo dict_translate("Netmask:"); ></label>
+                            <input type="text" name="mgmtIpNetmask" id="mgmtIpNetmask" value="" />
+                        </div>
+			<div id="mgmtGatewayDns">
+				<div class="row">
+				    <label for="mgmtGateway"><? echo dict_translate("Gateway IP:"); ></label>
+				    <input type="text" name="mgmtGateway" id="mgmtGateway" value="" />
+				</div>
+				<div class="row">
+				    <label for="mgmtDns1"><? echo dict_translate("Primary DNS IP:"); ></label>
+				    <input type="text" name="mgmtDns1" id="mgmtDns1" value="" />
+				</div>
+				<div class="row">
+				    <label for="mgmtDns2"><? echo dict_translate("Secondary DNS IP:"); ></label>
+				    <input type="text" name="mgmtDns2" id="mgmtDns2" value="" />
+				</div>
+			</div>
+                    </div>
+                    <div class="row simple-only">
+                        <label for="mgmtMtu"><? echo dict_translate("MTU:"); ></label>
+                        <input type="text" name="mgmtMtu" id="mgmtMtu" class="std_width" size="5" maxlength="5" value="" />
+                    </div>
+                    <div id="mgmtVlanSection" class="initial_hide">
+                        <div class="row">
+                            <label for="mgmtVlanEnable"><? echo dict_translate("Management VLAN:"); ></label>
+                            <input type="checkbox" name="mgmtVlanEnable" id="mgmtVlanEnable" /> <label class="f" for="mgmtVlanEnable"><? echo dict_translate("Enable"); ></label>
+                        </div>
+                        <div id="mgmtVlanIdSection" class="row initial_hide">
+                            <label for="mgmtVlanId"><? echo dict_translate("VLAN ID:"); ></label>
+                            <input type="text" name="mgmtVlanId" id="mgmtVlanId" size="5" maxlength="4" style="width: 40px" value="" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <label for="mgmtAutoIp"><? echo dict_translate("Auto IP Aliasing:"); ></label>
+                        <input type="checkbox" name="mgmtAutoIp" id="mgmtAutoIp" /> <label class="f" for="mgmtAutoIp"><? echo dict_translate("Enable"); ></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+	<h2 id="headerIfaces" class="trigger"><a href="#"><? echo dict_translate("Interfaces"); ></a></h2>
+	<div class="toggle_section">
+		<div class="block">
+			<div id="ifaceErrDiv" class="ui-state-error ui-corner-all initial_hide errors">
+			</div>
+			<table id="iface_table" class="settings" style="width: auto;">
+				<thead>
+					<tr>
+						<th class="enabled"></th>
+						<th class="interface"><? echo dict_translate("Interface"); ></th>
+						<th class="mtu"><? echo dict_translate("MTU"); ></th>
+						<th class="ext-action"><? echo dict_translate("Action"); ></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</div>
+
+	<h2 id="headerAliases" class="trigger"><a href="#"><? echo dict_translate("IP Aliases"); ></a></h2>
+	<div class="toggle_section">
+		<div class="block">
+			<div id="aliasErrDiv" class="ui-state-error ui-corner-all initial_hide errors">
+			</div>
+			<table id="alias_table" class="settings">
+				<thead>
+					<tr>
+						<th class="enabled"><? echo dict_translate("Enabled"); ></th>
+						<th class="interface"><? echo dict_translate("Interface"); ></th>
+						<th class="ip"><? echo dict_translate("IP Address"); ></th>
+						<th class="ip"><? echo dict_translate("Netmask"); ></th>
+						<th class="comment"><? echo dict_translate("Comment"); ></th>
+						<th class="action"><? echo dict_translate("Action"); ></th>
+					</tr>
+				</thead>
+				<tfoot>
+					<tr>
+						<td>&nbsp;</td>
+						<td><select name="aliasIfc" class="interface" id="aliasIfc"></select></td>
+						<td><input type="text" class="ip" id="aliasIp" /></td>
+						<td><input type="text" class="ip" id="aliasNetmask" /></td>
+						<td><input type="text" class="comment" id="aliasComment" /></td>
+						<td><input type="button" id="aliasAdd" value="<? echo dict_translate("Add")>" /></td>
+					</tr>
+				</tfoot>
+				<tbody></tbody>
+			</table>
+		</div>
+	</div>
+
+        <h2 id="headerVlan" class="trigger"><a href="#"><? echo dict_translate("VLAN Network"); ></a></h2>
+        <div class="toggle_section">
+            <div class="block">
+                <div id="vlanErrDiv" class="ui-state-error ui-corner-all initial_hide errors">
+                </div>
+                <table id="vlan_table" class="settings">
+                    <thead>
+                        <tr>
+                            <th class="enabled"><? echo dict_translate("Enabled"); ></th>
+                            <th class="interface"><? echo dict_translate("Interface"); ></th>
+                            <th class="interface"><? echo dict_translate("VLAN ID");></th>
+                            <th class="comment"><? echo dict_translate("Comment");></th>
+			    <th class="action"><? echo dict_translate("Action"); ></th>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <td></td>
+                            <td><select name="vlanIfc" class="interface" id="vlanIfc"></select></td>
+                            <td><input type="text" id="vlanId" maxlength="4" /></td>
+                            <td><input type="text" id="vlanComment" class="comment" /></td>
+                            <td>
+                                <input type="button" id="vlanAdd" value="<? echo dict_translate("Add")>" />
+                            </td>
+                        </tr>
+                    </tfoot>
+                    <tbody><tbody>
+                </table>
+            </div>
+        </div>
+        <h2 id="headerBridge" class="trigger"><a href="#"><? echo dict_translate("Bridge Network"); ></a></h2>
+        <div class="toggle_section">
+            <div class="block">
+                <div id="bridgeErrDiv" class="ui-state-error ui-corner-all initial_hide errors">
+                </div>
+                <table id="bridge_table" class="settings">
+                    <thead>
+                        <tr>
+                            <th class="enabled"><? echo dict_translate("Enabled"); ></th>
+                            <th class="interface"><? echo dict_translate("Interface"); ></th>
+                            <th class="check"><? echo dict_translate("STP");></th>
+                            <th style="width:150px"><? echo dict_translate("Ports"); ></th>
+                            <th class="comment"><? echo dict_translate("Comment");></th>
+			    <th class="action"><? echo dict_translate("Action"); ></th>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <td colspan="5"></td>
+                            <td>
+                                <input type="button" id="bridgeAdd" value="<? echo dict_translate("Add")>" />
+                            </td>
+                        </tr>
+                    </tfoot>
+                    <tbody><tbody>
+                </table>
+            </div>
+        </div>
+	<h2 id="headerFirewall" class="trigger"><a href="#"><? echo dict_translate("Firewall"); ></a></h2>
+	<div class="toggle_section">
+		<div class="block">
+			<div>
+				<input type="checkbox" id="fwEnable" /> <label class="f" for="fwEnable"><? echo dict_translate("Enable"); ></label>
+			</div>
+			<div id="fwErrDiv" class="ui-state-error ui-corner-all initial_hide errors">
+			</div>
+			<table id="fw_table" class="listhead initial_hide">
+				<thead>
+					<tr>
+						<th><? echo dict_translate("Enabled"); ></th>
+						<th><? echo dict_translate("Target");></th>
+						<th><? echo dict_translate("Interface");></th>
+						<th><? echo dict_translate("IP Type");></th>
+						<th colspan="4"><? echo dict_translate("Source");></th>
+						<th colspan="4"><? echo dict_translate("Destination");></th>
+						<th><? echo dict_translate("Action");></th>
+					</tr>
+					<tr>
+						<th colspan="4"><? echo dict_translate("Comment"); ></th>
+						<th><? echo dict_translate("!");></th>
+						<th><? echo dict_translate("IP/Mask");></th>
+						<th><? echo dict_translate("!");></th>
+						<th><? echo dict_translate("Port");></th>
+						<th><? echo dict_translate("!");></th>
+						<th><? echo dict_translate("IP/Mask");></th>
+						<th><? echo dict_translate("!");></th>
+						<th><? echo dict_translate("Port");></th>
+						<th>&nbsp;</th>
+					</tr>
+				</thead>
+				<tfoot>
+					<tr>
+						<td>&nbsp;</td>
+						<td>
+							<select id="fwTarget" class="std_width">
+								<option value="ACCEPT">ACCEPT</option>
+								<option value="DROP">DROP</option>
+							</select>
+						</td>
+						<td><select id="fwIfc" class="std_width"></select></td>
+						<td>
+							<select id="fwProto" class="std_width">
+								<option value="0">IP</option>
+								<option value="1">ICMP</option>
+								<option value="6">TCP</option>
+								<option value="17">UDP</option>
+								<option value="p2p">P2P</option>
+							</select>
+						</td>
+						<td><input type="checkbox" id="fwNotSrcIp" /></td>
+						<td><input type="text" id="fwSrcIp" style="width: 100px;" /></td>
+						<td><input type="checkbox" id="fwNotSrcPort" class="fw_port" /></td>
+						<td><input type="text" id="fwSrcPort" class="fw_port" style="width: 50px;" /></td>
+						<td><input type="checkbox" id="fwNotDstIp" /></td>
+						<td><input type="text" id="fwDstIp" style="width: 100px;" /></td>
+						<td><input type="checkbox" id="fwNotDstPort" class="fw_port" /></td>
+						<td><input type="text" id="fwDstPort" class="fw_port" style="width: 50px;" /></td>
+						<td><input type="button" id="fwRuleAdd" value="<? echo dict_translate("Add")>" /></td>
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
+						<td colspan="3"><input type="text" id="fwComment" style="width: 100%;" /></td>
+						<td colspan="9">&nbsp;</td>
+					</tr>
+				</tfoot>
+				<tbody></tbody>
+			</table>
+		</div>
+	</div>
+	<h2 id="headerRoutes" class="trigger"><a href="#"><? echo dict_translate("Static Routes"); ></a></h2>
+	<div class="toggle_section">
+		<div class="block">
+			<div id="routeErrDiv" class="ui-state-error ui-corner-all initial_hide errors">
+			</div>
+			<table id="route_table" class="settings">
+				<thead>
+					<tr>
+						<th class="enabled"><? echo dict_translate("Enabled");></th>
+						<th class="ip"><? echo dict_translate("Target Network IP"); ></th>
+						<th class="ip"><? echo dict_translate("Netmask"); ></th>
+						<th class="ip"><? echo dict_translate("Gateway IP");></th>
+						<th class="comment"><? echo dict_translate("Comment");></th>
+						<th class="action"><? echo dict_translate("Action");></th>
+					</tr>
+				</thead>
+				<tfoot>
+					<tr>
+						<td>&nbsp;</td>
+						<td><input type="text" id="rtIp" class="ip" /></td>
+						<td><input type="text" id="rtNetmask" class="ip" /></td>
+						<td><input type="text" id="rtGateway" class="ip" /></td>
+						<td><input type="text" id="rtComment" class="comment" /></td>
+						<td><input type="button" id="routeAdd" value="<? echo dict_translate("Add")>" /></td>
+					</tr>
+				</tfoot>
+				<tbody></tbody>
+			</table>
+		</div>
+	</div>
+	<h2 id="headerPortFwd" class="trigger initial_hide"><a href="#"><? echo dict_translate("Port Forwarding"); ></a></h2>
+	<div class="toggle_section initial_hide">
+		<div class="block">
+			<div id="pfwdErrDiv" class="ui-state-error ui-corner-all initial_hide errors">
+			</div>
+			<table id="pfwd_table" class="settings">
+				<thead>
+					<tr>
+						<th class="enabled"><? echo dict_translate("Enabled");></th>
+						<th class="ip"><? echo dict_translate("Private IP"); ></th>
+						<th class="port"><? echo dict_translate("Private Port"); ></th>
+						<th class="port"><? echo dict_translate("Type"); ></th>
+						<th class="ip"><? echo dict_translate("Source IP/mask"); ></th>
+						<th class="ip"><? echo dict_translate("Public IP/mask"); ></th>
+						<th class="port"><? echo dict_translate("Public Port"); ></th>
+						<th class="comment"><? echo dict_translate("Comment");></th>
+						<th class="action"><? echo dict_translate("Action");></th>
+					</tr>
+				</thead>
+				<tfoot>
+					<tr>
+						<td>&nbsp;</td>
+						<td><input type="text" id="pfwdHost" /></td>
+						<td><input type="text" id="pfwdPort" /></td>
+						<td>
+							<select id="pfwdProto">
+								<option value="TCP">TCP</option>
+								<option value="UDP">UDP</option>
+							</select>
+						</td>
+						<td><input type="text" id="pfwdSrc" /></td>
+						<td><input type="text" id="pfwdDst" /></td>
+						<td><input type="text" id="pfwdDport" /></td>
+						<td><input type="text" id="pfwdComment" /></td>
+						<td><input type="button" id="pfwdAdd" value="<? echo dict_translate("Add")>" /></td>
+					</tr>
+				</tfoot>
+				<tbody></tbody>
+			</table>
+		</div>
+	</div>
+	<h2 id="headerIgmp" class="trigger initial_hide"><a href="#"><? echo dict_translate("Multicast Routing Settings"); ></a></h2>
+	<div class="toggle_section initial_hide">
+		<div class="block">
+			<div id="igmpErrDiv" class="ui-state-error ui-corner-all initial_hide errors">
+			</div>
+			<div class="row">
+				<label for="igmpEnable"><? echo dict_translate("Multicast Routing:"); ></label>
+				<input type="checkbox" name="igmpEnable" id="igmpEnable" /> <label class="f" for="igmpEnable"><? echo dict_translate("Enable"); ></label>
+			</div>
+			<div id="igmpSettings" class="initial_hide">
+				<div class="row">
+					<label for="igmpUpstream"><? echo dict_translate("Multicast Upstream:"); ></label>
+					<select id="igmpUpstream" name="igmpUpstream">
+					</select>
+				</div>
+				<div class="row">
+					<label for="igmpDownstream"><? echo dict_translate("Multicast Downstream:"); ></label>
+					<div style="display: inline-block; *display:inline; vertical-align: top;">
+						<select multiple size="5" id="igmpDownstream" class="igmpDownstream">
+						</select>
+					</div>
+				</div>
+				<div class="row">
+					<label for="igmpDownstreamAdd"></label>
+					<div style="display: inline-block; *display:inline; vertical-align: top;">
+						<select id="igmpDownstreamAdd" class="addBridgePort">
+							<option value="add"><? echo dict_translate("Add"); ></option>
+						</select>
+						<input type="button" id="igmpDownstreamDel" class="delBridgePort" value="<? echo dict_translate("Del")>" />
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<h2 id="headerTShaping" class="trigger"><a href="#"><? echo dict_translate("Traffic Shaping"); ></a></h2>
+	<div class="toggle_section">
+		<div class="block">
+			<div>
+				<input type="checkbox" id="tshapingEnable" /> <label class="f" for="tshapingEnable"><? echo dict_translate("Enable"); ></label>
+			</div>
+			<div id="tshapingErrDiv" class="ui-state-error ui-corner-all initial_hide errors">
+			</div>
+			<table id="tshaping_table" class="settings">
+				<thead>
+					<tr>
+						<th rowspan="2" class="enabled"><? echo dict_translate("Enabled"); ></th>
+						<th rowspan="2" class="interface"><? echo dict_translate("Interface"); ></th>
+						<th colspan="3"><? echo dict_translate("Ingress"); ></th>
+						<th colspan="3"><? echo dict_translate("Egress"); ></th>
+						<th rowspan="2" class="action"><? echo dict_translate("Action"); ></th>
+					</tr>
+					<tr>
+						<th class="enabled"><? echo dict_translate("Enable"); ></th>
+						<th><? echo dict_translate("Rate, kbit/s"); ></th>
+						<th><? echo dict_translate("Burst, kBytes"); ></th>
+						<th class="enabled"><? echo dict_translate("Enable"); ></th>
+						<th><? echo dict_translate("Rate, kbit/s"); ></th>
+						<th><? echo dict_translate("Burst, kBytes"); ></th>
+					</tr>
+				</thead>
+				<tfoot>
+					<tr>
+						<td>&nbsp;</td>
+						<td><select name="tshapingIfc" id="tshapingIfc" class="interface"></select></td>
+						<td><input type="checkbox" id="tshapingInEnable" checked /></td>
+						<td><input type="text" id="tshapingInRate" maxlength="8" size="7" /></td>
+						<td><input type="text" id="tshapingInBurst" maxlength="8" size="7" /></td>
+						<td><input type="checkbox" id="tshapingOutEnable" checked /></td>
+						<td><input type="text" id="tshapingOutRate" maxlength="8" size="7" /></td>
+						<td><input type="text" id="tshapingOutBurst" maxlength="8" size="7" /></td>
+						<td><input type="button" id="tshapingAdd" value="<? echo dict_translate("Add")>" /></td>
+					</tr>
+				</tfoot>
+				<tbody></tbody>
+			</table>
+		</div>
+	</div>
+        <h2 class="trigger"></h2>
+        <div class="change">
+            <input type="hidden" name="network_data" id="network_data" value="">
+            <input type="submit" id="change" value="<? echo dict_translate("Change"); >" />
+        </div>
+        <div style="clear:both" class="initial_hide">
+        <input type="button" id="show_cfg" name="showCfg" value="Show Config" />
+                <br />
+		<span id="debug_cfg"></span>
+        </div>
+    </form>
+    </td>
+  </tr>
+  <tr> 
+   <td colspan="2">
+      <table cellpadding="0" align="center" cellspacing="0" width="100%">
+      <tr>
+	<td height="10" class="footlogo"><img src="/glogo.cgi" border="0"></td>
+	<td height="10" class="foottext"><? echo dict_translate($oem_copyright); ></td>
+      </tr>
+      </table>
+   </td>
+  </tr>
+</table>
+
+</body>
+</html>

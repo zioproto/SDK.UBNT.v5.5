@@ -1,0 +1,54 @@
+--- a/src/cfg.c
++++ b/src/cfg.c
+@@ -199,15 +199,15 @@ void _CfgGet(int mode, int ne) {
+ 
+ 	value = (char*)cfg_get_value(cfg, def_value, key);
+ 	if (ne && (value != def_value)) {
+ 		/* if value is empty, then return default value */
+ 		if (is_empty(value))
+ 			value = def_value;
+ 	}
+-	Push(value, STRING);
++	Push(AddSlashes(value,1), STRING);
+ }
+ 
+ void CfgGet(void) {
+ 	_CfgGet(0, 0);
+ }
+ 
+ void CfgGetDef(void) {
+@@ -234,14 +234,15 @@ void _CfgSet(int mode) {
+ 		return;
+ 	}
+ 	if (!s->strval) {
+ 		Push(EMPTY_STR, STRING);
+ 		return;
+ 	}
+ 	value = (char*) estrdup(1, s->strval);
++	StripSlashes(value);
+ 
+ 	s = Pop();
+ 	if (!s) {
+ 		Error("Stack Error in CfgGet");
+ 		return;
+ 	}
+ 	if (!*(s->strval)) {
+--- a/src/post.c
++++ b/src/post.c
+@@ -269,15 +269,15 @@ char *getpost(void) {
+ 	{
+ 		struct list_head* pos;
+ 		struct list_head* n;
+ 		struct header* h;
+ 
+ 		list_for_each_safe(pos, n, &ub->parameters) {
+ 			h = list_entry(pos, struct header, list);
+-			Push(h->value, STRING);
++			Push(AddSlashes(h->value,1), STRING);
+ 			SetVar(h->name, 0, 0);
+ 
+ 			if (h->is_file) {
+ 				char name[strlen(h->name) + 5];
+ 				char number[32];
+ 				/* filename (client side),
+ 				 * but we use the same one

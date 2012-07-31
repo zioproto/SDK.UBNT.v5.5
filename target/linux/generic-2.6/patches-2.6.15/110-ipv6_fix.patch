@@ -1,0 +1,24 @@
+--- linux-2.6.15-5.2/net/ipv6/addrconf.c
++++ linux-2.6.15.7/net/ipv6/addrconf.c
+@@ -2164,6 +2164,9 @@
+ 					dev->name);
+ 				break;
+ 			}
++
++			if (idev)
++				idev->if_flags |= IF_READY;
+ 		} else {
+ 			if (!netif_carrier_ok(dev)) {
+ 				/* device is still not ready. */
+--- linux-2.6.15-5.2/net/ipv6/netfilter/ip6_queue.c
++++ linux-2.6.15.7/net/ipv6/netfilter/ip6_queue.c
+@@ -522,7 +522,7 @@
+ 	write_unlock_bh(&queue_lock);
+ 	
+ 	status = ipq_receive_peer(NLMSG_DATA(nlh), type,
+-	                          skblen - NLMSG_LENGTH(0));
++	                          nlmsglen - NLMSG_LENGTH(0));
+ 	if (status < 0)
+ 		RCV_SKB_FAIL(status);
+ 		
+

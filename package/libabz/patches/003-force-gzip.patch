@@ -1,0 +1,13 @@
+Index: libabz-0.6.2/man/Makefile
+===================================================================
+--- libabz-0.6.2.orig/man/Makefile
++++ libabz-0.6.2/man/Makefile
+@@ -84,7 +84,7 @@
+ 
+ install::
+ 	$(INSTALL) -d $(mandir)/man3
+-	set -e; for F in $(MAN); do $(INSTALL) -c -m 0644 $$F $(mandir)/man3 && gzip -9 $(mandir)/man3/$$F; done
++	set -e; for F in $(MAN); do $(INSTALL) -c -m 0644 $$F $(mandir)/man3 && gzip -f9 $(mandir)/man3/$$F; done
+ 	$(LN) bprintf.3abz.gz $(mandir)/man3/vbprintf.3abz.gz
+ 	$(LN) tmp_name.3abz.gz $(mandir)/man3/tmp_open.3abz.gz
+ 	$(LN) tmp_name.3abz.gz $(mandir)/man3/tmp_close.3abz.gz

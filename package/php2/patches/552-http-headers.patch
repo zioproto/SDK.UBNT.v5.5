@@ -1,0 +1,34 @@
+--- a/src/head.c
++++ b/src/head.c
+@@ -257,28 +257,28 @@ void php_header(int type,char *str) {
+ 			if(cookie->domain && strlen(cookie->domain)) {
+ 				strcat(tempstr,"; domain=");
+ 				strcat(tempstr,cookie->domain);
+ 			}
+ 			if(cookie->secure) {
+ 				strcat(tempstr,"; secure");
+ 			}	
+-			fputs("Set-Cookie: ",stdout);
++			fputs("Set-cookie: ",stdout);
+ 			fputs(tempstr,stdout);
+ 			fputs("\015\012",stdout);
+ 			cookie = PopCookieList();
+ 		}
+ 		if(type==1) {
+ 			fputs("Location: ",stdout);
+ 			fputs(str,stdout);
+ 			fputs("\015\012\015\012",stdout);
+ 		} else {
+ 			if(!cont_type) {
+-	        	fputs("Content-type: text/html\015\012\015\012",stdout); 
++				fputs("Content-Type: text/html\015\012\015\012",stdout);
+ 			} else {
+-				fputs("Content-type:",stdout);
++				fputs("Content-Type: ",stdout);
+ 				fputs(cont_type,stdout);
+ 				if (cont_disp) {
+ 					fputs("\015\012",stdout);
+ 					fputs("Content-Disposition: ",stdout);
+ 					fputs(cont_disp,stdout);
+ 				}
+ 				fputs("\015\012\015\012",stdout);

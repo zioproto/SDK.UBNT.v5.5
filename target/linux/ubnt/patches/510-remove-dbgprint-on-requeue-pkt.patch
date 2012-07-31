@@ -1,0 +1,16 @@
+Index: linux-2.6.32.29/net/core/dev.c
+===================================================================
+--- linux-2.6.32.29.orig/net/core/dev.c
++++ linux-2.6.32.29/net/core/dev.c
+@@ -1957,9 +1957,11 @@ gso:
+ 				}
+ 			}
+ 			HARD_TX_UNLOCK(dev, txq);
++#if 0 /* UBNT: disabled code */
+ 			if (net_ratelimit())
+ 				printk(KERN_CRIT "Virtual device %s asks to "
+ 				       "queue packet!\n", dev->name);
++#endif
+ 		} else {
+ 			/* Recursion is detected! It is possible,
+ 			 * unfortunately */

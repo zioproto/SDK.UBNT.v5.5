@@ -1,0 +1,157 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title><? echo get_title($cfg, dict_translate("Configure Bridges")); ></title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Pragma" content="no-cache">
+<link rel="shortcut icon" href="FULL_VERSION_LINK/favicon.ico" >
+<link href="FULL_VERSION_LINK/style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" language="javascript" src="jsl10n.cgi"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/jsval.js"></script>
+<script type="text/javascript" language="javascript" src="FULL_VERSION_LINK/util.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/common.js"></script>
+<script type="text/javascript" language="javascript">
+//<!--
+var bridge_cfg = <? bridge_json($cfg);>;
+
+function cfg_entry(status, ifc, stp, comment, c) {
+	var str = "bridge."+c+".status="+(status ? "enabled" : "disabled")+"\n";
+        str += "bridge."+c+".devname="+uidevname2devname(ifc)+"\n";
+        str += "bridge."+c+".stp.status="+(stp ? "enabled" : "disabled")+"\n";
+        str += "bridge."+c+".comment="+comment+"\n";
+	return str;
+}
+
+function prepare_cfg() {
+        var rows = $("tr.row");
+        var str = "bridge.status="+($('[ui_id="main_status"]').attr('checked') ? "enabled" : "disabled")+"\n";
+        var c = 1;
+        for(var i = 0; i < rows.length; i++) {
+            	var obj=rows.eq(i);
+        	var ifc = $('[ui_id="ifc"]', obj).val();
+                if (!ifc.length)  continue;
+                var stp = $('[ui_id="stp"]', obj).val();
+                var stp = $('[ui_id="stp"]', obj).attr("checked");
+                var comment = $('[ui_id="comment"]', obj).val();
+                var status = $('[ui_id="status"]', obj).attr("checked");
+              	str += cfg_entry(status, ifc, stp, comment, c);
+		c++;
+        }
+	return str;
+}
+
+function on_save(e) {
+	return common_on_save("#bridge");
+}
+
+function add_data(dat) {
+        var obj = $("tr.row").last();
+        var dat_obj = obj;
+        var new_obj = null;
+        var req = false;
+        if (!dat) {
+	        new_obj = obj.clone();
+	        $('[ui_id="add"]', obj).addClass('initial_hide');
+        	$('[ui_id="del"]', obj).removeClass("initial_hide");
+
+        	$('[ui_id="del"]', new_obj).addClass("initial_hide");
+	        $('[ui_id="add"]', new_obj).removeClass('initial_hide');
+
+	        obj.after(new_obj);
+                dat_obj = new_obj;
+                dat = {"enabled":false,"devname":"",
+                	"stp":false,"comment":""};
+        }
+        req = dat.enabled;
+      	$('[ui_id="status"]', dat_obj).attr('checked', req);
+        ifc = $('[ui_id="ifc"]', dat_obj);
+        ifc.val(devname2uidevname(dat.devname));
+        ifc.attr('req', req ? 1 : 0);
+      	$('[ui_id="stp"]', dat_obj).attr('checked', dat.stp);
+        comment = $('[ui_id="comment"]', dat_obj);
+        comment.val(dat.comment);
+        common_recount();
+        return dat.enabled;
+}
+
+function on_init() {
+	var c = 0;
+        var enabled = bridge_cfg.enabled;
+        for(var i = 0; i < bridge_cfg.objs.length; ++i) {
+        	add_data(bridge_cfg.objs[i]);
+                add_data(null);
+                c++;
+        }
+        $('[ui_id="main_status"]').attr('checked', enabled);
+}
+
+//-->
+</script>
+
+</head>
+<body class="popup">
+	<form id="bridge" name="bridge" enctype="multipart/form-data" action="bridge.cgi" method="POST">
+		<table cellspacing="0" cellpadding="0" align="center" class="popup">
+	     		<tr><th colspan="3"><? echo dict_translate("Bridges");></th></tr>
+    			<tr><td colspan="3">
+	 			<? include("lib/error.tmpl");><br>
+				<table cellspacing="0" cellpadding="0">
+					<tr>
+                                        	<td colspan="5"><input type="checkbox" ui_id="main_status" value="enabled"><? echo dict_translate("Enabled")></td>
+                                        </tr>
+					<tr>
+                                        	<td colspan="5"><? echo dict_translate("Bridge Ports")> <input type="button" value="<? echo dict_translate("Configure..."); >"
+						onClick="return openPage('port.cgi',450,550);" /></td>
+                                        </tr>
+		  			<tr>
+		  				<td>&nbsp;</td>
+		  				<td><? echo dict_translate("Interface"); ></td>
+                  				<td><? echo dict_translate("STP");></td>
+                  				<td><? echo dict_translate("Comment");></td>
+						<td><? echo dict_translate("Enabled"); ></td>
+		  				<td>&nbsp;</td>
+					</tr>
+					<tr class="row">
+						<td class="h">
+                                                	<span ui_id="no">&nbsp;</span>
+                                                </td>
+						<td><input type="text" class="std_width" ui_id="ifc"
+							value="" size="10" maxlength="10" minlength="1"  req="0" realname="<? echo dict_translate("Bridge Interface Name"); >">
+                                                </td>
+						<td>
+							<input type="checkbox" ui_id="stp" value="enabled">
+						</td>
+                                                <td>
+                                                	<input type="text"  style="width: 145px;" ui_id="comment" value="" size="16">
+                                                </td>
+						<td>
+							<input type="checkbox" ui_id="status" value="enabled">
+						</td>
+                                                <td>
+                                                	<input type="button" class="initial_hide" ui_id="del" value="<? echo dict_translate("Del")>">
+                                                        <input type="button" ui_id="add" value="<? echo dict_translate("Add")>">
+                                                </td>
+					</tr>
+					<tr>
+                                        	<td colspan="5">&nbsp;</td>
+                                                <td>
+                                                        <input type="button" id="del_all" value="<? echo dict_translate("Del All")>">
+                                                </td>
+                                        </tr>
+					<tr>
+                                        	<td colspan="6"><input id="bridge_data" name="bridge_data" type="hidden" value="">&nbsp;</td>
+                                        </tr>
+					<tr>
+                                        	<td colspan="6" class="center">
+							<input type="button" id="save" value="<? echo dict_translate("Save")>">
+							<input type="button" id="close" value="<? echo dict_translate("Close")>">
+						</td>
+					</tr>
+				</table>
+			</td></tr>
+		</table>
+	</form>
+</body>
+</html>

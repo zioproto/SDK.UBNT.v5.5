@@ -1,0 +1,20 @@
+--- a/defs.mk
++++ b/defs.mk
+@@ -29,14 +29,14 @@
+ #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ # Compile debugging symbols into binaries
+-DEBUG = "yes"
++DEBUG = "no"
+ 
+ # Compile binaries with profiling support
+ PROFILE = "no"
+ 
+ # Enable support for old 2.2.x kernels
+-COMPAT22 = "yes"
++COMPAT22 = "no"
+ 
+ # Enable support for resolving hostnames and services
+-RESOLVE = "yes"
++RESOLVE = "no"
+ 

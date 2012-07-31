@@ -1,0 +1,71 @@
+--- a/src/drivers/driver_wext.c
++++ b/src/drivers/driver_wext.c
+@@ -952,14 +952,15 @@ void * wpa_driver_wext_init(void *ctx, c
+ static void wpa_driver_wext_finish_drv_init(struct wpa_driver_wext_data *drv)
+ {
+ 	int flags;
+ 
+ 	if (wpa_driver_wext_get_ifflags(drv, &flags) != 0)
+ 		printf("Could not get interface '%s' flags\n", drv->ifname);
+ 	else if (!(flags & IFF_UP)) {
++#ifdef CONFIG_IFACE_DOWN_CONTROL
+ 		if (wpa_driver_wext_set_ifflags(drv, flags | IFF_UP) != 0) {
+ 			printf("Could not set interface '%s' UP\n",
+ 			       drv->ifname);
+ 		} else {
+ 			/*
+ 			 * Wait some time to allow driver to initialize before
+ 			 * starting configuring the driver. This seems to be
+@@ -967,14 +968,15 @@ static void wpa_driver_wext_finish_drv_i
+ 			 * when the interface is set up.
+ 			 */
+ 			wpa_printf(MSG_DEBUG, "Interface %s set UP - waiting "
+ 				   "a second for the driver to complete "
+ 				   "initialization", drv->ifname);
+ 			sleep(1);
+ 		}
++#endif
+ 	}
+ 
+ 	/*
+ 	 * Make sure that the driver does not have any obsolete PMKID entries.
+ 	 */
+ 	wpa_driver_wext_flush_pmkid(drv);
+ 
+@@ -1018,15 +1020,17 @@ static void wpa_driver_wext_finish_drv_i
+  *
+  * Shut down driver interface and processing of driver events. Free
+  * private data buffer if one was allocated in wpa_driver_wext_init().
+  */
+ void wpa_driver_wext_deinit(void *priv)
+ {
+ 	struct wpa_driver_wext_data *drv = priv;
++#ifdef CONFIG_IFACE_DOWN_CONTROL
+ 	int flags;
++#endif /* CONFIG_IFACE_DOWN_CONTROL */
+ 
+ 	eloop_cancel_timeout(wpa_driver_wext_scan_timeout, drv, drv->ctx);
+ 
+ 	/*
+ 	 * Clear possibly configured driver parameters in order to make it
+ 	 * easier to use the driver after wpa_supplicant has been terminated.
+ 	 */
+@@ -1034,16 +1038,18 @@ void wpa_driver_wext_deinit(void *priv)
+ 
+ 	wpa_driver_wext_send_oper_ifla(priv, 0, IF_OPER_UP);
+ 
+ 	eloop_unregister_read_sock(drv->event_sock);
+ 	if (drv->mlme_sock >= 0)
+ 		eloop_unregister_read_sock(drv->mlme_sock);
+ 
++#ifdef CONFIG_IFACE_DOWN_CONTROL
+ 	if (wpa_driver_wext_get_ifflags(drv, &flags) == 0)
+ 		(void) wpa_driver_wext_set_ifflags(drv, flags & ~IFF_UP);
++#endif /* CONFIG_IFACE_DOWN_CONTROL */
+ 
+ 	close(drv->event_sock);
+ 	close(drv->ioctl_sock);
+ 	if (drv->mlme_sock >= 0)
+ 		close(drv->mlme_sock);
+ 	os_free(drv->assoc_req_ies);
+ 	os_free(drv->assoc_resp_ies);

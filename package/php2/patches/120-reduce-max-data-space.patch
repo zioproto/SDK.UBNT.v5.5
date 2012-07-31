@@ -1,0 +1,19 @@
+--- a/src/php.h
++++ b/src/php.h
+@@ -284,15 +284,15 @@ extern request_rec *php_rqst;
+  * DEFAULT_MAX_DATA_SPACE
+  *
+  * Set this to the maximum size a memory sub-pool is allowed to grow
+  * to.  (number of kilo bytes)  
+  * In the Apache module version, this can be overwritten by the
+  * phpMaxDataSpace Apache configuration directive.
+  */
+-#define DEFAULT_MAX_DATA_SPACE 8192
++#define DEFAULT_MAX_DATA_SPACE 4096
+ 
+ /*
+  * PHP_TRACK_VARS
+  *
+  * If you define this, 3 arrays will be created in your scripts.  They are:
+  * 
+  *  $PHP_GETVARS

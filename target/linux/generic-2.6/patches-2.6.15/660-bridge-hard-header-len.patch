@@ -1,0 +1,8 @@
+--- a/net/bridge/br_device.c
++++ b/net/bridge/br_device.c
+@@ -100,4 +100,5 @@ void br_dev_setup(struct net_device *dev
+ 	dev->tx_queue_len = 0;
+ 	dev->set_mac_address = NULL;
+ 	dev->priv_flags = IFF_EBRIDGE;
++	dev->hard_header_len = 64;
+ }

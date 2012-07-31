@@ -1,0 +1,184 @@
+#!/bin/sh
+
+[ -z "$1" ] && echo "Error: should be called from udhcpc" && exit 1
+
+RESOLV_CONF="/etc/resolv.conf"
+DHCPC_FALLBACK="/etc/dhcpc.fallback"
+SERVICES_FILE="/etc/udhcpc_services"
+UDHCPC_CONFDIR="/etc/udhcpc"
+UDHCPC_CONF="$UDHCPC_CONFDIR/info.$interface"
+
+udhcpc_write_config()
+{
+	# store settings to UDHCPC_CONF
+	mkdir -p $UDHCPC_CONFDIR
+	cat > $UDHCPC_CONF << END
+u_interface="$interface"
+u_broadcast="$broadcast"
+u_subnet="$subnet"
+u_ip="$ip"
+u_router="$router"
+u_dns="$dns"
+u_hostname="$hostname"
+u_serverid="$serverid"
+u_domain="$domain"
+u_leasetime=$lease
+u_timestamp="`date +%s`"
+u_started=`sed 's/\([0-9]*\).*/\1/;' /proc/uptime`
+u_pid=$PPID
+END
+}
+
+udhcpc_compare_config()
+{
+	if [ ! -f $UDHCPC_CONF ]; then 
+		return 1;
+	fi
+
+	. $UDHCPC_CONF
+
+	if [ ".$u_interface" != ".$interface" ]; then return 1; fi
+	if [ ".$u_broadcast" != ".$broadcast" ]; then return 1; fi
+	if [ ".$u_subnet" != ".$subnet" ]; then return 1; fi
+	if [ ".$u_ip" != ".$ip" ]; then return 1; fi
+	if [ ".$u_router" != ".$router" ]; then return 1; fi
+	if [ ".$u_domain" != ".$domain" ]; then return 1; fi
+	if [ ".$u_dns" != ".$dns" ]; then return 1; fi
+
+	return 0;
+}
+
+udhcpc_remove_config()
+{
+	rm -f $UDHCPC_CONF
+}
+
+restore_ip_aliases()
+{
+	ipaliases=`grep "ip addr add dev $interface" /etc/sysinit/net.conf`
+        eval "$ipaliases"
+	if [ -e /var/run/${interface}_autoip ]; then 
+	        . /var/run/${interface}_autoip
+	fi
+}
+
+configure_routes()
+{
+	if [ -n "$router" ] ; then
+		echo "deleting routers"
+		while route del default gw 0.0.0.0 dev $interface 2> /dev/null ; do
+			:
+		done
+		for i in $router ; do
+			route add default gw $i dev $interface
+			if [ ! $? -eq 0 ]; then
+				route add -host $router dev $interface
+				route add default gw $i dev $interface
+			fi
+		done
+	fi
+}
+configure_dns()
+{
+	# do not remove resolv.conf if no dns servers received from dhcp
+	if [ ".$dns" = "." ]; then
+		return 0
+	fi
+
+	echo -n > $RESOLV_CONF
+	[ -n "$domain" ] && echo search $domain >> $RESOLV_CONF
+	for i in $dns ; do
+		echo adding dns $i
+		echo nameserver $i >> $RESOLV_CONF
+	done
+}
+
+udhcpc_start_services()
+{
+	restore_ip_aliases
+	if [ ! -f $SERVICES_FILE ]; then 
+		echo "File $SERVICES_FILE does not exist"
+		return;
+	fi
+
+	for serv in `cat $SERVICES_FILE`; do
+		/usr/etc/init.d/plugin start $serv
+	done
+}
+
+udhcpc_stop_services()
+{
+	if [ ! -f $SERVICES_FILE ]; then 
+		echo "File $SERVICES_FILE does not exist"
+		return;
+	fi
+
+	rev_servlist=""
+	for serv in `cat $SERVICES_FILE`; do
+		rev_servlist="$serv $rev_servlist"
+	done
+
+	for serv in $rev_servlist; do
+		/usr/etc/init.d/plugin stop $serv
+	done
+	/sbin/ip addr flush dev $interface
+}
+
+configure_ipaddress()
+{
+	/sbin/ip addr add $ip/$subnet $BROADCAST dev $interface
+}
+
+udhcpc_internet_state() {
+	if [ -x /bin/sysled ]; then
+		/bin/sysled -i $1 2>/dev/null
+	fi
+	return 0
+}
+
+if [ -n "$broadcast" ]; then
+	BROADCAST="brd $broadcast"
+else
+	BROADCAST="brd +"
+fi
+
+case "$1" in
+	deconfig)
+		udhcpc_stop_services
+		udhcpc_remove_config
+		udhcpc_start_services
+		udhcpc_internet_state 0
+		;;
+
+	leasefail)
+		udhcpc_stop_services
+		udhcpc_remove_config
+                $($(grep "${interface} " ${DHCPC_FALLBACK}))
+		udhcpc_start_services
+		udhcpc_internet_state 0
+		;;
+
+	bound)
+		udhcpc_stop_services
+		configure_ipaddress
+		configure_routes
+		configure_dns
+		udhcpc_start_services
+		udhcpc_write_config
+		udhcpc_internet_state 1
+		;;
+
+	renew)
+		if ! udhcpc_compare_config; then
+			udhcpc_stop_services
+			configure_ipaddress
+			configure_routes
+			configure_dns
+			udhcpc_start_services
+		fi
+		udhcpc_write_config
+		udhcpc_internet_state 1
+		;;
+esac
+
+exit 0

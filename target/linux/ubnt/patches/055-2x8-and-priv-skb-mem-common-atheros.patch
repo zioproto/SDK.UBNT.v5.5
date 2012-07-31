@@ -1,0 +1,38 @@
+--- linux-2.6.31/include/linux/skbuff.h	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/include/linux/skbuff.h	2011-03-17 17:03:18.000000000 +0200
+@@ -122,8 +125,17 @@
+ 
+ struct sk_buff;
+ 
++#if defined(CONFIG_ATH_2X8) || defined(CONFIG_PRIV_SKB_MEM)
++/*
++ * Atheros doesn't use this facility. This increases the size
++ * of skb and makes it go to the next slab, unnecesarily wasting
++ * memory
++ */
++#define MAX_SKB_FRAGS (2)
++#else
+ /* To allow 64K frame to be packed as single skb without frag_list */
+ #define MAX_SKB_FRAGS (65536/PAGE_SIZE + 2)
++#endif
+ 
+ typedef struct skb_frag_struct skb_frag_t;
+ 
+@@ -190,7 +202,7 @@
+ 	atomic_t	dataref;
+ 	unsigned short	nr_frags;
+ 	unsigned short	gso_size;
+-#ifdef CONFIG_HAS_DMA
++#if defined(CONFIG_HAS_DMA) && !defined(CONFIG_ATH_2X8) && !defined(CONFIG_PRIV_SKB_MEM)
+ 	dma_addr_t	dma_head;
+ #endif
+ 	/* Warning: this field is not always filled in (UFO)! */
+@@ -201,7 +213,7 @@
+ 	struct sk_buff	*frag_list;
+ 	struct skb_shared_hwtstamps hwtstamps;
+ 	skb_frag_t	frags[MAX_SKB_FRAGS];
+-#ifdef CONFIG_HAS_DMA
++#if defined(CONFIG_HAS_DMA) && !defined(CONFIG_ATH_2X8) && !defined(CONFIG_PRIV_SKB_MEM)
+ 	dma_addr_t	dma_maps[MAX_SKB_FRAGS];
+ #endif
+ 	/* Intermediate layers must ensure that destructor_arg

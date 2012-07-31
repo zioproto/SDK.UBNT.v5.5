@@ -1,0 +1,400 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/DTD/loose.dtd">
+<html>
+<head>
+<title><? echo get_title($cfg, dict_translate("Wireless")); ></title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Pragma" content="no-cache">
+<link rel="shortcut icon" href="FULL_VERSION_LINK/favicon.ico" >
+<link href="FULL_VERSION_LINK/style.css" rel="stylesheet" type="text/css">
+<link href="FULL_VERSION_LINK/help.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="jsl10n.cgi"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/slider-min.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/jsval.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/util.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/network.js"></script>
+<script type="text/javascript" language="javascript1.2" src="FULL_VERSION_LINK/slink.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.cookie.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.dimensions.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.ui.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.passwd.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/js/jquery.utils.js"></script>
+<script type="text/javascript" src="FULL_VERSION_LINK/help.js"></script>
+<link type="text/css" rel="StyleSheet" href="FULL_VERSION_LINK/bluecurve.css" />
+<script type="text/javascript">
+//<!--
+var radio_chains = <? echo $radio_chains; ?>;
+
+<?
+if ($radio["ieee_mode_a"] == 1 && $radio["ieee_mode_bg"] == 0) {
+	if ($ieee_mode != "at" && $ieee_mode != "ast" && $ieee_mode != "a") {
+		$ieee_mode = "a";
+	}
+} elseif ($radio["ieee_mode_bg"] == 1 && $radio["ieee_mode_a"] == 0) {
+	if ($ieee_mode != "b" && $ieee_mode != "g" && $ieee_mode != "pureg") {
+		$ieee_mode = "g";
+	}
+}
+
+generate_js_regdomain($country, "full_regdomain", $radio["ieee_mode_a"], $radio["ieee_mode_bg"], $chanbw);
+>
+var cc_dialog = $('<div/>');
+var fixer = new ieee_mode_fixer("<?echo $ieee_mode>".toLowerCase(), "<?echo $clksel>");
+var ieee_mode = fixer.getIEEEMode();
+var clksel = fixer.getClkSel();
+var old_clksel = clksel;
+var extchannel = fixer.getExtChannel();
+
+var chanshift="<?echo $chanshift>";
+// Channel will be set depending on wireless mode
+var rate="<?echo $rate>";
+var mcast_rate="<?echo $mcast_rate>";
+var chan_freq="<?echo $chan_freq>";
+var obey = '<? echo $obey_regulatory_status; >' == 'enabled';
+
+var txpower_max = <?echo $radio["txpower_max"]>;
+if (txpower_max < 1)
+{
+	txpower_max = 26;
+}
+var radio_low_txpower_mode = <?echo $radio["low_txpower_mode"]>;
+var txpower = <?echo $txpower>;
+var antenna_gain = <?echo $antenna_gain>;
+var cable_loss = <?echo $cable_loss>;
+var txpower_offset = <?echo $radio["txpower_offset"]>;
+var low_txpower_atten = <?echo $radio["low_txpower_atten"]>;
+var low_txpower_limit = <?echo $radio["low_txpower_limit"]>;
+var txpower_regdomain_limit = -1;
+var country = "<?echo $country>";
+var mac_clone = "<? echo $macclone>";
+var polling = '<? echo $polling; >' == 'enabled';
+var polling_fh = '<? echo $polling_fh; >' == '1';
+var select_max_rate = '<? echo $select_max_rate; >' == '1';
+
+var rg_data = parse_full_regdomain(full_regdomain);
+var regdomain = rg_data.regdomain;
+var sta_power = init_sta_power(regdomain);
+
+var globals = {
+	chanbw : <? echo $chanbw; >,
+	supported_chanbw : <? echo $radio["chanbw"]; >,
+	i18n : { ht40_label : '<? if ($wmode == "sta") { >Auto 20/<? } >40 MHz' }
+};
+
+<? gen_update_check($cfg); >
+
+function doSubmit() {
+	$('#this_form').submit();
+}
+
+var ieee_modes =
+{
+<? if ($radio["legacy"] != 1) { >
+	'11naht' : 'A/N mixed',
+	'11nght' : 'B/G/N mixed'
+<? } else { >
+	'a':'A',
+	'b':'<? echo dict_translate("B only"); >',
+	'g':'<? echo dict_translate("B/G mixed"); >',
+	'pureg':'<? echo dict_translate("G only"); >'
+<? } >
+};
+
+function init_ieee_mode(regdomain, value)
+{
+	var select = document.getElementById("ieee_mode_select");
+	var options;
+	var ieee_mode;
+
+	if (!select)
+	{
+		return value;
+	}
+	options = select.options;
+	options.length = 0;
+	for (ieee_mode in ieee_modes)
+	{
+		if (regdomain[getRegdomainMode(ieee_mode)])
+		{
+			options[options.length] = new Option(ieee_modes[ieee_mode],
+				ieee_mode, false, value == ieee_mode);
+		}
+	}
+	if (value == 'auto') {
+<? if ($radio["caps"] & $radio_cap_11n_no_ht40) { >
+		clksel = '0';
+<?} else {>
+		clksel = 'E';
+<?}>
+	}
+
+	if (options.length < 2) $('#ieee_mode_select').disable();
+
+	return options.length ? select.options[select.selectedIndex].value : value;
+}
+
+function init_ext_channels(regdomain, ieee_mode, clksel, chanshift, chan_freq, value) {
+	var select;
+	var options;
+	var i;
+	var mode;
+	var channels;
+	var chan = null;
+
+	var ext;
+
+	select = document.getElementById("extchannel_select");
+	if (!select) {
+		return value;
+	}
+	mode = getRegdomainMode(ieee_mode);
+
+	if (!regdomain[mode] || !regdomain[mode][clksel]) {
+		return value;
+	}
+	channels = regdomain[mode][clksel];
+	chan = get_channel_by_freq(channels, chan_freq);
+
+	options = select.options;
+	options.length = 0;
+
+	if (clksel != "E" || !chan) {
+		options[options.length] = new Option("<? echo dict_translate("None");>",
+			"", false, true);
+	} else {
+		ext = channels[chan][3];
+		if ((ext & 3) == 3) {
+			options[options.length] = new Option("<? echo dict_translate("Upper Channel");>",
+				"plus", false, value == "plus");
+		}
+		if ((ext & 5) == 5) {
+			options[options.length] = new Option("<? echo dict_translate("Lower Channel");>",
+				"minus", false, value == "minus");
+		}
+	}
+	setDisabled(select, options.length < 2);
+	return options.length ? select.options[select.selectedIndex].value : value;
+}
+
+function adjustRate(rate, multiplier) {
+<? if ($radio["legacy"] == 1) { >
+        return ""+(parseFloat(rate) * multiplier)+"M";
+<? } else { >
+        return ""+rate;
+<? } >
+}
+
+function reinit_form(level, leave_rates)
+{
+	var new_rate_multiplier = 1.0;
+	switch (level)
+	{
+	case 0: // reinit All
+		ieee_mode = init_ieee_mode(regdomain, ieee_mode);
+	case 1: // reinit on ieee_mode change
+		clksel = init_clksel(regdomain, ieee_mode, clksel, globals.chanbw);
+	case 2: // reinit on clksel change
+		new_rate_multiplier = calculateNewRateMultiplier(old_clksel, clksel);
+		// TODO: check this below...
+		fix_turbo_settings(ieee_mode, clksel);
+		rate = adjustRate(rate, new_rate_multiplier);
+		if (!leave_rates)
+		{
+			rate = init_rates(regdomain, ieee_mode, clksel, rate, "rate", select_max_rate);
+			if (level != 0) {
+				security = document.getElementById("security");
+				onSecurity(security, false);
+			}
+		}
+		// Set to lowest multicast on mode change.
+		mcast_rate = adjustMulticastRate(level == 1 ? 0 : mcast_rate, new_rate_multiplier, "rate");
+		setMaxrate('rate', 'maxrate');
+	case 3: // reinit on chanshift change
+		chan_freq = init_frequencies(regdomain, ieee_mode, clksel, chanshift, chan_freq, level == 3);
+	case 4: // reinit on toggle obey
+		if (level != 2 && level != 3)
+			init_power(regdomain, sta_power, ieee_mode, clksel, chan_freq);
+		else if (level == 3)
+			txpower_regdomain_limit = getRegdomainPower(regdomain, sta_power, ieee_mode, clksel, chan_freq);
+<? if ($radio["legacy"] != 1) { >
+		extchannel = init_ext_channels(regdomain, ieee_mode, clksel, chanshift, chan_freq, extchannel);
+		document.getElementById("extchannel").value = (extchannel == null ? "" : extchannel);
+<? } >
+	}
+}
+
+function init_common() {
+	$(document).bind('rate_list_updated', function() {
+		if (typeof filterRates.all != 'undefined')
+			delete filterRates.all;
+	});
+	$(document).bind('frequencies_updated', updateFreqList);
+
+	$('#wmode').val("<? echo $wmode; >");
+	$('#country_ctrl').val(country);
+	if (country == 511) {
+		$('.obey_regulatory').hide();
+		obey = false;
+		globals.supported_chanbw = (1 << 2) | (1 << 4) | (1 << 7) | (1 << 9) | (1 << 19) | (1 << 24) | (1 << 29);
+		globals.supported_chanbw+= 0x8000000000;
+	}
+	$('#chanshift').val(chanshift);
+       	$('#antenna').val("<? echo $antenna; >");
+       	$('#antenna_gain').val("<? echo $antenna_gain; >");
+        $("#antenna_gain").bind("change", on_antenna_gain_change);
+       	$('#cable_loss').val("<? echo $cable_loss; >");
+        $("#cable_loss").bind("change", on_cable_loss_change);
+
+	createTxPowerSlider(txpower_max);
+	reinit_form(0);
+
+	$('#security').val("<? echo $security; >");
+	var security = document.getElementById("security");
+	onSecurity(security, false);
+
+	$('#wpa_auth').val("<? echo $wpa_auth; >");
+	$('#wpa_eap').val("<? echo $wpa_eap; >");
+	var wpa_auth = document.getElementById("wpa_auth");
+
+<? if ($radio["legacy"] != 1) { >
+	$('#wep_key_length').val("<? echo $wep_key_length; >");
+	$('#wep_key_id').val("<? echo $wep_key_id; >");
+	$('#wep_key_type').val("<? echo $wep_key_type; >");
+<? } >
+	selectRadio("authtype", "<?echo $authtype>");
+	$('.pwd').attr('autocomplete', 'off').passwd({
+		label :  "<?echo dict_translate("Show");>",
+		migrate_attrs : [ 'req', 'callback', 'realname' ]
+	});
+	$('#dfs_row').toggle(rg_data.has_dfs);
+        $('#radius_mac_acl_format').val("<? echo $radius_mac_acl_format; >");
+	chooseWPA(wpa_auth, false);
+}
+
+function is_changeable_country(ccode) {
+	return <? if ($old_country == $country) { switch($country) {
+		case "840";
+		case "843";
+		case "US";
+		case "U2";
+                case "724";
+                case "ES";
+                	echo "false";
+                        break;
+                default;
+                	echo "true";
+                        break;
+                }
+        } else { echo "true"; }
+        >
+}
+
+function change_country(cc) {
+        cc_dialog.dialog("open");
+}
+
+$(document).ready(function(){
+   	cc_dialog.load('FULL_VERSION_LINK/cc_change.cgi'+'?'+Math.random()*Math.random());
+<? if ($include_page == "ap") { ?>
+	init_common();
+	toggleMACACL();
+	jQuery("#hidessid_chk").bind('click', function(){
+		jQuery("#hidessid").val(this.checked ? "enabled" : "disabled");
+	});
+<? } else { ?>
+	document.getElementById('apmac').value = '<?echo $apmac;>';
+
+	init_common();
+
+<? if ($radio["legacy"] == 1) { >
+	updateWepError();
+<? } >
+<? } ?>
+	toggleScanChannels();
+
+	$('#this_form').submit(function() {
+		if (!$('#channel_scan_list').is(':checked')) {
+			var scan_list = $('#scan_channels').val();
+			$(this).append('<input type="hidden" name="scan_channels" value="' + scan_list + '"/>');
+		}
+
+		$(this).append('<input type="hidden" name="chanbw" value="' + globals.chanbw + '"/>');
+		if ($('#obey_regulatory_checkbox').is(':disabled')) {
+			$(this).append('<input type="hidden" name="obey_regulatory_status" value="' + (obey ? "enabled" : "disabled") + '"/>');
+		}
+	});
+
+	$(document).bind('obey_toggled', function() {
+		obey = $('#obey_regulatory_checkbox').is(':checked'); // !! global
+		if (obey) {
+			var value = $('#scan_channels').val();
+			var scan_channels = get_current_scan_channels(value);
+			if (scan_channels.length > 0) {
+				var all_channels = get_scan_channels(regdomain, ieee_mode, clksel, chanshift, obey, false);
+				var new_channels = [], i;
+				for (i = 0; i < scan_channels.length; ++i)
+				{
+					if ($.inArray(scan_channels[i], all_channels) != -1)
+						new_channels.push(scan_channels[i]);
+				}
+				var new_val = new_channels.join(',');
+				if (value != new_val)
+					$('#scan_channels').val(new_val);
+			}
+		}
+	});
+
+	cc_dialog.attr('title', "<? echo dict_translate("Change Country"); >");
+	if ($("#country_ctrl").is(':visible')) {
+		var pos = $("#country_ctrl").position();
+		var y = pos.top - $(document).scrollTop();
+		cc_dialog.dialog(
+		{
+                	autoOpen: false,
+			bgiframe: true,
+			modal : true,
+			height : '360',
+			width: 400,
+			resizable : false,
+                        position: ['center', y],
+			buttons: {
+				"<? echo dict_translate("Accept"); >": function() { 
+                                	if (!$('#agreed').is(":checked")) {
+                                        	$('#errmsg').html("<? echo dict_translate("To change country, you must agree to<br/>terms of use."); >");
+                                                $('#errmsg').show();
+                                        	return false;
+                                        }
+                                        if ($('#country_select').val() == 0) {
+                                        	$('#errmsg').html("<? echo dict_translate("Please select your country."); >");
+                                                $('#errmsg').show();
+                                        	return false;
+                                        }
+                                        $('#country').val($('#country_select').val());
+                                	$(this).dialog("close");
+                                        $('#agreed').attr("checked", false);
+                                        $('#country_ctrl').change();
+                                        return true;
+                                },
+				"<? echo dict_translate("Cancel"); >": function() { 
+                                	$(this).dialog("close"); 
+                                        $('#agreed').attr("checked", false);
+                                        $('#errmsg').hide();
+                                        return true;
+                                }
+			}
+		});
+	}
+	var state = is_changeable_country(country);
+   	$('#change_ccode').toggle(state);
+
+	fwUpdateCheck(false, fw_check);
+});
+//-->
+</script>
+</head>
+<? flush(); >
+<body>
+<table class="maintable" cellpadding="0" align="center" cellspacing="0"><?
+$top_tab = "link"; include("lib/head.tmpl"); >
+

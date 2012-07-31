@@ -1,0 +1,21 @@
+#Format:
+#Vendor:Product:cdma/gsm:PPP dev handle:backend dev handle:AT+CSQ:pic file name:notes:backendmode
+1199:6880:gsm:/dev/ttyUSB4:/dev/ttyUSB3:AT+CSQ:3g_sierra_mercury_connect.gif:Sierra Wireless USB Connect Mercury:2
+1199:6890:gsm:/dev/ttyUSB4:/dev/ttyUSB3:AT+CSQ:3g_sierra_usb888.gif:Sierra Wireless USB 888:3
+1199:0025:cdma:/dev/ttyUSB0:/dev/ttyUSB1:AT+CSQ:3g_sierra_598U.gif:Sierra Wireless 598U:1
+1199:68a3:gsm:/dev/ttyUSB0:/dev/ttyUSB1:AT+CSQ:3g_sierra_lightning_usb305.gif:Sierra Wireless Lightning USB 305:3
+1199:683c:gsm:/dev/ttyUSB4:/dev/ttyUSB3:AT+CSQ:3g_sierra_mc8790.gif:Sierra MC8790 HSPA Module:3
+1410:6000:cdma:/dev/ttyUSB0::AT+CSQ:3g_novatel_usb760.png:Novatel U760:0
+1004:6141:gsm:/dev/ttyACM0:/dev/ttyACM1:AT+CSQ:3g_lg_usbconnect_turbo.gif:LGE USB Connect Turbo:3
+1199:0024:cdma:/dev/ttyUSB0:/dev/ttyUSB1:AT+CSQ:3g_sierra_mc5727.gif:Sierra MC5727:1
+1199:0224:cdma:/dev/ttyUSB0:/dev/ttyUSB1:AT+CSQ:3g_sierra_mc5727.gif:Sierra MC5727:1
+1199:0028:cdma:/dev/ttyUSB0:/dev/ttyUSB1:AT+CSQ:3g_sierra_mc5728.gif:Sierra MC5728:1
+
+#unverified that anything is on ttyUSB1
+0af0:7a05:gsm:/dev/ttyUSB0:/dev/ttyUSB1:AT+CSQ:3g_option_usbconnect_velocity.gif:Option USB Connect Velocity:0
+12d1:1464:gsm:/dev/ttyUSB0:/dev/ttyUSB3:AT+CSQ:3g_vodafone_huawei.gif:Vodafone Mobile Broadband (Huawei):3
+19d2:0015:gsm:/dev/ttyUSB0:/dev/ttyUSB2:AT+CSQ:3g_zte_mf628.gif:ZTE MF628:3
+19d2:0016:gsm:/dev/ttyUSB0:/dev/ttyUSB3:AT+CSQ:3g_zte_k3565_z.gif:Vodafone ZTE K3565-Z:3
+19d2:0063:gsm:/dev/ttyUSB3:/dev/ttyUSB1:AT+CSQ:3g_zte_k3565_z.gif:Vodafone ZTE K3565-Z:3
+19d2:0104:gsm:/dev/ttyUSB0:/dev/ttyUSB3:AT+CSQ:3g_zte_k4505_z.gif:Vodafone ZTE K4505-Z:3
+12d1:140c:gsm:/dev/ttyUSB0:/dev/ttyUSB3:AT+CSQ:3g_huawei_E173.gif:Huawei E173:3

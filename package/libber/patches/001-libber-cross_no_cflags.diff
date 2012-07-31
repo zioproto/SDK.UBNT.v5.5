@@ -1,0 +1,11 @@
+--- libber/vars.mk	2003-10-26 00:30:43.000000000 +0200
++++ libber/vars.mk	2007-01-21 15:16:29.000000000 +0100
+@@ -54,8 +54,6 @@
+ 
+ ifndef CROSS
+ COLOR = color
+-else	# ifndef CROSS
+-CFLAGS += -mapcs-32 -march=armv4 -mtune=strongarm1100 -mshort-load-bytes
+ endif	# ifndef CROSS
+ 
+ CC = $(CROSS)$(COLOR)gcc

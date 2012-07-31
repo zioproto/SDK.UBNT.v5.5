@@ -1,0 +1,11 @@
+</td></tr>
+<tr><td>&nbsp;</td><td class="change">
+<? if ($status != -1) { ?>
+<input type="button" onClick="return refresh('<? echo $PHP_SELF + "?action=restartppp"; >');" value=" <? echo dict_translate("Restart Service"); > ">
+<? } ?>
+<input type="button" onClick="return refresh('<? echo $PHP_SELF;>');" value=" <? echo dict_translate("Refresh"); > ">
+</td>
+</tr></table>
+</form>
+</body>
+</html>

@@ -1,0 +1,60 @@
+# check if sim card present and if pin enabled
+opengt
+ set com 115200n81
+ set senddelay 0.05
+ send "AT+CFUN=1^m"
+ waitquiet 3 0.5
+ flash 0.1
+
+ let c=0
+:start
+ send "AT+CRSM=176,12258,0,0,10^m"
+ waitfor 5 "+CRSM: 144,0,","ERROR","ERR"
+ if % = -1 goto checkpin
+ if % = 0 goto goticcid
+ if % = 1 goto checkpin
+ if % = 2 goto checkpin
+
+:goticcid
+ get 1 "^m" $s
+ print $s
+
+:checkpin
+ send "AT+CPIN?^m"
+ waitfor 15 "SIM PUK","SIM PIN","READY","ERROR","ERR"
+ if % = -1 goto timeout
+ if % = 0 goto setpuk
+ if % = 1 goto setpin
+ if % = 2 goto ready
+ if % = 3 goto checkrepeat
+ if % = 4 goto checkrepeat
+
+:checkrepeat
+ inc c
+ if c>3 goto simerror
+ waitquiet 12 0.5
+ goto checkpin
+
+:simerror
+ exit 1
+
+:timeout
+ exit 1
+
+:ready
+ goto continue
+ exit 0
+
+:setpin
+ # check if output was "SIM PIN2", that's ok.
+ waitfor 1 "2"
+ if % = 0 goto ready
+
+ exit 2
+
+:setpuk
+# card blocked
+ exit 3
+
+:continue
+ exit 0

@@ -1,0 +1,13 @@
+Index: ebtables-v2.0.8-2/useful_functions.c
+===================================================================
+--- ebtables-v2.0.8-2.orig/useful_functions.c
++++ ebtables-v2.0.8-2/useful_functions.c
+@@ -214,7 +214,7 @@
+ 			mask22 = htonl(0xFFFFFFFF << (32 - bits));
+ 			memcpy(mask2, &mask22, 4);
+ 		} else {
+-			mask22 = 0xFFFFFFFF;
++			mask22 = 0x0;
+ 			memcpy(mask2, &mask22, 4);
+ 		}
+ 	}

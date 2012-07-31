@@ -1,0 +1,35 @@
+--- a/net/bridge/br_forward.c
++++ b/net/bridge/br_forward.c
+@@ -23,7 +23,7 @@ static inline int should_deliver(const s
+ 				 const struct sk_buff *skb)
+ {
+ 	if (skb->dev == p->dev ||
+-	    p->state != BR_STATE_FORWARDING)
++	    (p->state != BR_STATE_FORWARDING && skb->protocol != __constant_htons(ETH_P_EAPOL)))
+ 		return 0;
+ 
+ 	return 1;
+--- a/net/bridge/br_input.c
++++ b/net/bridge/br_input.c
+@@ -120,7 +120,7 @@ int br_handle_frame(struct net_bridge_po
+ 		}
+ 	}
+ 
+-	else if (p->state == BR_STATE_FORWARDING) {
++	else if (p->state == BR_STATE_FORWARDING || skb->protocol == __constant_htons(ETH_P_EAPOL)) {
+ 		if (br_should_route_hook) {
+ 			if (br_should_route_hook(pskb)) 
+ 				return 0;
+--- a/net/bridge/br_private.h
++++ b/net/bridge/br_private.h
+@@ -27,6 +27,10 @@
+ #define BR_PORT_BITS	10
+ #define BR_MAX_PORTS	(1<<BR_PORT_BITS)
+ 
++#ifndef ETH_P_EAPOL
++#define	ETH_P_EAPOL	0x888e		/* EAPOL PAE/802.1x */
++#endif
++
+ typedef struct bridge_id bridge_id;
+ typedef struct mac_addr mac_addr;
+ typedef __u16 port_id;

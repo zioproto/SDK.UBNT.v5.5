@@ -1,0 +1,15 @@
+Index: linux-2.6.32.29/net/ipv4/netfilter/Kconfig
+===================================================================
+--- linux-2.6.32.29.orig/net/ipv4/netfilter/Kconfig	2011-04-06 00:02:23.585223960 +0300
++++ linux-2.6.32.29/net/ipv4/netfilter/Kconfig	2011-04-06 09:41:55.013421653 +0300
+@@ -181,6 +181,10 @@
+ 
+ 	  To compile it as a module, choose M here.  If unsure, say N.
+ 
++config IP_NF_TARGET_NATTYPE
++        tristate "NATTYPE target support"
++        depends on IP_NF_IPTABLES
++
+ config IP_NF_TARGET_NETMAP
+ 	tristate "NETMAP target support"
+ 	depends on NF_NAT

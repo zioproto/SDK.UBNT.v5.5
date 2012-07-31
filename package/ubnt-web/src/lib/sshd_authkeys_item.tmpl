@@ -1,0 +1,7 @@
+<tr>
+  <td class="centered"><input id="status_<? echo $i; >" class="st" type="checkbox" <? if ($status == "enabled") { echo "checked"; }>></td>
+  <td>&nbsp;<? echo $typename; ></td>
+  <td>&nbsp;<span title="<? echo $key; >"><? echo $key_str; ></span></td>
+  <td><input id="comment_<? echo $i; >" class="cm" type="text" value="<? echo $comment;>" size=16></td>
+  <td><input id="remove_<? echo $i; >" class="rm" type="button" value="<? echo dict_translate("Remove"); >"></td>
+</tr>

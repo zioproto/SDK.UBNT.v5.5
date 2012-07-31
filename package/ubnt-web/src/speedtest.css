@@ -1,0 +1,47 @@
+table.st_opt td.h {
+	vertical-align: top;
+}
+
+img#ip_refresh {
+	border: 0px;
+	vertical-align: middle;
+	padding: 2px 4px 2px 8px;
+}
+
+fieldset {
+	color:#363636;
+	border: 1px solid #B8B8B8;
+	width: 150px;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: normal;
+	white-space: nowrap;
+	padding-top: 10px;
+	padding-left: 15px;
+	padding-bottom: 10px;
+}
+
+td#st_results {
+	vertical-align: top;
+}
+
+td#run {
+	text-align: right;
+}
+
+div.note {
+	float: right;
+	width: 100%;
+	height: auto;
+ 	margin: 0px 0px 2px 0px;
+	background-color: #ffe18c;
+	color: #666666;
+	font-size: 11px;
+	white-space: normal;
+}
+
+div.note p {
+	margin: 1px;
+	padding 1px;
+	color: #666666;
+}

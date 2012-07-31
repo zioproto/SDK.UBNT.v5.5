@@ -1,0 +1,19 @@
+--- a/hostapd/wpa.c
++++ b/hostapd/wpa.c
+@@ -1326,14 +1326,16 @@ SM_STATE(WPA_PTK, AUTHENTICATION2)
+ 	inc_byte_array(sm->group->Counter, WPA_NONCE_LEN);
+ 	sm->ReAuthenticationRequest = FALSE;
+ 	/* IEEE 802.11i does not clear TimeoutCtr here, but this is more
+ 	 * logical place than INITIALIZE since AUTHENTICATION2 can be
+ 	 * re-entered on ReAuthenticationRequest without going through
+ 	 * INITIALIZE. */
+ 	sm->TimeoutCtr = 0;
++	/* So cancel any possibly pending send eapol timeout here also */
++	eloop_cancel_timeout(wpa_send_eapol_timeout, sm->wpa_auth, sm);
+ }
+ 
+ 
+ SM_STATE(WPA_PTK, INITPMK)
+ {
+ 	u8 msk[2 * PMK_LEN];
+ 	size_t len = 2 * PMK_LEN;

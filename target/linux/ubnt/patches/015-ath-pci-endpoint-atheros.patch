@@ -1,0 +1,32 @@
+Index: linux-2.6.32.29/drivers/pci/Kconfig
+===================================================================
+--- linux-2.6.32.29.orig/drivers/pci/Kconfig	2011-04-05 16:51:21.274972257 +0300
++++ linux-2.6.32.29/drivers/pci/Kconfig	2011-04-05 17:25:02.786216223 +0300
+@@ -69,6 +69,14 @@
+ 	help
+ 	  If you don't know what to do here, say N.
+ 
++config PCI_EP
++	tristate "PCI Endpoint driver for Atheros"
++	depends on PCI
++	help
++	  Say Y or M here if you want be able to use Atheros PCI device
++
++	  When in doubt, say N.
++
+ config HT_IRQ
+ 	bool "Interrupts on hypertransport devices"
+ 	default y
+Index: linux-2.6.32.29/drivers/pci/Makefile
+===================================================================
+--- linux-2.6.32.29.orig/drivers/pci/Makefile	2011-02-18 02:00:11.000000000 +0200
++++ linux-2.6.32.29/drivers/pci/Makefile	2011-04-05 17:25:02.786216223 +0300
+@@ -60,6 +60,8 @@
+ 
+ obj-$(CONFIG_PCI_STUB) += pci-stub.o
+ 
++obj-$(CONFIG_PCI_EP) += ath_pci_tgt.o
++
+ ifeq ($(CONFIG_PCI_DEBUG),y)
+ EXTRA_CFLAGS += -DDEBUG
+ endif

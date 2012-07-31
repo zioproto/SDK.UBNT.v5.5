@@ -1,0 +1,17 @@
+--- linux-2.6.31/drivers/watchdog/Kconfig	2009-09-10 01:13:59.000000000 +0300
++++ mips-linux-2.6.31/drivers/watchdog/Kconfig	2011-03-17 17:03:16.000000000 +0200
+@@ -28,6 +28,14 @@
+ 
+ if WATCHDOG
+ 
++config WATCHDOG_AR7240
++    tristate "Atheros AR7240 Hardware Watchdog support"
++    depends on WATCHDOG
++    help
++      Say Y here to support the hardware watchdog capability on AR7240.
++      The watchdog timeout period is normally one minute but 
++      can be changed with a boot-time parameter.
++
+ config WATCHDOG_NOWAYOUT
+ 	bool "Disable watchdog shutdown on close"
+ 	help

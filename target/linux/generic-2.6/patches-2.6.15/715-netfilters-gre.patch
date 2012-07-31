@@ -1,0 +1,21 @@
+--- a/net/ipv4/netfilter/ip_nat_proto_gre.c
++++ b/net/ipv4/netfilter/ip_nat_proto_gre.c
+@@ -128,6 +128,10 @@ gre_manip_pkt(struct sk_buff **pskb,
+ 				DEBUGP("can't nat GRE w/o key\n");
+ 				break;
+ 			}
++			if (!tuple->dst.u.gre.key) {
++				DEBUGP("Not removing GRE key 0x%04x\n", *(gre_key(greh)));
++				break;
++			}
+ 			if (greh->csum) {
+ 				/* FIXME: Never tested this code... */
+ 				*(gre_csum(greh)) = 
+@@ -135,6 +139,7 @@ gre_manip_pkt(struct sk_buff **pskb,
+ 							tuple->dst.u.gre.key,
+ 							*(gre_csum(greh)));
+ 			}
++			DEBUGP("GRE key 0x%x -> 0x%x\n", *(gre_key(greh)), tuple->dst.u.gre.key);
+ 			*(gre_key(greh)) = tuple->dst.u.gre.key;
+ 			break;
+ 		case GRE_VERSION_PPTP:

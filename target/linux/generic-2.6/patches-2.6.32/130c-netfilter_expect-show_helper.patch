@@ -1,0 +1,72 @@
+commit 8a96ae7fda648925254899ad997d5fe3984d3cf6
+Author: Patrick McHardy <kaber@trash.net>
+Date:   Wed Jan 20 17:38:16 2010 +0100
+
+    netfilter: nf_conntrack: show helper and class in /proc/net/nf_conntrack_expect
+    
+    Make the output a bit more informative by showing the helper an expectation
+    belongs to and the expectation class.
+    
+    Signed-off-by: Patrick McHardy <kaber@trash.net>
+
+diff --git a/include/net/netfilter/nf_conntrack_expect.h b/include/net/netfilter/nf_conntrack_expect.h
+index 9a2b9cb..917e170 100644
+--- a/include/net/netfilter/nf_conntrack_expect.h
++++ b/include/net/netfilter/nf_conntrack_expect.h
+@@ -66,6 +66,7 @@ static inline struct net *nf_ct_exp_net(struct nf_conntrack_expect *exp)
+ struct nf_conntrack_expect_policy {
+ 	unsigned int	max_expected;
+ 	unsigned int	timeout;
++	const char	*name;
+ };
+ 
+ #define NF_CT_EXPECT_CLASS_DEFAULT	0
+diff --git a/net/netfilter/nf_conntrack_expect.c b/net/netfilter/nf_conntrack_expect.c
+index fdf5d2a..5f5f29a 100644
+--- a/net/netfilter/nf_conntrack_expect.c
++++ b/net/netfilter/nf_conntrack_expect.c
+@@ -500,6 +500,7 @@ static void exp_seq_stop(struct seq_file *seq, void *v)
+ static int exp_seq_show(struct seq_file *s, void *v)
+ {
+ 	struct nf_conntrack_expect *expect;
++	struct nf_conntrack_helper *helper;
+ 	struct hlist_node *n = v;
+ 	char *delim = "";
+ 
+@@ -525,6 +526,14 @@ static int exp_seq_show(struct seq_file *s, void *v)
+ 	if (expect->flags & NF_CT_EXPECT_INACTIVE)
+ 		seq_printf(s, "%sINACTIVE", delim);
+ 
++	helper = rcu_dereference(nfct_help(expect->master)->helper);
++	if (helper) {
++		seq_printf(s, "%s%s", expect->flags ? " " : "", helper->name);
++		if (helper->expect_policy[expect->class].name)
++			seq_printf(s, "/%s",
++				   helper->expect_policy[expect->class].name);
++	}
++
+ 	return seq_putc(s, '\n');
+ }
+ 
+diff --git a/net/netfilter/nf_conntrack_sip.c b/net/netfilter/nf_conntrack_sip.c
+index 4b57216..5b1c24e 100644
+--- a/net/netfilter/nf_conntrack_sip.c
++++ b/net/netfilter/nf_conntrack_sip.c
+@@ -1305,14 +1305,17 @@ static char sip_names[MAX_PORTS][2][sizeof("sip-65535")] __read_mostly;
+ 
+ static const struct nf_conntrack_expect_policy sip_exp_policy[SIP_EXPECT_MAX + 1] = {
+ 	[SIP_EXPECT_SIGNALLING] = {
++		.name		= "signalling",
+ 		.max_expected	= 1,
+ 		.timeout	= 3 * 60,
+ 	},
+ 	[SIP_EXPECT_AUDIO] = {
++		.name		= "audio",
+ 		.max_expected	= 2 * IP_CT_DIR_MAX,
+ 		.timeout	= 3 * 60,
+ 	},
+ 	[SIP_EXPECT_VIDEO] = {
++		.name		= "video",
+ 		.max_expected	= 2 * IP_CT_DIR_MAX,
+ 		.timeout	= 3 * 60,
+ 	},

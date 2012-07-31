@@ -1,0 +1,70 @@
+--- a/src/drivers/driver_wext.c
++++ b/src/drivers/driver_wext.c
+@@ -1111,22 +1111,30 @@ int wpa_driver_wext_scan(void *priv, con
+ 	if (ioctl(drv->ioctl_sock, SIOCSIWSCAN, &iwr) < 0) {
+ 		perror("ioctl[SIOCSIWSCAN]");
+ 		ret = -1;
+ 	}
+ 
+ 	/* Not all drivers generate "scan completed" wireless event, so try to
+ 	 * read results after a timeout. */
+-	timeout = 5;
++	 /**
++	  * if we have a channel count - we assume to stay 200ms on channel,
++	  * and add 1 second "bonus" time
++	  **/
++	if (drv->num_channels)
++		timeout = drv->num_channels * 2 / 10 + 1;
++	if (timeout < 10)
++		timeout = 10;
+ 	if (drv->scan_complete_events) {
+ 		/*
+ 		 * The driver seems to deliver SIOCGIWSCAN events to notify
+ 		 * when scan is complete, so use longer timeout to avoid race
+ 		 * conditions with scanning and following association request.
+ 		 */
+-		timeout = 30;
++		if (timeout < 30)
++			timeout = 30;
+ 	}
+ 	wpa_printf(MSG_DEBUG, "Scan requested (ret=%d) - scan timeout %d "
+ 		   "seconds", ret, timeout);
+ 	eloop_cancel_timeout(wpa_driver_wext_scan_timeout, drv, drv->ctx);
+ 	eloop_register_timeout(timeout, 0, wpa_driver_wext_scan_timeout, drv,
+ 			       drv->ctx);
+ 
+@@ -1625,14 +1633,16 @@ static int wpa_driver_wext_get_range(voi
+ 		drv->capa.auth = WPA_DRIVER_AUTH_OPEN |
+ 			WPA_DRIVER_AUTH_SHARED |
+ 			WPA_DRIVER_AUTH_LEAP;
+ 
+ 		wpa_printf(MSG_DEBUG, "  capabilities: key_mgmt 0x%x enc 0x%x "
+ 			   "flags 0x%x",
+ 			   drv->capa.key_mgmt, drv->capa.enc, drv->capa.flags);
++		drv->num_channels = range->num_channels;
++		wpa_printf(MSG_DEBUG, "  has %d available channels", drv->num_channels);
+ 	} else {
+ 		wpa_printf(MSG_DEBUG, "SIOCGIWRANGE: too old (short) data - "
+ 			   "assuming WPA is not supported");
+ 	}
+ 
+ 	os_free(range);
+ 	return 0;
+--- a/src/drivers/driver_wext.h
++++ b/src/drivers/driver_wext.h
+@@ -29,14 +29,15 @@ struct wpa_driver_wext_data {
+ 	u8 *assoc_req_ies;
+ 	size_t assoc_req_ies_len;
+ 	u8 *assoc_resp_ies;
+ 	size_t assoc_resp_ies_len;
+ 	struct wpa_driver_capa capa;
+ 	int has_capability;
+ 	int we_version_compiled;
++	unsigned int num_channels;
+ 
+ 	/* for set_auth_alg fallback */
+ 	int use_crypt;
+ 	int auth_alg_fallback;
+ 
+ 	int operstate;
+ 

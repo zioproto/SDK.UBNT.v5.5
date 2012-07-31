@@ -1,0 +1,102 @@
+--- a/include/asm-mips/div64.h
++++ b/include/asm-mips/div64.h
+@@ -18,7 +18,7 @@
+  */
+ 
+ #define do_div64_32(res, high, low, base) ({ \
+-	unsigned long __quot, __mod; \
++	unsigned long __quotB, __modB; \
+ 	unsigned long __cf, __tmp, __tmp2, __i; \
+ 	\
+ 	__asm__(".set	push\n\t" \
+@@ -46,16 +46,16 @@
+ 		"bnez	%4, 0b\n\t" \
+ 		" srl	%5, %1, 0x1f\n\t" \
+ 		".set	pop" \
+-		: "=&r" (__mod), "=&r" (__tmp), "=&r" (__quot), "=&r" (__cf), \
++		: "=&r" (__modB), "=&r" (__tmp), "=&r" (__quotB), "=&r" (__cf), \
+ 		  "=&r" (__i), "=&r" (__tmp2) \
+ 		: "Jr" (base), "0" (high), "1" (low)); \
+ 	\
+-	(res) = __quot; \
+-	__mod; })
++	(res) = __quotB; \
++	__modB; })
+ 
+ #define do_div(n, base) ({ \
+-	unsigned long long __quot; \
+-	unsigned long __mod; \
++	unsigned long long __quotA; \
++	unsigned long __modA; \
+ 	unsigned long long __div; \
+ 	unsigned long __upper, __low, __high, __base; \
+ 	\
+@@ -72,12 +72,12 @@
+ 			: "Jr" (__high), "Jr" (__base) \
+ 			: GCC_REG_ACCUM); \
+ 	\
+-	__mod = do_div64_32(__low, __upper, __low, __base); \
++	__modA = do_div64_32(__low, __upper, __low, __base); \
+ 	\
+-	__quot = __high; \
+-	__quot = __quot << 32 | __low; \
+-	(n) = __quot; \
+-	__mod; })
++	__quotA = __high; \
++	__quotA = __quotA << 32 | __low; \
++	(n) = __quotA; \
++	__modA; })
+ #endif /* (_MIPS_SZLONG == 32) */
+ 
+ #if (_MIPS_SZLONG == 64)
+@@ -86,7 +86,7 @@
+  * Don't use this one in new code
+  */
+ #define do_div64_32(res, high, low, base) ({ \
+-	unsigned int __quot, __mod; \
++	unsigned int __quotB, __modB; \
+ 	unsigned long __div; \
+ 	unsigned int __low, __high, __base; \
+ 	\
+@@ -96,31 +96,31 @@
+ 	__div = __div << 32 | __low; \
+ 	__base = (base); \
+ 	\
+-	__mod = __div % __base; \
++	__modB = __div % __base; \
+ 	__div = __div / __base; \
+ 	\
+-	__quot = __div; \
+-	(res) = __quot; \
+-	__mod; })
++	__quotB = __div; \
++	(res) = __quotB; \
++	__modB; })
+ 
+ /*
+  * Hey, we're already 64-bit, no
+  * need to play games..
+  */
+ #define do_div(n, base) ({ \
+-	unsigned long __quot; \
+-	unsigned int __mod; \
++	unsigned long __quotA; \
++	unsigned int __modA; \
+ 	unsigned long __div; \
+ 	unsigned int __base; \
+ 	\
+ 	__div = (n); \
+ 	__base = (base); \
+ 	\
+-	__mod = __div % __base; \
+-	__quot = __div / __base; \
++	__modA = __div % __base; \
++	__quotA = __div / __base; \
+ 	\
+-	(n) = __quot; \
+-	__mod; })
++	(n) = __quotA; \
++	__modA; })
+ 
+ #endif /* (_MIPS_SZLONG == 64) */
+ 

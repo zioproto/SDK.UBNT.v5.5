@@ -1,0 +1,38 @@
+--- a/include/ebtables_u.h
++++ b/include/ebtables_u.h
+@@ -22,27 +22,35 @@
+  */
+ 
+ #ifndef EBTABLES_U_H
+ #define EBTABLES_U_H
+ #include <netinet/in.h>
+ #include <linux/netfilter_bridge/ebtables.h>
+ 
++#ifdef USE_XTABLES
++#include <linux/netfilter/x_tables.h>
++#endif
++
+ #ifndef IPPROTO_SCTP
+ #define IPPROTO_SCTP		132
+ #endif
+ #ifndef IPPROTO_DCCP
+ #define IPPROTO_DCCP		33
+ #endif
+ 
+ #define EXEC_STYLE_PRG		0
+ #define EXEC_STYLE_DAEMON	1
+ 
+ #ifndef EBT_MIN_ALIGN
++#ifdef USE_XTABLES
++#define EBT_MIN_ALIGN (__alignof__(struct _xt_align))
++#else
+ #define EBT_MIN_ALIGN (__alignof__(struct ebt_entry_target))
+ #endif
++#endif
+ #define EBT_ALIGN(s) (((s) + (EBT_MIN_ALIGN-1)) & ~(EBT_MIN_ALIGN-1))
+ #define ERRORMSG_MAXLEN 128
+ 
+ struct ebt_u_entries
+ {
+ 	int policy;
+ 	unsigned int nentries;

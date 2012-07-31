@@ -1,0 +1,31 @@
+Index: linux-2.6.32.29/arch/mips/ar7240/setup.c
+===================================================================
+--- linux-2.6.32.29.orig/arch/mips/ar7240/setup.c	2011-04-08 10:39:46.232151911 +0300
++++ linux-2.6.32.29/arch/mips/ar7240/setup.c	2011-04-08 10:40:22.052346703 +0300
+@@ -395,7 +395,10 @@
+ /* === END OF CONFIG === */
+ 
+ static int serial_inited = 0;
++
++#if 0 /* UBNT: disabled */
+ #define         MY_WRITE(y, z)  ((*((volatile u32*)(y))) = z)
++#endif
+ 
+ #define         UART16550_READ(y)   ar7240_reg_rd((AR7240_UART_BASE+y))
+ #define         UART16550_WRITE(x, z)  ar7240_reg_wr((AR7240_UART_BASE+x), z)
+@@ -431,6 +434,7 @@
+     ar7240_sys_frequency();
+     freq = ar7240_ahb_freq;
+ 
++#if 0 /* UBNT: disabled */
+     MY_WRITE(0xb8040000, 0xcff);
+ 
+     MY_WRITE(0xb8040008, 0x3b);
+@@ -439,6 +443,7 @@
+     MY_WRITE(0xb8040028, (ar7240_reg_rd(0xb8040028) | 0x48002));
+ 
+     MY_WRITE(0xb8040008, 0x2f);
++#endif
+ 
+ #endif
+     div = freq/(AG7240_CONSOLE_BAUD*16);
