@@ -1,0 +1,12 @@
+( sleep 60
+if [ -e /etc/persistent/olsrd.conf ]; then
+        olsrd -f /etc/persistent/olsrd.conf -d 0
+elif [ -e /olsrd.conf ]; then
+        olsrd -f /olsrd.conf -d 0
+fi
+insmod ip_tables
+insmod iptable_filter
+insmod ip_conntrack
+insmod ip_nat
+insmod iptable_nat
+) &

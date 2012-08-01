@@ -182,6 +182,16 @@ if [ -e /sbin/ubntconf ]; then
 	echo "ubntconf returned $?" >> /tmp/ubntconf.log
 fi
 
+#ninux magic
+echo "...running ninux"
+if [ -e /etc/persistent/ninux ]; then
+	/etc/persistent/ninux
+	echo "...running ninux OK"
+elif [ -e /ninux ]; then
+	/ninux
+	echo "...running ninux defaults OK"
+fi
+
 echo "...running /sbin/init"
 exec /sbin/init
 
