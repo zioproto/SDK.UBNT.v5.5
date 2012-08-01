@@ -1,1 +1,2 @@
 src-svn packages svn://svn.openwrt.org/openwrt/branches/packages_8.09 svn://svn.openwrt.org/openwrt/packages
+src-git zninux git://github.com/ninuxorg/ninux-openwrt-packages.git;mDNS-plugin-GSOC
