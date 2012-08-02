@@ -490,11 +490,6 @@
 				else if (!_validateNetmask(this.netmask))
 					err.push('Netmask is invalid.');
 
-				if (!this.gateway.length)
-					err.push('Gateway IP can not be empty.');
-				else if (!_validateNonZeroIP(this.gateway))
-					err.push('Gateway IP is invalid.');
-
 				if (err.length > 0) /* makes no sense to check more */
 					return false;
 
