@@ -42,11 +42,11 @@ ip rule add from all lookup 254 pref 5
 ip rule add from all lookup 112 pref 6
 
 #Blackhole private aggregates
-ip route add blackhole 10.0.0.0/8 table 111 
-ip route add blackhole 172.16.0.0/12 table 111 
-ip route add blackhole 192.168.0.0/16 table 111 
+ip route add blackhole 10.0.0.0/8 table 254 
+ip route add blackhole 172.16.0.0/12 table 254 
+ip route add blackhole 192.168.0.0/16 table 254 
 
 #Blackhole Ninux aggregate
-ip route add blackhole 176.62.53.0/24 table 111 
+ip route add blackhole 176.62.53.0/24 table 254 
 
 ) &
