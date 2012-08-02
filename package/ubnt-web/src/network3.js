@@ -924,7 +924,7 @@ wan: {
 					validateFieds($wanSettings, [
 						{ name: 'WAN IP', field: '#wanIpAddr', req: true, valid: _validateNonZeroIP },
 						{ name: 'WAN Netmask', field: '#wanIpNetmask', req: true, valid: _validateNetmask },
-						{ name: 'WAN Gateway IP', field: '#wanGateway', req: true, valid: _validateNonZeroIP },
+						{ name: 'WAN Gateway IP', field: '#wanGateway', req: false, valid: _validateNonZeroIP },
 						{ name: 'Primary DNS IP', field: '#wanDns1', req: true, valid: _validateNonZeroIP },
 						{ name: 'Secondary DNS IP', field: '#wanDns2', req: false, valid: _validateNonZeroIP },
 						{ name: 'MTU', field: '#wanMtu', req: true, min: 64, max: maxMtu }
