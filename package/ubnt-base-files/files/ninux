@@ -28,5 +28,25 @@ elif [ -e /olsrd6.conf ]; then
         olsrd -f /olsrd6.conf -d 0
 fi
 
+#Private routes to OLSR table
+ip rule add to 10.0.0.0/8 table RtTable pref 4
+ip rule add to 172.16.0.0/12 table RtTable pref 4
+ip rule add to 192.168.0.0/16 table RtTable pref 4
+
+#Ninux IP Addresses to OLSR table
+ip rule add to 176.62.53.0/24 table RtTable pref 4
+ip rule add from 176.62.53.0/24 table RtTable pref 4
+
+#Lookup default route first from user and then from OLSR
+ip rule add from all lookup main pref 5
+ip rule add from all lookup RtTableDefault pref 6
+
+#Blackhole private aggregates
+ip route add blackhole 10.0.0.0/8 table RtTable 
+ip route add blackhole 172.16.0.0/12 table RtTable
+ip route add blackhole 192.168.0.0/16 table RtTable 
+
+#Blackhole Ninux aggregate
+ip route add blackhole 176.62.53.0/24 table RtTable
 
 ) &
