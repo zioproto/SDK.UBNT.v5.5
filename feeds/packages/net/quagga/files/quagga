@@ -27,11 +27,13 @@ ARG_DAEMONS=$*
 BINDIR=/usr/sbin
 CONFDIR=/etc/quagga
 STATEDIR=/var/run/quagga
+RUNUSER=network
+RUNGROUP=$RUNUSER
 DAEMONS="zebra ripd ripngd ospfd ospf6d bgpd"
 DAEMON_FLAGS=-d
 WATCHQUAGGA_FLAGS="-d -z -T 60 -R"
 WATCHQUAGGA_CMD="$0 watchrestart"
-if [ ${COMMAND} != "watchrestart" ]
+if [ ${COMMAND} != "watchrestart" -a -x "${BINDIR}/watchquagga" ]
 then
 	DAEMONS="${DAEMONS} watchquagga"
 fi
@@ -258,7 +260,7 @@ do
 		then
 			if echo "${survivors}" > ${pidfile}
 			then
-				chown quagga:quagga ${pidfile}
+				chown ${RUNUSER}:${RUNGROUP} ${pidfile}
 				echo -n " Wrote ${survivors} to pidfile."
 			else
 				echo -n " Failed to write ${survivors} to pidfile."
@@ -274,10 +276,10 @@ if [ -n "$START_DAEMONS" ]
 then
 	[ -d ${CONFDIR} ] \
 	|| quit "${ME}: no config directory ${CONFDIR} - exiting."
-	chown -R quagga:quagga ${CONFDIR}
+	chown -R ${RUNUSER}:${RUNGROUP} ${CONFDIR}
 	[ -d ${STATEDIR} ] || mkdir -p ${STATEDIR} \
 	|| die "${ME}: could not create state directory ${STATEDIR} - exiting."
-	chown -R quagga:quagga ${STATEDIR}
+	chown -R ${RUNUSER}:${RUNGROUP} ${STATEDIR}
 
 	for d in $START_DAEMONS
 	do
@@ -300,7 +302,7 @@ then
 			then
 				if echo "${proc_pid}" > ${pidfile}
 				then
-					chown quagga:quagga ${pidfile}
+					chown ${RUNUSER}:${RUNGROUP} ${pidfile}
 					echo -n " Wrote ${proc_pid} to pidfile."
 				else
 					echo -n " Failed to write ${proc_pid} to pidfile."
@@ -310,13 +312,13 @@ then
 		then
 			if [ "${d}" = "watchquagga" ]
 			then
-				$("${BINDIR}/${d}" \
+				"${BINDIR}/${d}" \
 					${WATCHQUAGGA_FLAGS} \
 					"${WATCHQUAGGA_CMD}" \
-					${WATCHQUAGGA_DAEMONS})
+					${WATCHQUAGGA_DAEMONS}
 				status=$?
 			else
-				$("${BINDIR}/${d}" ${DAEMON_FLAGS})
+				"${BINDIR}/${d}" ${DAEMON_FLAGS}
 				status=$?
 			fi
 			if [ $status -eq 0 ]
