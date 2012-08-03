@@ -5,7 +5,8 @@ Notes from Ninux
 First of all you need to check the path of your feeds in feeds.conf.default and then:
 
 ./scripts/feeds update zninux
-./scripts/feeds install -p zninux -a
+./scripts/feeds update -i
+./scripts/feeds install -a
 
 You dont need to call feed install for the "package" feeds because Ubiquiti gives you the SDK with the packages already installed. Also node that updating the "package" feed might give you unexpected results, for example will will update the lighttpd package, and the current one do not compiles in the SDK.
 
