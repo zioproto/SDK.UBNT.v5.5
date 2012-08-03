@@ -22,7 +22,8 @@ you are now ready for "make"
 in short:
 
 ./scripts/feeds update zninux
-./scripts/feeds install -p zninux -a
+./scripts/feeds update -i
+./scripts/feeds install -a
 git checkout .config
 make
 
