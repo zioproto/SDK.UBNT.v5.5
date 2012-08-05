@@ -4,11 +4,13 @@ if [ -e /etc/persistent/olsrd.conf ]; then
 elif [ -e /olsrd.conf ]; then
         olsrd -f /olsrd.conf -d 0
 fi
-insmod ip_tables
-insmod iptable_filter
-insmod ip_conntrack
-insmod ip_nat
-insmod iptable_nat
+
+#If you need NAT uncomment the following inmods
+#insmod ip_tables
+#insmod iptable_filter
+#insmod ip_conntrack
+#insmod ip_nat
+#insmod iptable_nat
 
 echo 0 > /proc/sys/net/ipv6/conf/all/accept_ra
 ip -6 addr flush dev eth0 scope global
