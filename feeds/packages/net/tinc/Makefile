@@ -1,49 +1,46 @@
 #
-# Copyright (C) 2007 OpenWrt.org
+# Copyright (C) 2007-2011 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
 #
-# $Id: Makefile 12175 2008-08-05 22:04:10Z florian $
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=tinc
-PKG_VERSION:=1.0.8
+PKG_VERSION:=1.0.19
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=http://www.tinc-vpn.org/packages \
-	http://ftp.yi.se/pub/tinc/ \
-	http://www.mirrors.wiretapped.net/security/network-security/tinc/
-PKG_MD5SUM:=1b59583b5bc57806459c81a413fb0cc4
+PKG_SOURCE_URL:=http://www.tinc-vpn.org/packages 
+PKG_MD5SUM:=5d97ee0f1ccf8fea5b492f6b54d5ac32
+
+PKG_INSTALL:=1
 
 include $(INCLUDE_DIR)/package.mk
 
 define Package/tinc
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=+liblzo +libopenssl +zlib
+  DEPENDS:=+liblzo +libopenssl +kmod-tun
   TITLE:=VPN tunneling daemon
   URL:=http://www.tinc-vpn.org/
   SUBMENU:=VPN
 endef
 
-define Build/Configure
-	$(call Build/Configure/Default, \
-		--with-kernel="$(LINUX_DIR)" \
-		--with-zlib="$(STAGING_DIR)/usr" \
-		--with-lzo-include="$(STAGING_DIR)/usr/include/lzo" \
-	)
+define Package/tinc/description
+  tinc is a Virtual Private Network (VPN) daemon that uses tunnelling and
+  encryption to create a secure private network between hosts on the Internet.
 endef
 
-define Build/Compile
-	$(MAKE) -C $(PKG_BUILD_DIR) \
-		DESTDIR="$(PKG_INSTALL_DIR)" \
-		all install
-endef
+TARGET_CFLAGS += -std=gnu99
 
-define Package/tinc/install	
+CONFIGURE_ARGS += \
+	--with-kernel="$(LINUX_DIR)" \
+	--with-zlib="$(STAGING_DIR)/usr" \
+	--with-lzo-include="$(STAGING_DIR)/usr/include/lzo"
+
+define Package/tinc/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/tincd $(1)/usr/sbin/
 endef
