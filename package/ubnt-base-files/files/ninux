@@ -15,6 +15,7 @@ fi
 echo 0 > /proc/sys/net/ipv6/conf/all/accept_ra
 echo 0 > /proc/sys/net/ipv6/conf/all/accept_ra_pinfo
 echo 0 > /proc/sys/net/ipv6/conf/all/accept_ra_defrtr
+echo 0 > /proc/sys/net/ipv6/conf/lo/disable_ipv6
 ip -6 addr flush dev eth0 scope global
 ip -6 addr flush dev ath0 scope global
 #ip addr add 2001:4c00:893b:1:CAP::XX/128 dev ath0
