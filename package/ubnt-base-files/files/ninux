@@ -54,4 +54,10 @@ ip route add blackhole 192.168.0.0/16 table 254
 #Blackhole Ninux aggregate
 ip route add blackhole 176.62.53.0/24 table 254 
 
+#tinc vpn
+if [ -d /etc/persistent/tinc ]; then
+  ln -s /etc/persistent/tinc /etc/tinc
+  tincd -n ninux
+fi
+
 ) &
