@@ -33,6 +33,14 @@ elif [ -e /olsrd6.conf ]; then
         olsrd -f /olsrd6.conf -d 0
 fi
 
+#Copy local routes only from table main 254 to table 110
+ip route show table 254 | grep -Ev ^default | grep -Ev ^blackhole | while read ROUTE ; do
+ip route add table 110 $ROUTE
+done
+
+#First evaluate local routes
+ip rule add from all lookup 110 pref 3
+
 #Private routes to OLSR table
 ip rule add to 10.0.0.0/8 table 111 pref 4
 ip rule add to 172.16.0.0/12 table 111 pref 4
