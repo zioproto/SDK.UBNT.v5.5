@@ -1,0 +1,14 @@
+# Patch to fix 
+# 1. Receiving of data from serial port emulator device (/dev/ttyACM* ) when device was closed & reopend to read data again.
+# 2. cat /proc/bus/usb/devices hang after disconnecting the  serial port emulator hardware.
+
+--- linux-2.6.32/drivers/usb/host/ehci-ath.c	2013-07-09 16:36:32.000000000 +0530
++++ linux-2.6.32_new/drivers/usb/host/ehci-ath.c	2013-07-09 16:36:16.000000000 +0530
+@@ -138,6 +138,7 @@ static struct hc_driver ath_usb_ehci_dri
+ 	.hub_control = ehci_hub_control,
+ 	.bus_suspend = ehci_bus_suspend,
+ 	.bus_resume = ehci_bus_resume,
++	.clear_tt_buffer_complete = ehci_clear_tt_buffer_complete,
+ };
+ 
+ #ifndef CONFIG_USB_ATH_OTG
